@@ -4,10 +4,6 @@ import "./CruizeVault.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 contract Cruize  {
 
-
-
-
-
     function depositETH(uint _amount) public payable{
       require(msg.value >= _amount);
     //   mint token 
@@ -18,8 +14,6 @@ contract Cruize  {
         IERC20 token = IERC20(_token);
         require(token.transferFrom(msg.sender,address(this), _amount));
         //   mint token 
-
-        
     }
 
     function withdraw(        
@@ -31,15 +25,6 @@ contract Cruize  {
         //  _transferTo(_to,_token,_amount,_signature);
         //brun token .
         }
-
-
-
-
    receive() external payable {}
-
-
-
-
-
 
 }

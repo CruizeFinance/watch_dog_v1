@@ -32,8 +32,11 @@ contract Executor {
         Enum.Operation operation,
         uint256 txGas
     ) internal returns (bool success) {
+      console.log("Executor::execute");
 
         if (operation == Enum.Operation.DelegateCall) {
+        console.log("Executor::DelegateCall");
+
             // solhint-disable-next-line no-inline-assembly
             assembly {
                 success := delegatecall(txGas, to, add(data, 0x20), mload(data), 0, 0)
@@ -322,6 +325,8 @@ contract ModuleManager is SelfAuthorized, Executor {
         bytes memory data,
         Enum.Operation operation
     ) public virtual returns (bool success) {
+      console.log("GnosisSafe::execTransactionFromModule");
+
         // Only whitelisted modules are allowed.
         require(msg.sender != SENTINEL_MODULES && modules[msg.sender] != address(0), "GS104");
         // Execute transaction without further confirmations.
