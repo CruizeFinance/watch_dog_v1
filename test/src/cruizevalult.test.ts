@@ -15,6 +15,7 @@ describe("testing Gnosis Trnasfer fund", function () {
   let cruizeSafe: Contract;
   let cruizeModule: Contract;
   let dai: Contract;
+  let crContract:Contract;
   let user1: SignerWithAddress;
   const gnosisAddress: Address = "0xBe4C54c29f95786ca5e94ba9701FD5758183BFd4";
   const gnosisOwnerAddress: Address =
@@ -24,6 +25,8 @@ describe("testing Gnosis Trnasfer fund", function () {
     "0xb63e800d00000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000048f91fbc86679e14f481dd3c3381f0e07f93a7110000000000000000000000000000000000000000000000000000000000000000";
   before(async () => {
     [signer, user1] = await ethers.getSigners();
+    const CRCONTRACT  = await ethers.getContractFactory("CRTokenUpgradeable", signer);
+    crContract = await CRCONTRACT.deploy();
     //  deploy GnosisSafe
     const SINGLETON = await ethers.getContractFactory("GnosisSafe", signer);
     singleton = await SINGLETON.deploy();
@@ -35,10 +38,7 @@ describe("testing Gnosis Trnasfer fund", function () {
     );
     masterProxy = await MASTERPROXY.deploy();
 
-    const DAI = await ethers.getContractFactory(
-    "DAI",
-      signer
-    );
+    const DAI = await ethers.getContractFactory("DAI", signer);
     dai = await DAI.deploy();
 
     let res = await masterProxy.createProxy(
@@ -47,27 +47,31 @@ describe("testing Gnosis Trnasfer fund", function () {
     );
     let tx = await res.wait();
     gProxyAddress = tx.events[1].args["proxy"];
-    console.log(gProxyAddress);
+   
     //  get cruizeSafe
     cruizeSafe = await ethers.getContractAt(
       "GnosisSafe",
       gProxyAddress as Address,
       signer
     );
-    console.log(typeof masterProxy);
+   
 
-    const CRUIZEMODULE = await ethers.getContractFactory("CruizeVault", signer);
+    const CRUIZEMODULE = await ethers.getContractFactory("Cruize", signer);
     //  signer.address -  a user's that can perfome only functions on safe.
     // gProxyAddress -  address of gnosis  safe.
-    cruizeModule = await CRUIZEMODULE.deploy(signer.address, gProxyAddress);
+   
+    cruizeModule = await CRUIZEMODULE.deploy(signer.address, gProxyAddress,crContract.address);
+ 
+
     hre.tracer.nameTags[cruizeSafe.address] = "Cruize safe";
     hre.tracer.nameTags[singleton.address] = "singleton";
     hre.tracer.nameTags[gProxyAddress as Address] = "gProxyAddress";
     hre.tracer.nameTags[cruizeModule.address] = "cruizeModule";
     hre.tracer.nameTags[user1.address] = "userOne";
     hre.tracer.nameTags[signer.address] = "singer";
-  });
 
+  });
+ 
   it("approve moudle on gnosis", async () => {
     // cruizeModule -  deployed address of Cruize module.
     const data = abi.simpleEncode(
@@ -93,54 +97,76 @@ describe("testing Gnosis Trnasfer fund", function () {
       "0x0000000000000000000000000000000000000000",
       signature
     );
-    res = await res.wait();
-    // console.log(res.events[1].args)
+  
   });
   it("send funds to Safe", async () => {
+
     let tx = {
       to: cruizeSafe.address,
       // Convert currency unit from ether to wei
       value: ethers.utils.parseEther("20"),
     };
     let res = await signer.sendTransaction(tx);
-    let tnx = await res.wait();
-    // console.log('fund transfer to gnosis',tnx)
-
-    await dai.transfer(cruizeSafe.address,parseEther("100"))
+    await dai.transfer(cruizeSafe.address, parseEther("100"));
   });
-  it("send ETH  using module", async () => {
-    const data = abi.simpleEncode(
-      "Withdraw(address,address,uint256)",
-      ethers.constants.AddressZero,
-      user1.address,
-      1000000000000
+
+
+  it('create crtokens',async()=>{
+  let res =  await cruizeModule.createToken("cruzie Dai",'crdai',dai.address,18)
+  let tx = await res.wait()
+    tx =  await cruizeModule.cruizeTokens(dai.address)
+    hre.tracer.nameTags[tx] = "crDai";
+   res =  await cruizeModule.createToken("cruzie ETH",'crETH',ethers.constants.AddressZero,18)
+    tx = await res.wait()
+      tx =  await cruizeModule.cruizeTokens(ethers.constants.AddressZero)
+      
+    hre.tracer.nameTags[tx] = "CRETH";
+  })
+  
+
+  it('deposit ERC20 token to contract',async()=>{
+    await dai.approve(cruizeModule.address,parseEther('10'))
+     await cruizeModule.deposit(dai.address,parseEther("5"));
+    
+    
+  })
+  it('deposit ETH token to contract',async()=>{
+     await cruizeModule.deposit(ethers.constants.AddressZero,parseEther("1"),{value:parseEther("1")})
+   
+    
+  })
+  it("withdraw ERC20  using module", async () => {
+
+    const data = abi.rawEncode(
+      ['address','address','uint256'],
+     [ dai.address,
+      signer.address,
+      100000000000000]
     );
 
-    let res = await cruizeModule.sendmoney(
+    await cruizeModule.withdraw(
       cruizeModule.address,
-      ethers.utils.parseEther("0"),
       "0x" + data.toString("hex"),
       1
     );
-    let tx = await res.wait();
-    console.log(tx);
+  
   });
-
-  it("send ERC20  using module", async () => {
-    const data = abi.simpleEncode(
-      "Withdraw(address,address,uint256)",
-      dai.address,
-      user1.address,
-      100000000000000
+  it("withdraw ETH  using module", async () => {
+    const data = abi.rawEncode(
+      ['address','address','uint256'],
+      [  ethers.constants.AddressZero,
+        signer.address,
+        50000000000000]
+    
     );
 
-    let res = await cruizeModule.sendmoney(
+    let res = await cruizeModule.withdraw(
       cruizeModule.address,
-      ethers.utils.parseEther("0"),
       "0x" + data.toString("hex"),
       1
     );
-    let tx = await res.wait();
-    console.log(tx);
+
   });
+
+
 });

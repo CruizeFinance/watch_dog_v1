@@ -4,7 +4,16 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test":"hardhat test --trace"
+    "test": "hardhat test --trace",
+    "build": "hardhat compile",
+    "fork_node":"hardhat node --fork https://arb1.arbitrum.io/rpc --no-deploy --fork-ignore-unknown-tx-type true",
+    "test_mainnet": "hardhat test --logs ./test/src/1_asset-pool.spec.ts",
+    "test_arbi": "hardhat test --config ./hardhat_arbi.config.ts ./test/src/2_aave-integration-v3.spec.ts --network localhost",
+    "clean": "hardhat clean",
+    "build:watch": "hardhat watch compilation",
+    "test:watch": "hardhat watch test_mainnet",
+    "deploy:network": "hardhat deploy --network",
+    "help":"hardhat node --help"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
@@ -31,6 +40,7 @@
   "dependencies": {
     "@gnosis.pm/zodiac": "^2.1.2",
     "@openzeppelin/contracts": "^4.8.0",
+    "@openzeppelin/upgrades": "^2.8.0",
     "@types/ethereumjs-abi": "^0.6.3",
     "dotenv": "^16.0.3",
     "ethereumjs-abi": "^0.6.8",

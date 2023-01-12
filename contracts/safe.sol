@@ -4,17 +4,18 @@
 
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
-import 'hardhat/console.sol';
+import "hardhat/console.sol";
+
 /// @title Enum - Collection of enums
 /// @author Richard Meissner - <richard@gnosis.pm>
 contract Enum {
-    enum Operation {Call, DelegateCall}
+    enum Operation {
+        Call,
+        DelegateCall
+    }
 }
 
-
 // File contracts/base/Executor.sol
-
-
 
 /// @title Executor - A contract that can execute transactions
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -32,29 +33,36 @@ contract Executor {
         Enum.Operation operation,
         uint256 txGas
     ) internal returns (bool success) {
-      console.log("Executor::execute");
-
         if (operation == Enum.Operation.DelegateCall) {
-        console.log("Executor::DelegateCall");
-
             // solhint-disable-next-line no-inline-assembly
             assembly {
-                success := delegatecall(txGas, to, add(data, 0x20), mload(data), 0, 0)
+                success := delegatecall(
+                    txGas,
+                    to,
+                    add(data, 0x20),
+                    mload(data),
+                    0,
+                    0
+                )
             }
         } else {
-            
             // solhint-disable-next-line no-inline-assembly
             assembly {
-                success := call(txGas, to, value, add(data, 0x20), mload(data), 0, 0)
+                success := call(
+                    txGas,
+                    to,
+                    value,
+                    add(data, 0x20),
+                    mload(data),
+                    0,
+                    0
+                )
             }
         }
     }
 }
 
-
 // File contracts/accessors/SimulateTxAccessor.sol
-
-
 
 /// @title Simulate Transaction Accessor - can be used with StorageAccessible to simulate Safe transactions
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -66,7 +74,10 @@ contract SimulateTxAccessor is Executor {
     }
 
     modifier onlyDelegateCall() {
-        require(address(this) != accessorSingleton, "SimulateTxAccessor should only be called via delegatecall");
+        require(
+            address(this) != accessorSingleton,
+            "SimulateTxAccessor should only be called via delegatecall"
+        );
         _;
     }
 
@@ -77,7 +88,7 @@ contract SimulateTxAccessor is Executor {
         Enum.Operation operation
     )
         external
-        onlyDelegateCall()
+        onlyDelegateCall
         returns (
             uint256 estimate,
             bool success,
@@ -104,10 +115,7 @@ contract SimulateTxAccessor is Executor {
     }
 }
 
-
 // File contracts/common/SelfAuthorized.sol
-
-
 
 /// @title SelfAuthorized - authorizes current contract to perform actions
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -123,10 +131,7 @@ contract SelfAuthorized {
     }
 }
 
-
 // File contracts/base/FallbackManager.sol
-
-
 
 /// @title Fallback Manager - A contract that manages fallback calls made to this contract
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -134,7 +139,8 @@ contract FallbackManager is SelfAuthorized {
     event ChangedFallbackHandler(address handler);
 
     // keccak256("fallback_manager.handler.address")
-    bytes32 internal constant FALLBACK_HANDLER_STORAGE_SLOT = 0x6c9a6c4a39284e37ed1cf53d337577d14212a4870fb976a4366c693b939918d5;
+    bytes32 internal constant FALLBACK_HANDLER_STORAGE_SLOT =
+        0x6c9a6c4a39284e37ed1cf53d337577d14212a4870fb976a4366c693b939918d5;
 
     function internalSetFallbackHandler(address handler) internal {
         bytes32 slot = FALLBACK_HANDLER_STORAGE_SLOT;
@@ -167,7 +173,15 @@ contract FallbackManager is SelfAuthorized {
             // Then the address without padding is stored right after the calldata
             mstore(calldatasize(), shl(96, caller()))
             // Add 20 bytes for the address appended add the end
-            let success := call(gas(), handler, 0, 0, add(calldatasize(), 20), 0, 0)
+            let success := call(
+                gas(),
+                handler,
+                0,
+                0,
+                add(calldatasize(), 20),
+                0,
+                0
+            )
             returndatacopy(0, 0, returndatasize())
             if iszero(success) {
                 revert(0, returndatasize())
@@ -177,10 +191,7 @@ contract FallbackManager is SelfAuthorized {
     }
 }
 
-
 // File contracts/interfaces/IERC165.sol
-
-
 
 /// @notice More details at https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/introspection/IERC165.sol
 interface IERC165 {
@@ -195,12 +206,7 @@ interface IERC165 {
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 }
 
-
 // File contracts/base/GuardManager.sol
-
-
-
-
 
 interface Guard is IERC165 {
     function checkTransaction(
@@ -221,7 +227,13 @@ interface Guard is IERC165 {
 }
 
 abstract contract BaseGuard is Guard {
-    function supportsInterface(bytes4 interfaceId) external view virtual override returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        external
+        view
+        virtual
+        override
+        returns (bool)
+    {
         return
             interfaceId == type(Guard).interfaceId || // 0xe6d7a83a
             interfaceId == type(IERC165).interfaceId; // 0x01ffc9a7
@@ -233,13 +245,17 @@ abstract contract BaseGuard is Guard {
 contract GuardManager is SelfAuthorized {
     event ChangedGuard(address guard);
     // keccak256("guard_manager.guard.address")
-    bytes32 internal constant GUARD_STORAGE_SLOT = 0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;
+    bytes32 internal constant GUARD_STORAGE_SLOT =
+        0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;
 
     /// @dev Set a guard that checks transactions before execution
     /// @param guard The address of the guard to be used or the 0 address to disable the guard
     function setGuard(address guard) external authorized {
         if (guard != address(0)) {
-            require(Guard(guard).supportsInterface(type(Guard).interfaceId), "GS300");
+            require(
+                Guard(guard).supportsInterface(type(Guard).interfaceId),
+                "GS300"
+            );
         }
         bytes32 slot = GUARD_STORAGE_SLOT;
         // solhint-disable-next-line no-inline-assembly
@@ -258,12 +274,7 @@ contract GuardManager is SelfAuthorized {
     }
 }
 
-
 // File contracts/base/ModuleManager.sol
-
-
-
-
 
 /// @title Module Manager - A contract that manages modules that can execute transactions via this contract
 /// @author Stefan George - <stefan@gnosis.pm>
@@ -283,7 +294,10 @@ contract ModuleManager is SelfAuthorized, Executor {
         modules[SENTINEL_MODULES] = SENTINEL_MODULES;
         if (to != address(0))
             // Setup has to complete successfully or transaction fails.
-            require(execute(to, 0, data, Enum.Operation.DelegateCall, gasleft()), "GS000");
+            require(
+                execute(to, 0, data, Enum.Operation.DelegateCall, gasleft()),
+                "GS000"
+            );
     }
 
     /// @dev Allows to add a module to the whitelist.
@@ -305,7 +319,10 @@ contract ModuleManager is SelfAuthorized, Executor {
     /// @notice Disables the module `module` for the Safe.
     /// @param prevModule Module that pointed to the module to be removed in the linked list
     /// @param module Module to be removed.
-    function disableModule(address prevModule, address module) public authorized {
+    function disableModule(address prevModule, address module)
+        public
+        authorized
+    {
         // Validate module address and check that it corresponds to module index.
         require(module != address(0) && module != SENTINEL_MODULES, "GS101");
         require(modules[prevModule] == module, "GS103");
@@ -325,10 +342,11 @@ contract ModuleManager is SelfAuthorized, Executor {
         bytes memory data,
         Enum.Operation operation
     ) public virtual returns (bool success) {
-      console.log("GnosisSafe::execTransactionFromModule");
-
         // Only whitelisted modules are allowed.
-        require(msg.sender != SENTINEL_MODULES && modules[msg.sender] != address(0), "GS104");
+        require(
+            msg.sender != SENTINEL_MODULES && modules[msg.sender] != address(0),
+            "GS104"
+        );
         // Execute transaction without further confirmations.
         success = execute(to, value, data, operation, type(uint256).max);
         if (success) emit ExecutionFromModuleSuccess(msg.sender);
@@ -374,14 +392,22 @@ contract ModuleManager is SelfAuthorized, Executor {
     /// @param pageSize Maximum number of modules that should be returned.
     /// @return array Array of modules.
     /// @return next Start of the next page.
-    function getModulesPaginated(address start, uint256 pageSize) external view returns (address[] memory array, address next) {
+    function getModulesPaginated(address start, uint256 pageSize)
+        external
+        view
+        returns (address[] memory array, address next)
+    {
         // Init array with max page size
         array = new address[](pageSize);
 
         // Populate return array
         uint256 moduleCount = 0;
         address currentModule = modules[start];
-        while (currentModule != address(0x0) && currentModule != SENTINEL_MODULES && moduleCount < pageSize) {
+        while (
+            currentModule != address(0x0) &&
+            currentModule != SENTINEL_MODULES &&
+            moduleCount < pageSize
+        ) {
             array[moduleCount] = currentModule;
             currentModule = modules[currentModule];
             moduleCount++;
@@ -395,10 +421,7 @@ contract ModuleManager is SelfAuthorized, Executor {
     }
 }
 
-
 // File contracts/base/OwnerManager.sol
-
-
 
 /// @title OwnerManager - Manages a set of owners and a threshold to perform actions.
 /// @author Stefan George - <stefan@gnosis.pm>
@@ -417,7 +440,9 @@ contract OwnerManager is SelfAuthorized {
     /// @dev Setup function sets initial storage of contract.
     /// @param _owners List of Safe owners.
     /// @param _threshold Number of required confirmations for a Safe transaction.
-    function setupOwners(address[] memory _owners, uint256 _threshold) internal {
+    function setupOwners(address[] memory _owners, uint256 _threshold)
+        internal
+    {
         // Threshold can only be 0 at initialization.
         // Check ensures that setup function can only be called once.
         require(threshold == 0, "GS200");
@@ -430,7 +455,13 @@ contract OwnerManager is SelfAuthorized {
         for (uint256 i = 0; i < _owners.length; i++) {
             // Owner address cannot be null.
             address owner = _owners[i];
-            require(owner != address(0) && owner != SENTINEL_OWNERS && owner != address(this) && currentOwner != owner, "GS203");
+            require(
+                owner != address(0) &&
+                    owner != SENTINEL_OWNERS &&
+                    owner != address(this) &&
+                    currentOwner != owner,
+                "GS203"
+            );
             // No duplicate owners allowed.
             require(owners[owner] == address(0), "GS204");
             owners[currentOwner] = owner;
@@ -446,9 +477,17 @@ contract OwnerManager is SelfAuthorized {
     /// @notice Adds the owner `owner` to the Safe and updates the threshold to `_threshold`.
     /// @param owner New owner address.
     /// @param _threshold New threshold.
-    function addOwnerWithThreshold(address owner, uint256 _threshold) public authorized {
+    function addOwnerWithThreshold(address owner, uint256 _threshold)
+        public
+        authorized
+    {
         // Owner address cannot be null, the sentinel or the Safe itself.
-        require(owner != address(0) && owner != SENTINEL_OWNERS && owner != address(this), "GS203");
+        require(
+            owner != address(0) &&
+                owner != SENTINEL_OWNERS &&
+                owner != address(this),
+            "GS203"
+        );
         // No duplicate owners allowed.
         require(owners[owner] == address(0), "GS204");
         owners[owner] = owners[SENTINEL_OWNERS];
@@ -495,7 +534,12 @@ contract OwnerManager is SelfAuthorized {
         address newOwner
     ) public authorized {
         // Owner address cannot be null, the sentinel or the Safe itself.
-        require(newOwner != address(0) && newOwner != SENTINEL_OWNERS && newOwner != address(this), "GS203");
+        require(
+            newOwner != address(0) &&
+                newOwner != SENTINEL_OWNERS &&
+                newOwner != address(this),
+            "GS203"
+        );
         // No duplicate owners allowed.
         require(owners[newOwner] == address(0), "GS204");
         // Validate oldOwner address and check that it corresponds to owner index.
@@ -546,10 +590,7 @@ contract OwnerManager is SelfAuthorized {
     }
 }
 
-
 // File contracts/common/EtherPaymentFallback.sol
-
-
 
 /// @title EtherPaymentFallback - A contract that has a fallback to accept ether payments
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -562,10 +603,7 @@ contract EtherPaymentFallback {
     }
 }
 
-
 // File contracts/common/Singleton.sol
-
-
 
 /// @title Singleton - Base for singleton contracts (should always be first super contract)
 ///         This contract is tightly coupled to our proxy contract (see `proxies/GnosisSafeProxy.sol`)
@@ -576,10 +614,7 @@ contract Singleton {
     address private singleton;
 }
 
-
 // File contracts/common/SignatureDecoder.sol
-
-
 
 /// @title SignatureDecoder - Decodes signatures that a encoded as bytes
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -615,10 +650,7 @@ contract SignatureDecoder {
     }
 }
 
-
 // File contracts/common/SecuredTokenTransfer.sol
-
-
 
 /// @title SecuredTokenTransfer - Secure token transfer
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -633,30 +665,39 @@ contract SecuredTokenTransfer {
         uint256 amount
     ) internal returns (bool transferred) {
         // 0xa9059cbb - keccack("transfer(address,uint256)")
-        bytes memory data = abi.encodeWithSelector(0xa9059cbb, receiver, amount);
+        bytes memory data = abi.encodeWithSelector(
+            0xa9059cbb,
+            receiver,
+            amount
+        );
         // solhint-disable-next-line no-inline-assembly
         assembly {
             // We write the return value to scratch space.
             // See https://docs.soliditylang.org/en/v0.7.6/internals/layout_in_memory.html#layout-in-memory
-            let success := call(sub(gas(), 10000), token, 0, add(data, 0x20), mload(data), 0, 0x20)
+            let success := call(
+                sub(gas(), 10000),
+                token,
+                0,
+                add(data, 0x20),
+                mload(data),
+                0,
+                0x20
+            )
             switch returndatasize()
-                case 0 {
-                    transferred := success
-                }
-                case 0x20 {
-                    transferred := iszero(or(iszero(success), iszero(mload(0))))
-                }
-                default {
-                    transferred := 0
-                }
+            case 0 {
+                transferred := success
+            }
+            case 0x20 {
+                transferred := iszero(or(iszero(success), iszero(mload(0))))
+            }
+            default {
+                transferred := 0
+            }
         }
     }
 }
 
-
 // File contracts/common/StorageAccessible.sol
-
-
 
 /// @title StorageAccessible - generic base contract that allows callers to access all internal storage.
 /// @notice See https://github.com/gnosis/util-contracts/blob/bb5fe5fb5df6d8400998094fb1b32a178a47c3a1/contracts/StorageAccessible.sol
@@ -667,7 +708,11 @@ contract StorageAccessible {
      * @param length - the number of words (32 bytes) of data to read
      * @return the bytes that were read.
      */
-    function getStorageAt(uint256 offset, uint256 length) public view returns (bytes memory) {
+    function getStorageAt(uint256 offset, uint256 length)
+        public
+        view
+        returns (bytes memory)
+    {
         bytes memory result = new bytes(length * 32);
         for (uint256 index = 0; index < length; index++) {
             // solhint-disable-next-line no-inline-assembly
@@ -690,10 +735,20 @@ contract StorageAccessible {
      * @param targetContract Address of the contract containing the code to execute.
      * @param calldataPayload Calldata that should be sent to the target contract (encoded method name and arguments).
      */
-    function simulateAndRevert(address targetContract, bytes memory calldataPayload) external {
+    function simulateAndRevert(
+        address targetContract,
+        bytes memory calldataPayload
+    ) external {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            let success := delegatecall(gas(), targetContract, add(calldataPayload, 0x20), mload(calldataPayload), 0, 0)
+            let success := delegatecall(
+                gas(),
+                targetContract,
+                add(calldataPayload, 0x20),
+                mload(calldataPayload),
+                0,
+                0
+            )
 
             mstore(0x00, success)
             mstore(0x20, returndatasize())
@@ -703,10 +758,7 @@ contract StorageAccessible {
     }
 }
 
-
 // File contracts/interfaces/ISignatureValidator.sol
-
-
 
 contract ISignatureValidatorConstants {
     // bytes4(keccak256("isValidSignature(bytes,bytes)")
@@ -723,13 +775,14 @@ abstract contract ISignatureValidator is ISignatureValidatorConstants {
      * MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5)
      * MUST allow external calls
      */
-    function isValidSignature(bytes memory _data, bytes memory _signature) public view virtual returns (bytes4);
+    function isValidSignature(bytes memory _data, bytes memory _signature)
+        public
+        view
+        virtual
+        returns (bytes4);
 }
 
-
 // File contracts/external/GnosisSafeMath.sol
-
-
 
 /**
  * @title GnosisSafeMath
@@ -783,20 +836,7 @@ library GnosisSafeMath {
     }
 }
 
-
 // File contracts/GnosisSafe.sol
-
-
-
-
-
-
-
-
-
-
-
-
 
 /// @title Gnosis Safe - A multisignature wallet with support for confirmations using signed messages based on ERC191.
 /// @author Stefan George - <stefan@gnosis.io>
@@ -820,14 +860,22 @@ contract GnosisSafe is
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );
-    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
+    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
+        0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
     // keccak256(
     //     "SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)"
     // );
-    bytes32 private constant SAFE_TX_TYPEHASH = 0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8;
+    bytes32 private constant SAFE_TX_TYPEHASH =
+        0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8;
 
-    event SafeSetup(address indexed initiator, address[] owners, uint256 threshold, address initializer, address fallbackHandler);
+    event SafeSetup(
+        address indexed initiator,
+        address[] owners,
+        uint256 threshold,
+        address initializer,
+        address fallbackHandler
+    );
     event ApproveHash(bytes32 indexed approvedHash, address indexed owner);
     event SignMsg(bytes32 indexed msgHash);
     event ExecutionFailure(bytes32 txHash, uint256 payment);
@@ -869,7 +917,8 @@ contract GnosisSafe is
     ) external {
         // setupOwners checks if the Threshold is already set, therefore preventing that this method is called twice
         setupOwners(_owners, _threshold);
-        if (fallbackHandler != address(0)) internalSetFallbackHandler(fallbackHandler);
+        if (fallbackHandler != address(0))
+            internalSetFallbackHandler(fallbackHandler);
         // As setupOwners can only be called if the contract has not been initialized we don't need a check for setupModules
         setupModules(to, data);
 
@@ -908,22 +957,21 @@ contract GnosisSafe is
         bytes32 txHash;
         // Use scope here to limit variable lifetime and prevent `stack too deep` errors
         {
-            bytes memory txHashData =
-                encodeTransactionData(
-                    // Transaction info
-                    to,
-                    value,
-                    data,
-                    operation,
-                    safeTxGas,
-                    // Payment info
-                    baseGas,
-                    gasPrice,
-                    gasToken,
-                    refundReceiver,
-                    // Signature info
-                    nonce
-                );
+            bytes memory txHashData = encodeTransactionData(
+                // Transaction info
+                to,
+                value,
+                data,
+                operation,
+                safeTxGas,
+                // Payment info
+                baseGas,
+                gasPrice,
+                gasToken,
+                refundReceiver,
+                // Signature info
+                nonce
+            );
             // Increase nonce and execute transaction.
             nonce++;
             txHash = keccak256(txHashData);
@@ -952,13 +1000,22 @@ contract GnosisSafe is
         }
         // We require some gas to emit the events (at least 2500) after the execution and some to perform code until the execution (500)
         // We also include the 1/64 in the check that is not send along with a call to counteract potential shortings because of EIP-150
-        require(gasleft() >= ((safeTxGas * 64) / 63).max(safeTxGas + 2500) + 500, "GS010");
+        require(
+            gasleft() >= ((safeTxGas * 64) / 63).max(safeTxGas + 2500) + 500,
+            "GS010"
+        );
         // Use scope here to limit variable lifetime and prevent `stack too deep` errors
         {
             uint256 gasUsed = gasleft();
             // If the gasPrice is 0 we assume that nearly all available gas can be used (it is always more than safeTxGas)
             // We only substract 2500 (compared to the 3000 before) to ensure that the amount passed is still higher than safeTxGas
-            success = execute(to, value, data, operation, gasPrice == 0 ? (gasleft() - 2500) : safeTxGas);
+            success = execute(
+                to,
+                value,
+                data,
+                operation,
+                gasPrice == 0 ? (gasleft() - 2500) : safeTxGas
+            );
             gasUsed = gasUsed.sub(gasleft());
             // If no safeTxGas and no gasPrice was set (e.g. both are 0), then the internal tx is required to be successful
             // This makes it possible to use `estimateGas` without issues, as it searches for the minimum gas where the tx doesn't revert
@@ -966,7 +1023,13 @@ contract GnosisSafe is
             // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
             uint256 payment = 0;
             if (gasPrice > 0) {
-                payment = handlePayment(gasUsed, baseGas, gasPrice, gasToken, refundReceiver);
+                payment = handlePayment(
+                    gasUsed,
+                    baseGas,
+                    gasPrice,
+                    gasToken,
+                    refundReceiver
+                );
             }
             if (success) emit ExecutionSuccess(txHash, payment);
             else emit ExecutionFailure(txHash, payment);
@@ -986,10 +1049,14 @@ contract GnosisSafe is
         address payable refundReceiver
     ) private returns (uint256 payment) {
         // solhint-disable-next-line avoid-tx-origin
-        address payable receiver = refundReceiver == address(0) ? payable(tx.origin) : refundReceiver;
+        address payable receiver = refundReceiver == address(0)
+            ? payable(tx.origin)
+            : refundReceiver;
         if (gasToken == address(0)) {
             // For ETH we will only adjust the gas price to not be higher than the actual used gas price
-            payment = gasUsed.add(baseGas).mul(gasPrice < tx.gasprice ? gasPrice : tx.gasprice);
+            payment = gasUsed.add(baseGas).mul(
+                gasPrice < tx.gasprice ? gasPrice : tx.gasprice
+            );
             require(receiver.send(payment), "GS011");
         } else {
             payment = gasUsed.add(baseGas).mul(gasPrice);
@@ -1058,7 +1125,11 @@ contract GnosisSafe is
                 assembly {
                     contractSignatureLen := mload(add(add(signatures, s), 0x20))
                 }
-                require(uint256(s).add(32).add(contractSignatureLen) <= signatures.length, "GS023");
+                require(
+                    uint256(s).add(32).add(contractSignatureLen) <=
+                        signatures.length,
+                    "GS023"
+                );
 
                 // Check signature
                 bytes memory contractSignature;
@@ -1067,23 +1138,48 @@ contract GnosisSafe is
                     // The signature data for contract signatures is appended to the concatenated signatures and the offset is stored in s
                     contractSignature := add(add(signatures, s), 0x20)
                 }
-                require(ISignatureValidator(currentOwner).isValidSignature(data, contractSignature) == EIP1271_MAGIC_VALUE, "GS024");
+                require(
+                    ISignatureValidator(currentOwner).isValidSignature(
+                        data,
+                        contractSignature
+                    ) == EIP1271_MAGIC_VALUE,
+                    "GS024"
+                );
             } else if (v == 1) {
                 // If v is 1 then it is an approved hash
                 // When handling approved hashes the address of the approver is encoded into r
                 currentOwner = address(uint160(uint256(r)));
                 // Hashes are automatically approved by the sender of the message or when they have been pre-approved via a separate transaction
-                require(msg.sender == currentOwner || approvedHashes[currentOwner][dataHash] != 0, "GS025");
+                require(
+                    msg.sender == currentOwner ||
+                        approvedHashes[currentOwner][dataHash] != 0,
+                    "GS025"
+                );
             } else if (v > 30) {
                 // If v > 30 then default va (27,28) has been adjusted for eth_sign flow
                 // To support eth_sign and similar we adjust v and hash the messageHash with the Ethereum message prefix before applying ecrecover
-                currentOwner = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)), v - 4, r, s);
+                currentOwner = ecrecover(
+                    keccak256(
+                        abi.encodePacked(
+                            "\x19Ethereum Signed Message:\n32",
+                            dataHash
+                        )
+                    ),
+                    v - 4,
+                    r,
+                    s
+                );
             } else {
                 // Default is the ecrecover flow with the provided data hash
                 // Use ecrecover with the messageHash for EOA signatures
                 currentOwner = ecrecover(dataHash, v, r, s);
             }
-            require(currentOwner > lastOwner && owners[currentOwner] != address(0) && currentOwner != SENTINEL_OWNERS, "GS026");
+            require(
+                currentOwner > lastOwner &&
+                    owners[currentOwner] != address(0) &&
+                    currentOwner != SENTINEL_OWNERS,
+                "GS026"
+            );
             lastOwner = currentOwner;
         }
     }
@@ -1132,7 +1228,10 @@ contract GnosisSafe is
     }
 
     function domainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this));
+        return
+            keccak256(
+                abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
+            );
     }
 
     /// @dev Returns the bytes that are hashed to be signed by owners.
@@ -1159,23 +1258,28 @@ contract GnosisSafe is
         address refundReceiver,
         uint256 _nonce
     ) public view returns (bytes memory) {
-        bytes32 safeTxHash =
-            keccak256(
-                abi.encode(
-                    SAFE_TX_TYPEHASH,
-                    to,
-                    value,
-                    keccak256(data),
-                    operation,
-                    safeTxGas,
-                    baseGas,
-                    gasPrice,
-                    gasToken,
-                    refundReceiver,
-                    _nonce
-                )
+        bytes32 safeTxHash = keccak256(
+            abi.encode(
+                SAFE_TX_TYPEHASH,
+                to,
+                value,
+                keccak256(data),
+                operation,
+                safeTxGas,
+                baseGas,
+                gasPrice,
+                gasToken,
+                refundReceiver,
+                _nonce
+            )
+        );
+        return
+            abi.encodePacked(
+                bytes1(0x19),
+                bytes1(0x01),
+                domainSeparator(),
+                safeTxHash
             );
-        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeTxHash);
     }
 
     /// @dev Returns hash to be signed by owners.
@@ -1202,16 +1306,25 @@ contract GnosisSafe is
         address refundReceiver,
         uint256 _nonce
     ) public view returns (bytes32) {
-        return keccak256(encodeTransactionData(to, value, data, operation, safeTxGas, baseGas, gasPrice, gasToken, refundReceiver, _nonce));
+        return
+            keccak256(
+                encodeTransactionData(
+                    to,
+                    value,
+                    data,
+                    operation,
+                    safeTxGas,
+                    baseGas,
+                    gasPrice,
+                    gasToken,
+                    refundReceiver,
+                    _nonce
+                )
+            );
     }
 }
 
-
 // File contracts/examples/guards/DebugTransactionGuard.sol
-
-
-
-
 
 /// @title Debug Transaction Guard - A guard that will emit events with extended information.
 /// @notice This guard is only meant as a development tool and example
@@ -1235,7 +1348,12 @@ contract DebugTransactionGuard is BaseGuard {
         uint256 nonce
     );
 
-    event GasUsage(address indexed safe, bytes32 indexed txHash, uint256 indexed nonce, bool success);
+    event GasUsage(
+        address indexed safe,
+        bytes32 indexed txHash,
+        uint256 indexed nonce,
+        bool success
+    );
 
     mapping(bytes32 => uint256) public txNonces;
 
@@ -1258,13 +1376,37 @@ contract DebugTransactionGuard is BaseGuard {
         {
             GnosisSafe safe = GnosisSafe(payable(msg.sender));
             nonce = safe.nonce() - 1;
-            txHash = safe.getTransactionHash(to, value, data, operation, safeTxGas, baseGas, gasPrice, gasToken, refundReceiver, nonce);
+            txHash = safe.getTransactionHash(
+                to,
+                value,
+                data,
+                operation,
+                safeTxGas,
+                baseGas,
+                gasPrice,
+                gasToken,
+                refundReceiver,
+                nonce
+            );
         }
-        emit TransactionDetails(msg.sender, txHash, to, value, data, operation, safeTxGas, gasPrice > 0, nonce);
+        emit TransactionDetails(
+            msg.sender,
+            txHash,
+            to,
+            value,
+            data,
+            operation,
+            safeTxGas,
+            gasPrice > 0,
+            nonce
+        );
         txNonces[txHash] = nonce;
     }
 
-    function checkAfterExecution(bytes32 txHash, bool success) external override {
+    function checkAfterExecution(bytes32 txHash, bool success)
+        external
+        override
+    {
         uint256 nonce = txNonces[txHash];
         require(nonce != 0, "Could not get nonce");
         txNonces[txHash] = 0;
@@ -1272,12 +1414,7 @@ contract DebugTransactionGuard is BaseGuard {
     }
 }
 
-
 // File contracts/examples/guards/DelegateCallTransactionGuard.sol
-
-
-
-
 
 contract DelegateCallTransactionGuard is BaseGuard {
     address public immutable allowedTarget;
@@ -1306,18 +1443,16 @@ contract DelegateCallTransactionGuard is BaseGuard {
         bytes memory,
         address
     ) external view override {
-        require(operation != Enum.Operation.DelegateCall || to == allowedTarget, "This call is restricted");
+        require(
+            operation != Enum.Operation.DelegateCall || to == allowedTarget,
+            "This call is restricted"
+        );
     }
 
     function checkAfterExecution(bytes32, bool) external view override {}
 }
 
-
 // File contracts/examples/guards/OnlyOwnersGuard.sol
-
-
-
-
 
 interface ISafe {
     function getOwners() external view returns (address[] memory);
@@ -1357,15 +1492,11 @@ contract OnlyOwnersGuard is BaseGuard {
     function checkAfterExecution(bytes32, bool) external view override {}
 }
 
-
 // File contracts/examples/guards/ReentrancyTransactionGuard.sol
 
-
-
-
-
 contract ReentrancyTransactionGuard is BaseGuard {
-    bytes32 internal constant GUARD_STORAGE_SLOT = keccak256("reentrancy_guard.guard.struct");
+    bytes32 internal constant GUARD_STORAGE_SLOT =
+        keccak256("reentrancy_guard.guard.struct");
 
     struct GuardValue {
         bool active;
@@ -1409,10 +1540,7 @@ contract ReentrancyTransactionGuard is BaseGuard {
     }
 }
 
-
 // File contracts/libraries/GnosisSafeStorage.sol
-
-
 
 /// @title GnosisSafeStorage - Storage layout of the Safe contracts to be used in libraries
 /// @author Richard Meissner - <richard@gnosis.io>
@@ -1433,21 +1561,22 @@ contract GnosisSafeStorage {
     mapping(address => mapping(bytes32 => uint256)) internal approvedHashes;
 }
 
-
 // File contracts/examples/libraries/Migrate_1_3_0_to_1_2_0.sol
-
-
 
 /// @title Migration - migrates a Safe contract from 1.3.0 to 1.2.0
 /// @author Richard Meissner - <richard@gnosis.io>
 contract Migration is GnosisSafeStorage {
-    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749;
+    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
+        0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749;
 
     address public immutable migrationSingleton;
     address public immutable safe120Singleton;
 
     constructor(address targetSingleton) {
-        require(targetSingleton != address(0), "Invalid singleton address provided");
+        require(
+            targetSingleton != address(0),
+            "Invalid singleton address provided"
+        );
         safe120Singleton = targetSingleton;
         migrationSingleton = address(this);
     }
@@ -1458,18 +1587,20 @@ contract Migration is GnosisSafeStorage {
 
     /// @dev Allows to migrate the contract. This can only be called via a delegatecall.
     function migrate() public {
-        require(address(this) != migrationSingleton, "Migration should only be called via delegatecall");
+        require(
+            address(this) != migrationSingleton,
+            "Migration should only be called via delegatecall"
+        );
         // Master copy address cannot be null.
         singleton = safe120Singleton;
-        _deprecatedDomainSeparator = keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, this));
+        _deprecatedDomainSeparator = keccak256(
+            abi.encode(DOMAIN_SEPARATOR_TYPEHASH, this)
+        );
         emit ChangedMasterCopy(singleton);
     }
 }
 
-
 // File contracts/GnosisSafeL2.sol
-
-
 
 /// @title Gnosis Safe - A multisignature wallet with support for confirmations using signed messages based on ERC191.
 /// @author Stefan George - <stefan@gnosis.io>
@@ -1491,7 +1622,13 @@ contract GnosisSafeL2 is GnosisSafe {
         bytes additionalInfo
     );
 
-    event SafeModuleTransaction(address module, address to, uint256 value, bytes data, Enum.Operation operation);
+    event SafeModuleTransaction(
+        address module,
+        address to,
+        uint256 value,
+        bytes data,
+        Enum.Operation operation
+    );
 
     /// @dev Allows to execute a Safe transaction confirmed by required number of owners and then pays the account that submitted the transaction.
     ///      Note: The fees are always transferred, even if the user transaction fails.
@@ -1534,7 +1671,19 @@ contract GnosisSafeL2 is GnosisSafe {
             signatures,
             additionalInfo
         );
-        return super.execTransaction(to, value, data, operation, safeTxGas, baseGas, gasPrice, gasToken, refundReceiver, signatures);
+        return
+            super.execTransaction(
+                to,
+                value,
+                data,
+                operation,
+                safeTxGas,
+                baseGas,
+                gasPrice,
+                gasToken,
+                refundReceiver,
+                signatures
+            );
     }
 
     /// @dev Allows a Module to execute a Safe transaction without any further confirmations.
@@ -1553,10 +1702,7 @@ contract GnosisSafeL2 is GnosisSafe {
     }
 }
 
-
 // File contracts/interfaces/ERC1155TokenReceiver.sol
-
-
 
 /**
     Note: The ERC-165 identifier for this interface is 0x4e2312e0.
@@ -1605,10 +1751,7 @@ interface ERC1155TokenReceiver {
     ) external returns (bytes4);
 }
 
-
 // File contracts/interfaces/ERC721TokenReceiver.sol
-
-
 
 /// @dev Note: the ERC-165 identifier for this interface is 0x150b7a02.
 interface ERC721TokenReceiver {
@@ -1632,10 +1775,7 @@ interface ERC721TokenReceiver {
     ) external returns (bytes4);
 }
 
-
 // File contracts/interfaces/ERC777TokensRecipient.sol
-
-
 
 interface ERC777TokensRecipient {
     function tokensReceived(
@@ -1648,17 +1788,16 @@ interface ERC777TokensRecipient {
     ) external;
 }
 
-
 // File contracts/handler/DefaultCallbackHandler.sol
-
-
-
-
-
 
 /// @title Default Callback Handler - returns true for known token callbacks
 /// @author Richard Meissner - <richard@gnosis.pm>
-contract DefaultCallbackHandler is ERC1155TokenReceiver, ERC777TokensRecipient, ERC721TokenReceiver, IERC165 {
+contract DefaultCallbackHandler is
+    ERC1155TokenReceiver,
+    ERC777TokensRecipient,
+    ERC721TokenReceiver,
+    IERC165
+{
     string public constant NAME = "Default Callback Handler";
     string public constant VERSION = "1.0.0";
 
@@ -1702,7 +1841,13 @@ contract DefaultCallbackHandler is ERC1155TokenReceiver, ERC777TokensRecipient, 
         // We implement this for completeness, doesn't really have any value
     }
 
-    function supportsInterface(bytes4 interfaceId) external view virtual override returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        external
+        view
+        virtual
+        override
+        returns (bool)
+    {
         return
             interfaceId == type(ERC1155TokenReceiver).interfaceId ||
             interfaceId == type(ERC721TokenReceiver).interfaceId ||
@@ -1710,22 +1855,22 @@ contract DefaultCallbackHandler is ERC1155TokenReceiver, ERC777TokensRecipient, 
     }
 }
 
-
 // File contracts/handler/CompatibilityFallbackHandler.sol
-
-
-
-
 
 /// @title Compatibility Fallback Handler - fallback handler to provider compatibility between pre 1.3.0 and 1.3.0+ Safe contracts
 /// @author Richard Meissner - <richard@gnosis.pm>
-contract CompatibilityFallbackHandler is DefaultCallbackHandler, ISignatureValidator {
+contract CompatibilityFallbackHandler is
+    DefaultCallbackHandler,
+    ISignatureValidator
+{
     //keccak256(
     //    "SafeMessage(bytes message)"
     //);
-    bytes32 private constant SAFE_MSG_TYPEHASH = 0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca;
+    bytes32 private constant SAFE_MSG_TYPEHASH =
+        0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca;
 
-    bytes4 internal constant SIMULATE_SELECTOR = bytes4(keccak256("simulate(address,bytes)"));
+    bytes4 internal constant SIMULATE_SELECTOR =
+        bytes4(keccak256("simulate(address,bytes)"));
 
     address internal constant SENTINEL_MODULES = address(0x1);
     bytes4 internal constant UPDATED_MAGIC_VALUE = 0x1626ba7e;
@@ -1737,7 +1882,12 @@ contract CompatibilityFallbackHandler is DefaultCallbackHandler, ISignatureValid
      * @param _signature Signature byte array associated with _data
      * @return a bool upon valid or invalid signature with corresponding _data
      */
-    function isValidSignature(bytes memory _data, bytes memory _signature) public view override returns (bytes4) {
+    function isValidSignature(bytes memory _data, bytes memory _signature)
+        public
+        view
+        override
+        returns (bytes4)
+    {
         // Caller should be a Safe
         GnosisSafe safe = GnosisSafe(payable(msg.sender));
         bytes32 messageHash = getMessageHashForSafe(safe, _data);
@@ -1752,7 +1902,11 @@ contract CompatibilityFallbackHandler is DefaultCallbackHandler, ISignatureValid
     /// @dev Returns hash of a message that can be signed by owners.
     /// @param message Message that should be hashed
     /// @return Message hash.
-    function getMessageHash(bytes memory message) public view returns (bytes32) {
+    function getMessageHash(bytes memory message)
+        public
+        view
+        returns (bytes32)
+    {
         return getMessageHashForSafe(GnosisSafe(payable(msg.sender)), message);
     }
 
@@ -1760,9 +1914,23 @@ contract CompatibilityFallbackHandler is DefaultCallbackHandler, ISignatureValid
     /// @param safe Safe to which the message is targeted
     /// @param message Message that should be hashed
     /// @return Message hash.
-    function getMessageHashForSafe(GnosisSafe safe, bytes memory message) public view returns (bytes32) {
-        bytes32 safeMessageHash = keccak256(abi.encode(SAFE_MSG_TYPEHASH, keccak256(message)));
-        return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), safe.domainSeparator(), safeMessageHash));
+    function getMessageHashForSafe(GnosisSafe safe, bytes memory message)
+        public
+        view
+        returns (bytes32)
+    {
+        bytes32 safeMessageHash = keccak256(
+            abi.encode(SAFE_MSG_TYPEHASH, keccak256(message))
+        );
+        return
+            keccak256(
+                abi.encodePacked(
+                    bytes1(0x19),
+                    bytes1(0x01),
+                    safe.domainSeparator(),
+                    safeMessageHash
+                )
+            );
     }
 
     /**
@@ -1775,9 +1943,16 @@ contract CompatibilityFallbackHandler is DefaultCallbackHandler, ISignatureValid
      * @return a bool upon valid or invalid signature with corresponding _dataHash
      * @notice See https://github.com/gnosis/util-contracts/blob/bb5fe5fb5df6d8400998094fb1b32a178a47c3a1/contracts/StorageAccessible.sol
      */
-    function isValidSignature(bytes32 _dataHash, bytes calldata _signature) external view returns (bytes4) {
+    function isValidSignature(bytes32 _dataHash, bytes calldata _signature)
+        external
+        view
+        returns (bytes4)
+    {
         ISignatureValidator validator = ISignatureValidator(msg.sender);
-        bytes4 value = validator.isValidSignature(abi.encode(_dataHash), _signature);
+        bytes4 value = validator.isValidSignature(
+            abi.encode(_dataHash),
+            _signature
+        );
         return (value == EIP1271_MAGIC_VALUE) ? UPDATED_MAGIC_VALUE : bytes4(0);
     }
 
@@ -1786,7 +1961,10 @@ contract CompatibilityFallbackHandler is DefaultCallbackHandler, ISignatureValid
     function getModules() external view returns (address[] memory) {
         // Caller should be a Safe
         GnosisSafe safe = GnosisSafe(payable(msg.sender));
-        (address[] memory array, ) = safe.getModulesPaginated(SENTINEL_MODULES, 10);
+        (address[] memory array, ) = safe.getModulesPaginated(
+            SENTINEL_MODULES,
+            10
+        );
         return array;
     }
 
@@ -1796,7 +1974,10 @@ contract CompatibilityFallbackHandler is DefaultCallbackHandler, ISignatureValid
      * @param targetContract Address of the contract containing the code to execute.
      * @param calldataPayload Calldata that should be sent to the target contract (encoded method name and arguments).
      */
-    function simulate(address targetContract, bytes calldata calldataPayload) external returns (bytes memory response) {
+    function simulate(address targetContract, bytes calldata calldataPayload)
+        external
+        returns (bytes memory response)
+    {
         // Suppress compiler warnings about not using parameters, while allowing
         // parameters to keep names for documentation purposes. This does not
         // generate code.
@@ -1814,7 +1995,11 @@ contract CompatibilityFallbackHandler is DefaultCallbackHandler, ISignatureValid
             // selector) and copy calldata directly. This saves us approximately
             // 250 bytes of code and 300 gas at runtime over the
             // `abi.encodeWithSelector` builtin.
-            calldatacopy(add(internalCalldata, 0x04), 0x04, sub(calldatasize(), 0x04))
+            calldatacopy(
+                add(internalCalldata, 0x04),
+                0x04,
+                sub(calldatasize(), 0x04)
+            )
 
             // `pop` is required here by the compiler, as top level expressions
             // can't have return values in inline assembly. `call` typically
@@ -1855,11 +2040,7 @@ contract CompatibilityFallbackHandler is DefaultCallbackHandler, ISignatureValid
     }
 }
 
-
 // File contracts/libraries/SignMessageLib.sol
-
-
-
 
 /// @title SignMessageLib - Allows to set an entry in the signedMessages
 /// @author Richard Meissner - <richard@gnosis.io>
@@ -1867,7 +2048,8 @@ contract SignMessageLib is GnosisSafeStorage {
     //keccak256(
     //    "SafeMessage(bytes message)"
     //);
-    bytes32 private constant SAFE_MSG_TYPEHASH = 0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca;
+    bytes32 private constant SAFE_MSG_TYPEHASH =
+        0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca;
 
     event SignMsg(bytes32 indexed msgHash);
 
@@ -1883,17 +2065,27 @@ contract SignMessageLib is GnosisSafeStorage {
     /// @dev Returns hash of a message that can be signed by owners.
     /// @param message Message that should be hashed
     /// @return Message hash.
-    function getMessageHash(bytes memory message) public view returns (bytes32) {
-        bytes32 safeMessageHash = keccak256(abi.encode(SAFE_MSG_TYPEHASH, keccak256(message)));
+    function getMessageHash(bytes memory message)
+        public
+        view
+        returns (bytes32)
+    {
+        bytes32 safeMessageHash = keccak256(
+            abi.encode(SAFE_MSG_TYPEHASH, keccak256(message))
+        );
         return
-            keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), GnosisSafe(payable(address(this))).domainSeparator(), safeMessageHash));
+            keccak256(
+                abi.encodePacked(
+                    bytes1(0x19),
+                    bytes1(0x01),
+                    GnosisSafe(payable(address(this))).domainSeparator(),
+                    safeMessageHash
+                )
+            );
     }
 }
 
-
 // File contracts/proxies/GnosisSafeProxy.sol
-
-
 
 /// @title IProxy - Helper interface to access masterCopy of the Proxy on-chain
 /// @author Richard Meissner - <richard@gnosis.io>
@@ -1920,14 +2112,27 @@ contract GnosisSafeProxy {
     fallback() external payable {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            let _singleton := and(sload(0), 0xffffffffffffffffffffffffffffffffffffffff)
+            let _singleton := and(
+                sload(0),
+                0xffffffffffffffffffffffffffffffffffffffff
+            )
             // 0xa619486e == keccak("masterCopy()"). The value is right padded to 32-bytes with 0s
-            if eq(calldataload(0), 0xa619486e00000000000000000000000000000000000000000000000000000000) {
+            if eq(
+                calldataload(0),
+                0xa619486e00000000000000000000000000000000000000000000000000000000
+            ) {
                 mstore(0, _singleton)
                 return(0, 0x20)
             }
             calldatacopy(0, 0, calldatasize())
-            let success := delegatecall(gas(), _singleton, 0, calldatasize(), 0, 0)
+            let success := delegatecall(
+                gas(),
+                _singleton,
+                0,
+                calldatasize(),
+                0,
+                0
+            )
             returndatacopy(0, 0, returndatasize())
             if eq(success, 0) {
                 revert(0, returndatasize())
@@ -1937,10 +2142,7 @@ contract GnosisSafeProxy {
     }
 }
 
-
 // File contracts/proxies/IProxyCreationCallback.sol
-
-
 
 interface IProxyCreationCallback {
     function proxyCreated(
@@ -1951,11 +2153,7 @@ interface IProxyCreationCallback {
     ) external;
 }
 
-
 // File contracts/proxies/GnosisSafeProxyFactory.sol
-
-
-
 
 /// @title Proxy Factory - Allows to create new proxy contact and execute a message call to the new proxy within one transaction.
 /// @author Stefan George - <stefan@gnosis.pm>
@@ -1965,12 +2163,18 @@ contract GnosisSafeProxyFactory {
     /// @dev Allows to create new proxy contact and execute a message call to the new proxy within one transaction.
     /// @param singleton Address of singleton contract.
     /// @param data Payload for message call sent to new proxy contract.
-    function createProxy(address singleton, bytes memory data) public returns (GnosisSafeProxy proxy) {
+    function createProxy(address singleton, bytes memory data)
+        public
+        returns (GnosisSafeProxy proxy)
+    {
         proxy = new GnosisSafeProxy(singleton);
         if (data.length > 0)
             // solhint-disable-next-line no-inline-assembly
             assembly {
-                if eq(call(gas(), proxy, 0, add(data, 0x20), mload(data), 0, 0), 0) {
+                if eq(
+                    call(gas(), proxy, 0, add(data, 0x20), mload(data), 0, 0),
+                    0
+                ) {
                     revert(0, 0)
                 }
             }
@@ -1998,11 +2202,21 @@ contract GnosisSafeProxyFactory {
         uint256 saltNonce
     ) internal returns (GnosisSafeProxy proxy) {
         // If the initializer changes the proxy address should change too. Hashing the initializer data is cheaper than just concatinating it
-        bytes32 salt = keccak256(abi.encodePacked(keccak256(initializer), saltNonce));
-        bytes memory deploymentData = abi.encodePacked(type(GnosisSafeProxy).creationCode, uint256(uint160(_singleton)));
+        bytes32 salt = keccak256(
+            abi.encodePacked(keccak256(initializer), saltNonce)
+        );
+        bytes memory deploymentData = abi.encodePacked(
+            type(GnosisSafeProxy).creationCode,
+            uint256(uint160(_singleton))
+        );
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            proxy := create2(0x0, add(0x20, deploymentData), mload(deploymentData), salt)
+            proxy := create2(
+                0x0,
+                add(0x20, deploymentData),
+                mload(deploymentData),
+                salt
+            )
         }
         require(address(proxy) != address(0), "Create2 call failed");
     }
@@ -2020,7 +2234,18 @@ contract GnosisSafeProxyFactory {
         if (initializer.length > 0)
             // solhint-disable-next-line no-inline-assembly
             assembly {
-                if eq(call(gas(), proxy, 0, add(initializer, 0x20), mload(initializer), 0, 0), 0) {
+                if eq(
+                    call(
+                        gas(),
+                        proxy,
+                        0,
+                        add(initializer, 0x20),
+                        mload(initializer),
+                        0,
+                        0
+                    ),
+                    0
+                ) {
                     revert(0, 0)
                 }
             }
@@ -2038,9 +2263,16 @@ contract GnosisSafeProxyFactory {
         uint256 saltNonce,
         IProxyCreationCallback callback
     ) public returns (GnosisSafeProxy proxy) {
-        uint256 saltNonceWithCallback = uint256(keccak256(abi.encodePacked(saltNonce, callback)));
-        proxy = createProxyWithNonce(_singleton, initializer, saltNonceWithCallback);
-        if (address(callback) != address(0)) callback.proxyCreated(proxy, _singleton, initializer, saltNonce);
+        uint256 saltNonceWithCallback = uint256(
+            keccak256(abi.encodePacked(saltNonce, callback))
+        );
+        proxy = createProxyWithNonce(
+            _singleton,
+            initializer,
+            saltNonceWithCallback
+        );
+        if (address(callback) != address(0))
+            callback.proxyCreated(proxy, _singleton, initializer, saltNonce);
     }
 
     /// @dev Allows to get the address for a new proxy contact created via `createProxyWithNonce`
@@ -2059,11 +2291,7 @@ contract GnosisSafeProxyFactory {
     }
 }
 
-
 // File contracts/test/ERC1155Token.sol
-
-
-
 
 contract ERC1155Token {
     using GnosisSafeMath for uint256;
@@ -2080,8 +2308,15 @@ contract ERC1155Token {
         @param id ID of the token
         @return The owner's balance of the token type requested
      */
-    function balanceOf(address owner, uint256 id) public view returns (uint256) {
-        require(owner != address(0), "ERC1155: balance query for the zero address");
+    function balanceOf(address owner, uint256 id)
+        public
+        view
+        returns (uint256)
+    {
+        require(
+            owner != address(0),
+            "ERC1155: balance query for the zero address"
+        );
         return _balances[id][owner];
     }
 
@@ -2131,7 +2366,14 @@ contract ERC1155Token {
 
         _balances[id][to] = value + _balances[id][to];
 
-        _doSafeTransferAcceptanceCheck(msg.sender, address(0), to, id, value, data);
+        _doSafeTransferAcceptanceCheck(
+            msg.sender,
+            address(0),
+            to,
+            id,
+            value,
+            data
+        );
     }
 
     function isContract(address account) internal view returns (bool) {
@@ -2157,20 +2399,20 @@ contract ERC1155Token {
     ) internal {
         if (isContract(to)) {
             require(
-                ERC1155TokenReceiver(to).onERC1155Received(operator, from, id, value, data) ==
-                    ERC1155TokenReceiver(to).onERC1155Received.selector,
+                ERC1155TokenReceiver(to).onERC1155Received(
+                    operator,
+                    from,
+                    id,
+                    value,
+                    data
+                ) == ERC1155TokenReceiver(to).onERC1155Received.selector,
                 "ERC1155: got unknown value from onERC1155Received"
             );
         }
     }
 }
 
-
 // File @openzeppelin/contracts/utils/Context.sol@v3.4.1
-
-
-
-
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -2193,11 +2435,7 @@ abstract contract Context {
     }
 }
 
-
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v3.4.1
-
-
-
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -2220,7 +2458,9 @@ interface IERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transfer(address recipient, uint256 amount)
+        external
+        returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -2229,7 +2469,10 @@ interface IERC20 {
      *
      * This value changes when {approve} or {transferFrom} are called.
      */
-    function allowance(address owner, address spender) external view returns (uint256);
+    function allowance(address owner, address spender)
+        external
+        view
+        returns (uint256);
 
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -2256,7 +2499,11 @@ interface IERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
@@ -2270,14 +2517,14 @@ interface IERC20 {
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
      */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 }
 
-
 // File @openzeppelin/contracts/math/SafeMath.sol@v3.4.1
-
-
-
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -2298,7 +2545,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryAdd(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         uint256 c = a + b;
         if (c < a) return (false, 0);
         return (true, c);
@@ -2309,7 +2560,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function trySub(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         if (b > a) return (false, 0);
         return (true, a - b);
     }
@@ -2319,7 +2574,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryMul(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
         // benefit is lost if 'b' is also tested.
         // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
@@ -2334,7 +2593,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryDiv(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         if (b == 0) return (false, 0);
         return (true, a / b);
     }
@@ -2344,7 +2607,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryMod(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         if (b == 0) return (false, 0);
         return (true, a % b);
     }
@@ -2444,7 +2711,11 @@ library SafeMath {
      *
      * - Subtraction cannot overflow.
      */
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function sub(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b <= a, errorMessage);
         return a - b;
     }
@@ -2464,7 +2735,11 @@ library SafeMath {
      *
      * - The divisor cannot be zero.
      */
-    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function div(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b > 0, errorMessage);
         return a / b;
     }
@@ -2484,19 +2759,17 @@ library SafeMath {
      *
      * - The divisor cannot be zero.
      */
-    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function mod(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b > 0, errorMessage);
         return a % b;
     }
 }
 
-
 // File @openzeppelin/contracts/token/ERC20/ERC20.sol@v3.4.1
-
-
-
-
-
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -2525,9 +2798,9 @@ library SafeMath {
 contract ERC20 is Context, IERC20 {
     using SafeMath for uint256;
 
-    mapping (address => uint256) private _balances;
+    mapping(address => uint256) private _balances;
 
-    mapping (address => mapping (address => uint256)) private _allowances;
+    mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
 
@@ -2544,7 +2817,7 @@ contract ERC20 is Context, IERC20 {
      * All three of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor (string memory name_, string memory symbol_) public {
+    constructor(string memory name_, string memory symbol_) public {
         _name = name_;
         _symbol = symbol_;
         _decimals = 18;
@@ -2592,7 +2865,13 @@ contract ERC20 is Context, IERC20 {
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address account) public view virtual override returns (uint256) {
+    function balanceOf(address account)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         return _balances[account];
     }
 
@@ -2604,7 +2883,12 @@ contract ERC20 is Context, IERC20 {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+    function transfer(address recipient, uint256 amount)
+        public
+        virtual
+        override
+        returns (bool)
+    {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
@@ -2612,7 +2896,13 @@ contract ERC20 is Context, IERC20 {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view virtual override returns (uint256) {
+    function allowance(address owner, address spender)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         return _allowances[owner][spender];
     }
 
@@ -2623,7 +2913,12 @@ contract ERC20 is Context, IERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+    function approve(address spender, uint256 amount)
+        public
+        virtual
+        override
+        returns (bool)
+    {
         _approve(_msgSender(), spender, amount);
         return true;
     }
@@ -2641,9 +2936,20 @@ contract ERC20 is Context, IERC20 {
      * - the caller must have allowance for ``sender``'s tokens of at least
      * `amount`.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        _approve(
+            sender,
+            _msgSender(),
+            _allowances[sender][_msgSender()].sub(
+                amount,
+                "ERC20: transfer amount exceeds allowance"
+            )
+        );
         return true;
     }
 
@@ -2659,8 +2965,16 @@ contract ERC20 is Context, IERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+    function increaseAllowance(address spender, uint256 addedValue)
+        public
+        virtual
+        returns (bool)
+    {
+        _approve(
+            _msgSender(),
+            spender,
+            _allowances[_msgSender()][spender].add(addedValue)
+        );
         return true;
     }
 
@@ -2678,8 +2992,19 @@ contract ERC20 is Context, IERC20 {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+    function decreaseAllowance(address spender, uint256 subtractedValue)
+        public
+        virtual
+        returns (bool)
+    {
+        _approve(
+            _msgSender(),
+            spender,
+            _allowances[_msgSender()][spender].sub(
+                subtractedValue,
+                "ERC20: decreased allowance below zero"
+            )
+        );
         return true;
     }
 
@@ -2697,13 +3022,20 @@ contract ERC20 is Context, IERC20 {
      * - `recipient` cannot be the zero address.
      * - `sender` must have a balance of at least `amount`.
      */
-    function _transfer(address sender, address recipient, uint256 amount) internal virtual {
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal virtual {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
         _beforeTokenTransfer(sender, recipient, amount);
 
-        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
+        _balances[sender] = _balances[sender].sub(
+            amount,
+            "ERC20: transfer amount exceeds balance"
+        );
         _balances[recipient] = _balances[recipient].add(amount);
         emit Transfer(sender, recipient, amount);
     }
@@ -2743,7 +3075,10 @@ contract ERC20 is Context, IERC20 {
 
         _beforeTokenTransfer(account, address(0), amount);
 
-        _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
+        _balances[account] = _balances[account].sub(
+            amount,
+            "ERC20: burn amount exceeds balance"
+        );
         _totalSupply = _totalSupply.sub(amount);
         emit Transfer(account, address(0), amount);
     }
@@ -2761,7 +3096,11 @@ contract ERC20 is Context, IERC20 {
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
      */
-    function _approve(address owner, address spender, uint256 amount) internal virtual {
+    function _approve(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -2794,13 +3133,14 @@ contract ERC20 is Context, IERC20 {
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {}
 }
 
-
 // File contracts/test/ERC20Token.sol
-
-
 
 contract ERC20Token is ERC20 {
     constructor() public ERC20("TestToken", "TT") {
@@ -2808,10 +3148,7 @@ contract ERC20Token is ERC20 {
     }
 }
 
-
 // File contracts/handler/HandlerContext.sol
-
-
 
 /// @title Handler Context - allows to extract calling context
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -2834,406 +3171,503 @@ contract HandlerContext {
     }
 }
 
-
 // File contracts/test/TestHandler.sol
 
-
-
 contract TestHandler is HandlerContext {
-    function dudududu() external view returns (address sender, address manager) {
+    function dudududu()
+        external
+        view
+        returns (address sender, address manager)
+    {
         return (_msgSender(), _manager());
     }
 }
 
-
 // File @gnosis.pm/mock-contract/contracts/MockContract.sol@v4.0.0
 
-
 interface MockInterface {
-	/**
-	 * @dev After calling this method, the mock will return `response` when it is called
-	 * with any calldata that is not mocked more specifically below
-	 * (e.g. using givenMethodReturn).
-	 * @param response ABI encoded response that will be returned if method is invoked
-	 */
-	function givenAnyReturn(bytes calldata response) external;
-	function givenAnyReturnBool(bool response) external;
-	function givenAnyReturnUint(uint response) external;
-	function givenAnyReturnAddress(address response) external;
+    /**
+     * @dev After calling this method, the mock will return `response` when it is called
+     * with any calldata that is not mocked more specifically below
+     * (e.g. using givenMethodReturn).
+     * @param response ABI encoded response that will be returned if method is invoked
+     */
+    function givenAnyReturn(bytes calldata response) external;
 
-	function givenAnyRevert() external;
-	function givenAnyRevertWithMessage(string calldata message) external;
-	function givenAnyRunOutOfGas() external;
+    function givenAnyReturnBool(bool response) external;
 
-	/**
-	 * @dev After calling this method, the mock will return `response` when the given
-	 * methodId is called regardless of arguments. If the methodId and arguments
-	 * are mocked more specifically (using `givenMethodAndArguments`) the latter
-	 * will take precedence.
-	 * @param method ABI encoded methodId. It is valid to pass full calldata (including arguments). The mock will extract the methodId from it
-	 * @param response ABI encoded response that will be returned if method is invoked
-	 */
-	function givenMethodReturn(bytes calldata method, bytes calldata response) external;
-	function givenMethodReturnBool(bytes calldata method, bool response) external;
-	function givenMethodReturnUint(bytes calldata method, uint response) external;
-	function givenMethodReturnAddress(bytes calldata method, address response) external;
+    function givenAnyReturnUint(uint response) external;
 
-	function givenMethodRevert(bytes calldata method) external;
-	function givenMethodRevertWithMessage(bytes calldata method, string calldata message) external;
-	function givenMethodRunOutOfGas(bytes calldata method) external;
+    function givenAnyReturnAddress(address response) external;
 
-	/**
-	 * @dev After calling this method, the mock will return `response` when the given
-	 * methodId is called with matching arguments. These exact calldataMocks will take
-	 * precedence over all other calldataMocks.
-	 * @param call ABI encoded calldata (methodId and arguments)
-	 * @param response ABI encoded response that will be returned if contract is invoked with calldata
-	 */
-	function givenCalldataReturn(bytes calldata call, bytes calldata response) external;
-	function givenCalldataReturnBool(bytes calldata call, bool response) external;
-	function givenCalldataReturnUint(bytes calldata call, uint response) external;
-	function givenCalldataReturnAddress(bytes calldata call, address response) external;
+    function givenAnyRevert() external;
 
-	function givenCalldataRevert(bytes calldata call) external;
-	function givenCalldataRevertWithMessage(bytes calldata call, string calldata message) external;
-	function givenCalldataRunOutOfGas(bytes calldata call) external;
+    function givenAnyRevertWithMessage(string calldata message) external;
 
-	/**
-	 * @dev Returns the number of times anything has been called on this mock since last reset
-	 */
-	function invocationCount() external returns (uint);
+    function givenAnyRunOutOfGas() external;
 
-	/**
-	 * @dev Returns the number of times the given method has been called on this mock since last reset
-	 * @param method ABI encoded methodId. It is valid to pass full calldata (including arguments). The mock will extract the methodId from it
-	 */
-	function invocationCountForMethod(bytes calldata method) external returns (uint);
+    /**
+     * @dev After calling this method, the mock will return `response` when the given
+     * methodId is called regardless of arguments. If the methodId and arguments
+     * are mocked more specifically (using `givenMethodAndArguments`) the latter
+     * will take precedence.
+     * @param method ABI encoded methodId. It is valid to pass full calldata (including arguments). The mock will extract the methodId from it
+     * @param response ABI encoded response that will be returned if method is invoked
+     */
+    function givenMethodReturn(bytes calldata method, bytes calldata response)
+        external;
 
-	/**
-	 * @dev Returns the number of times this mock has been called with the exact calldata since last reset.
-	 * @param call ABI encoded calldata (methodId and arguments)
-	 */
-	function invocationCountForCalldata(bytes calldata call) external returns (uint);
+    function givenMethodReturnBool(bytes calldata method, bool response)
+        external;
 
-	/**
-	 * @dev Resets all mocked methods and invocation counts.
-	 */
-	 function reset() external;
+    function givenMethodReturnUint(bytes calldata method, uint response)
+        external;
+
+    function givenMethodReturnAddress(bytes calldata method, address response)
+        external;
+
+    function givenMethodRevert(bytes calldata method) external;
+
+    function givenMethodRevertWithMessage(
+        bytes calldata method,
+        string calldata message
+    ) external;
+
+    function givenMethodRunOutOfGas(bytes calldata method) external;
+
+    /**
+     * @dev After calling this method, the mock will return `response` when the given
+     * methodId is called with matching arguments. These exact calldataMocks will take
+     * precedence over all other calldataMocks.
+     * @param call ABI encoded calldata (methodId and arguments)
+     * @param response ABI encoded response that will be returned if contract is invoked with calldata
+     */
+    function givenCalldataReturn(bytes calldata call, bytes calldata response)
+        external;
+
+    function givenCalldataReturnBool(bytes calldata call, bool response)
+        external;
+
+    function givenCalldataReturnUint(bytes calldata call, uint response)
+        external;
+
+    function givenCalldataReturnAddress(bytes calldata call, address response)
+        external;
+
+    function givenCalldataRevert(bytes calldata call) external;
+
+    function givenCalldataRevertWithMessage(
+        bytes calldata call,
+        string calldata message
+    ) external;
+
+    function givenCalldataRunOutOfGas(bytes calldata call) external;
+
+    /**
+     * @dev Returns the number of times anything has been called on this mock since last reset
+     */
+    function invocationCount() external returns (uint);
+
+    /**
+     * @dev Returns the number of times the given method has been called on this mock since last reset
+     * @param method ABI encoded methodId. It is valid to pass full calldata (including arguments). The mock will extract the methodId from it
+     */
+    function invocationCountForMethod(bytes calldata method)
+        external
+        returns (uint);
+
+    /**
+     * @dev Returns the number of times this mock has been called with the exact calldata since last reset.
+     * @param call ABI encoded calldata (methodId and arguments)
+     */
+    function invocationCountForCalldata(bytes calldata call)
+        external
+        returns (uint);
+
+    /**
+     * @dev Resets all mocked methods and invocation counts.
+     */
+    function reset() external;
 }
 
 /**
  * Implementation of the MockInterface.
  */
 contract MockContract is MockInterface {
-	enum MockType { Return, Revert, OutOfGas }
-	
-	bytes32 public constant MOCKS_LIST_START = hex"01";
-	bytes public constant MOCKS_LIST_END = "0xff";
-	bytes32 public constant MOCKS_LIST_END_HASH = keccak256(MOCKS_LIST_END);
-	bytes4 public constant SENTINEL_ANY_MOCKS = hex"01";
-	bytes public constant DEFAULT_FALLBACK_VALUE = abi.encode(false);
+    enum MockType {
+        Return,
+        Revert,
+        OutOfGas
+    }
 
-	// A linked list allows easy iteration and inclusion checks
-	mapping(bytes32 => bytes) calldataMocks;
-	mapping(bytes => MockType) calldataMockTypes;
-	mapping(bytes => bytes) calldataExpectations;
-	mapping(bytes => string) calldataRevertMessage;
-	mapping(bytes32 => uint) calldataInvocations;
+    bytes32 public constant MOCKS_LIST_START = hex"01";
+    bytes public constant MOCKS_LIST_END = "0xff";
+    bytes32 public constant MOCKS_LIST_END_HASH = keccak256(MOCKS_LIST_END);
+    bytes4 public constant SENTINEL_ANY_MOCKS = hex"01";
+    bytes public constant DEFAULT_FALLBACK_VALUE = abi.encode(false);
 
-	mapping(bytes4 => bytes4) methodIdMocks;
-	mapping(bytes4 => MockType) methodIdMockTypes;
-	mapping(bytes4 => bytes) methodIdExpectations;
-	mapping(bytes4 => string) methodIdRevertMessages;
-	mapping(bytes32 => uint) methodIdInvocations;
+    // A linked list allows easy iteration and inclusion checks
+    mapping(bytes32 => bytes) calldataMocks;
+    mapping(bytes => MockType) calldataMockTypes;
+    mapping(bytes => bytes) calldataExpectations;
+    mapping(bytes => string) calldataRevertMessage;
+    mapping(bytes32 => uint) calldataInvocations;
 
-	MockType fallbackMockType;
-	bytes fallbackExpectation = DEFAULT_FALLBACK_VALUE;
-	string fallbackRevertMessage;
-	uint invocations;
-	uint resetCount;
+    mapping(bytes4 => bytes4) methodIdMocks;
+    mapping(bytes4 => MockType) methodIdMockTypes;
+    mapping(bytes4 => bytes) methodIdExpectations;
+    mapping(bytes4 => string) methodIdRevertMessages;
+    mapping(bytes32 => uint) methodIdInvocations;
 
-	constructor() public {
-		calldataMocks[MOCKS_LIST_START] = MOCKS_LIST_END;
-		methodIdMocks[SENTINEL_ANY_MOCKS] = SENTINEL_ANY_MOCKS;
-	}
+    MockType fallbackMockType;
+    bytes fallbackExpectation = DEFAULT_FALLBACK_VALUE;
+    string fallbackRevertMessage;
+    uint invocations;
+    uint resetCount;
 
-	function trackCalldataMock(bytes memory call) private {
-		bytes32 callHash = keccak256(call);
-		if (calldataMocks[callHash].length == 0) {
-			calldataMocks[callHash] = calldataMocks[MOCKS_LIST_START];
-			calldataMocks[MOCKS_LIST_START] = call;
-		}
-	}
+    constructor() public {
+        calldataMocks[MOCKS_LIST_START] = MOCKS_LIST_END;
+        methodIdMocks[SENTINEL_ANY_MOCKS] = SENTINEL_ANY_MOCKS;
+    }
 
-	function trackMethodIdMock(bytes4 methodId) private {
-		if (methodIdMocks[methodId] == 0x0) {
-			methodIdMocks[methodId] = methodIdMocks[SENTINEL_ANY_MOCKS];
-			methodIdMocks[SENTINEL_ANY_MOCKS] = methodId;
-		}
-	}
+    function trackCalldataMock(bytes memory call) private {
+        bytes32 callHash = keccak256(call);
+        if (calldataMocks[callHash].length == 0) {
+            calldataMocks[callHash] = calldataMocks[MOCKS_LIST_START];
+            calldataMocks[MOCKS_LIST_START] = call;
+        }
+    }
 
-	function _givenAnyReturn(bytes memory response) internal {
-		fallbackMockType = MockType.Return;
-		fallbackExpectation = response;
-	}
+    function trackMethodIdMock(bytes4 methodId) private {
+        if (methodIdMocks[methodId] == 0x0) {
+            methodIdMocks[methodId] = methodIdMocks[SENTINEL_ANY_MOCKS];
+            methodIdMocks[SENTINEL_ANY_MOCKS] = methodId;
+        }
+    }
 
-	function givenAnyReturn(bytes calldata response) override external {
-		_givenAnyReturn(response);
-	}
+    function _givenAnyReturn(bytes memory response) internal {
+        fallbackMockType = MockType.Return;
+        fallbackExpectation = response;
+    }
 
-	function givenAnyReturnBool(bool response) override external {
-		uint flag = response ? 1 : 0;
-		_givenAnyReturn(uintToBytes(flag));
-	}
+    function givenAnyReturn(bytes calldata response) external override {
+        _givenAnyReturn(response);
+    }
 
-	function givenAnyReturnUint(uint response) override external {
-		_givenAnyReturn(uintToBytes(response));	
-	}
+    function givenAnyReturnBool(bool response) external override {
+        uint flag = response ? 1 : 0;
+        _givenAnyReturn(uintToBytes(flag));
+    }
 
-	function givenAnyReturnAddress(address response) override external {
-		_givenAnyReturn(uintToBytes(uint(response)));
-	}
+    function givenAnyReturnUint(uint response) external override {
+        _givenAnyReturn(uintToBytes(response));
+    }
 
-	function givenAnyRevert() override external {
-		fallbackMockType = MockType.Revert;
-		fallbackRevertMessage = "";
-	}
+    function givenAnyReturnAddress(address response) external override {
+        _givenAnyReturn(uintToBytes(uint(response)));
+    }
 
-	function givenAnyRevertWithMessage(string calldata message) override external {
-		fallbackMockType = MockType.Revert;
-		fallbackRevertMessage = message;
-	}
+    function givenAnyRevert() external override {
+        fallbackMockType = MockType.Revert;
+        fallbackRevertMessage = "";
+    }
 
-	function givenAnyRunOutOfGas() override external {
-		fallbackMockType = MockType.OutOfGas;
-	}
+    function givenAnyRevertWithMessage(string calldata message)
+        external
+        override
+    {
+        fallbackMockType = MockType.Revert;
+        fallbackRevertMessage = message;
+    }
 
-	function _givenCalldataReturn(bytes memory call, bytes memory response) private  {
-		calldataMockTypes[call] = MockType.Return;
-		calldataExpectations[call] = response;
-		trackCalldataMock(call);
-	}
+    function givenAnyRunOutOfGas() external override {
+        fallbackMockType = MockType.OutOfGas;
+    }
 
-	function givenCalldataReturn(bytes calldata call, bytes calldata response) override external  {
-		_givenCalldataReturn(call, response);
-	}
+    function _givenCalldataReturn(bytes memory call, bytes memory response)
+        private
+    {
+        calldataMockTypes[call] = MockType.Return;
+        calldataExpectations[call] = response;
+        trackCalldataMock(call);
+    }
 
-	function givenCalldataReturnBool(bytes calldata call, bool response) override external {
-		uint flag = response ? 1 : 0;
-		_givenCalldataReturn(call, uintToBytes(flag));
-	}
+    function givenCalldataReturn(bytes calldata call, bytes calldata response)
+        external
+        override
+    {
+        _givenCalldataReturn(call, response);
+    }
 
-	function givenCalldataReturnUint(bytes calldata call, uint response) override external {
-		_givenCalldataReturn(call, uintToBytes(response));
-	}
+    function givenCalldataReturnBool(bytes calldata call, bool response)
+        external
+        override
+    {
+        uint flag = response ? 1 : 0;
+        _givenCalldataReturn(call, uintToBytes(flag));
+    }
 
-	function givenCalldataReturnAddress(bytes calldata call, address response) override external {
-		_givenCalldataReturn(call, uintToBytes(uint(response)));
-	}
+    function givenCalldataReturnUint(bytes calldata call, uint response)
+        external
+        override
+    {
+        _givenCalldataReturn(call, uintToBytes(response));
+    }
 
-	function _givenMethodReturn(bytes memory call, bytes memory response) private {
-		bytes4 method = bytesToBytes4(call);
-		methodIdMockTypes[method] = MockType.Return;
-		methodIdExpectations[method] = response;
-		trackMethodIdMock(method);		
-	}
+    function givenCalldataReturnAddress(bytes calldata call, address response)
+        external
+        override
+    {
+        _givenCalldataReturn(call, uintToBytes(uint(response)));
+    }
 
-	function givenMethodReturn(bytes calldata call, bytes calldata response) override external {
-		_givenMethodReturn(call, response);
-	}
+    function _givenMethodReturn(bytes memory call, bytes memory response)
+        private
+    {
+        bytes4 method = bytesToBytes4(call);
+        methodIdMockTypes[method] = MockType.Return;
+        methodIdExpectations[method] = response;
+        trackMethodIdMock(method);
+    }
 
-	function givenMethodReturnBool(bytes calldata call, bool response) override external {
-		uint flag = response ? 1 : 0;
-		_givenMethodReturn(call, uintToBytes(flag));
-	}
+    function givenMethodReturn(bytes calldata call, bytes calldata response)
+        external
+        override
+    {
+        _givenMethodReturn(call, response);
+    }
 
-	function givenMethodReturnUint(bytes calldata call, uint response) override external {
-		_givenMethodReturn(call, uintToBytes(response));
-	}
+    function givenMethodReturnBool(bytes calldata call, bool response)
+        external
+        override
+    {
+        uint flag = response ? 1 : 0;
+        _givenMethodReturn(call, uintToBytes(flag));
+    }
 
-	function givenMethodReturnAddress(bytes calldata call, address response) override external {
-		_givenMethodReturn(call, uintToBytes(uint(response)));
-	}
+    function givenMethodReturnUint(bytes calldata call, uint response)
+        external
+        override
+    {
+        _givenMethodReturn(call, uintToBytes(response));
+    }
 
-	function givenCalldataRevert(bytes calldata call) override external {
-		calldataMockTypes[call] = MockType.Revert;
-		calldataRevertMessage[call] = "";
-		trackCalldataMock(call);
-	}
+    function givenMethodReturnAddress(bytes calldata call, address response)
+        external
+        override
+    {
+        _givenMethodReturn(call, uintToBytes(uint(response)));
+    }
 
-	function givenMethodRevert(bytes calldata call) override external {
-		bytes4 method = bytesToBytes4(call);
-		methodIdMockTypes[method] = MockType.Revert;
-		trackMethodIdMock(method);		
-	}
+    function givenCalldataRevert(bytes calldata call) external override {
+        calldataMockTypes[call] = MockType.Revert;
+        calldataRevertMessage[call] = "";
+        trackCalldataMock(call);
+    }
 
-	function givenCalldataRevertWithMessage(bytes calldata call, string calldata message) override external {
-		calldataMockTypes[call] = MockType.Revert;
-		calldataRevertMessage[call] = message;
-		trackCalldataMock(call);
-	}
+    function givenMethodRevert(bytes calldata call) external override {
+        bytes4 method = bytesToBytes4(call);
+        methodIdMockTypes[method] = MockType.Revert;
+        trackMethodIdMock(method);
+    }
 
-	function givenMethodRevertWithMessage(bytes calldata call, string calldata message) override external {
-		bytes4 method = bytesToBytes4(call);
-		methodIdMockTypes[method] = MockType.Revert;
-		methodIdRevertMessages[method] = message;
-		trackMethodIdMock(method);		
-	}
+    function givenCalldataRevertWithMessage(
+        bytes calldata call,
+        string calldata message
+    ) external override {
+        calldataMockTypes[call] = MockType.Revert;
+        calldataRevertMessage[call] = message;
+        trackCalldataMock(call);
+    }
 
-	function givenCalldataRunOutOfGas(bytes calldata call) override external {
-		calldataMockTypes[call] = MockType.OutOfGas;
-		trackCalldataMock(call);
-	}
+    function givenMethodRevertWithMessage(
+        bytes calldata call,
+        string calldata message
+    ) external override {
+        bytes4 method = bytesToBytes4(call);
+        methodIdMockTypes[method] = MockType.Revert;
+        methodIdRevertMessages[method] = message;
+        trackMethodIdMock(method);
+    }
 
-	function givenMethodRunOutOfGas(bytes calldata call) override external {
-		bytes4 method = bytesToBytes4(call);
-		methodIdMockTypes[method] = MockType.OutOfGas;
-		trackMethodIdMock(method);	
-	}
+    function givenCalldataRunOutOfGas(bytes calldata call) external override {
+        calldataMockTypes[call] = MockType.OutOfGas;
+        trackCalldataMock(call);
+    }
 
-	function invocationCount() override external returns (uint) {
-		return invocations;
-	}
+    function givenMethodRunOutOfGas(bytes calldata call) external override {
+        bytes4 method = bytesToBytes4(call);
+        methodIdMockTypes[method] = MockType.OutOfGas;
+        trackMethodIdMock(method);
+    }
 
-	function invocationCountForMethod(bytes calldata call) override external returns (uint) {
-		bytes4 method = bytesToBytes4(call);
-		return methodIdInvocations[keccak256(abi.encodePacked(resetCount, method))];
-	}
+    function invocationCount() external override returns (uint) {
+        return invocations;
+    }
 
-	function invocationCountForCalldata(bytes calldata call) override external returns (uint) {
-		return calldataInvocations[keccak256(abi.encodePacked(resetCount, call))];
-	}
+    function invocationCountForMethod(bytes calldata call)
+        external
+        override
+        returns (uint)
+    {
+        bytes4 method = bytesToBytes4(call);
+        return
+            methodIdInvocations[
+                keccak256(abi.encodePacked(resetCount, method))
+            ];
+    }
 
-	function reset() override external {
-		// Reset all exact calldataMocks
-		bytes memory nextMock = calldataMocks[MOCKS_LIST_START];
-		bytes32 mockHash = keccak256(nextMock);
-		// We cannot compary bytes
-		while(mockHash != MOCKS_LIST_END_HASH) {
-			// Reset all mock maps
-			calldataMockTypes[nextMock] = MockType.Return;
-			calldataExpectations[nextMock] = hex"";
-			calldataRevertMessage[nextMock] = "";
-			// Set next mock to remove
-			nextMock = calldataMocks[mockHash];
-			// Remove from linked list
-			calldataMocks[mockHash] = "";
-			// Update mock hash
-			mockHash = keccak256(nextMock);
-		}
-		// Clear list
-		calldataMocks[MOCKS_LIST_START] = MOCKS_LIST_END;
+    function invocationCountForCalldata(bytes calldata call)
+        external
+        override
+        returns (uint)
+    {
+        return
+            calldataInvocations[keccak256(abi.encodePacked(resetCount, call))];
+    }
 
-		// Reset all any calldataMocks
-		bytes4 nextAnyMock = methodIdMocks[SENTINEL_ANY_MOCKS];
-		while(nextAnyMock != SENTINEL_ANY_MOCKS) {
-			bytes4 currentAnyMock = nextAnyMock;
-			methodIdMockTypes[currentAnyMock] = MockType.Return;
-			methodIdExpectations[currentAnyMock] = hex"";
-			methodIdRevertMessages[currentAnyMock] = "";
-			nextAnyMock = methodIdMocks[currentAnyMock];
-			// Remove from linked list
-			methodIdMocks[currentAnyMock] = 0x0;
-		}
-		// Clear list
-		methodIdMocks[SENTINEL_ANY_MOCKS] = SENTINEL_ANY_MOCKS;
+    function reset() external override {
+        // Reset all exact calldataMocks
+        bytes memory nextMock = calldataMocks[MOCKS_LIST_START];
+        bytes32 mockHash = keccak256(nextMock);
+        // We cannot compary bytes
+        while (mockHash != MOCKS_LIST_END_HASH) {
+            // Reset all mock maps
+            calldataMockTypes[nextMock] = MockType.Return;
+            calldataExpectations[nextMock] = hex"";
+            calldataRevertMessage[nextMock] = "";
+            // Set next mock to remove
+            nextMock = calldataMocks[mockHash];
+            // Remove from linked list
+            calldataMocks[mockHash] = "";
+            // Update mock hash
+            mockHash = keccak256(nextMock);
+        }
+        // Clear list
+        calldataMocks[MOCKS_LIST_START] = MOCKS_LIST_END;
 
-		fallbackExpectation = DEFAULT_FALLBACK_VALUE;
-		fallbackMockType = MockType.Return;
-		invocations = 0;
-		resetCount += 1;
-	}
+        // Reset all any calldataMocks
+        bytes4 nextAnyMock = methodIdMocks[SENTINEL_ANY_MOCKS];
+        while (nextAnyMock != SENTINEL_ANY_MOCKS) {
+            bytes4 currentAnyMock = nextAnyMock;
+            methodIdMockTypes[currentAnyMock] = MockType.Return;
+            methodIdExpectations[currentAnyMock] = hex"";
+            methodIdRevertMessages[currentAnyMock] = "";
+            nextAnyMock = methodIdMocks[currentAnyMock];
+            // Remove from linked list
+            methodIdMocks[currentAnyMock] = 0x0;
+        }
+        // Clear list
+        methodIdMocks[SENTINEL_ANY_MOCKS] = SENTINEL_ANY_MOCKS;
 
-	function useAllGas() private {
-		while(true) {
-			bool s;
-			assembly {
-				//expensive call to EC multiply contract
-				s := call(sub(gas(), 2000), 6, 0, 0x0, 0xc0, 0x0, 0x60)
-			}
-		}
-	}
+        fallbackExpectation = DEFAULT_FALLBACK_VALUE;
+        fallbackMockType = MockType.Return;
+        invocations = 0;
+        resetCount += 1;
+    }
 
-	function bytesToBytes4(bytes memory b) private pure returns (bytes4) {
-		bytes4 out;
-		for (uint i = 0; i < 4; i++) {
-			out |= bytes4(b[i] & 0xFF) >> (i * 8);
-		}
-		return out;
-	}
+    function useAllGas() private {
+        while (true) {
+            bool s;
+            assembly {
+                //expensive call to EC multiply contract
+                s := call(sub(gas(), 2000), 6, 0, 0x0, 0xc0, 0x0, 0x60)
+            }
+        }
+    }
 
-	function uintToBytes(uint256 x) private pure returns (bytes memory b) {
-		b = new bytes(32);
-		assembly { mstore(add(b, 32), x) }
-	}
+    function bytesToBytes4(bytes memory b) private pure returns (bytes4) {
+        bytes4 out;
+        for (uint i = 0; i < 4; i++) {
+            out |= bytes4(b[i] & 0xFF) >> (i * 8);
+        }
+        return out;
+    }
 
-	function updateInvocationCount(bytes4 methodId, bytes memory originalMsgData) public {
-		require(msg.sender == address(this), "Can only be called from the contract itself");
-		invocations += 1;
-		methodIdInvocations[keccak256(abi.encodePacked(resetCount, methodId))] += 1;
-		calldataInvocations[keccak256(abi.encodePacked(resetCount, originalMsgData))] += 1;
-	}
+    function uintToBytes(uint256 x) private pure returns (bytes memory b) {
+        b = new bytes(32);
+        assembly {
+            mstore(add(b, 32), x)
+        }
+    }
 
-	fallback () payable external {
-		bytes4 methodId;
-		assembly {
-			methodId := calldataload(0)
-		}
+    function updateInvocationCount(
+        bytes4 methodId,
+        bytes memory originalMsgData
+    ) public {
+        require(
+            msg.sender == address(this),
+            "Can only be called from the contract itself"
+        );
+        invocations += 1;
+        methodIdInvocations[
+            keccak256(abi.encodePacked(resetCount, methodId))
+        ] += 1;
+        calldataInvocations[
+            keccak256(abi.encodePacked(resetCount, originalMsgData))
+        ] += 1;
+    }
 
-		// First, check exact matching overrides
-		if (calldataMockTypes[msg.data] == MockType.Revert) {
-			revert(calldataRevertMessage[msg.data]);
-		}
-		if (calldataMockTypes[msg.data] == MockType.OutOfGas) {
-			useAllGas();
-		}
-		bytes memory result = calldataExpectations[msg.data];
+    fallback() external payable {
+        bytes4 methodId;
+        assembly {
+            methodId := calldataload(0)
+        }
 
-		// Then check method Id overrides
-		if (result.length == 0) {
-			if (methodIdMockTypes[methodId] == MockType.Revert) {
-				revert(methodIdRevertMessages[methodId]);
-			}
-			if (methodIdMockTypes[methodId] == MockType.OutOfGas) {
-				useAllGas();
-			}
-			result = methodIdExpectations[methodId];
-		}
+        // First, check exact matching overrides
+        if (calldataMockTypes[msg.data] == MockType.Revert) {
+            revert(calldataRevertMessage[msg.data]);
+        }
+        if (calldataMockTypes[msg.data] == MockType.OutOfGas) {
+            useAllGas();
+        }
+        bytes memory result = calldataExpectations[msg.data];
 
-		// Last, use the fallback override
-		if (result.length == 0) {
-			if (fallbackMockType == MockType.Revert) {
-				revert(fallbackRevertMessage);
-			}
-			if (fallbackMockType == MockType.OutOfGas) {
-				useAllGas();
-			}
-			result = fallbackExpectation;
-		}
+        // Then check method Id overrides
+        if (result.length == 0) {
+            if (methodIdMockTypes[methodId] == MockType.Revert) {
+                revert(methodIdRevertMessages[methodId]);
+            }
+            if (methodIdMockTypes[methodId] == MockType.OutOfGas) {
+                useAllGas();
+            }
+            result = methodIdExpectations[methodId];
+        }
 
-		// Record invocation as separate call so we don't rollback in case we are called with STATICCALL
-		(, bytes memory r) = address(this).call{gas: 100000}(abi.encodeWithSignature("updateInvocationCount(bytes4,bytes)", methodId, msg.data));
-		assert(r.length == 0);
-		
-		assembly {
-			return(add(0x20, result), mload(result))
-		}
-	}
+        // Last, use the fallback override
+        if (result.length == 0) {
+            if (fallbackMockType == MockType.Revert) {
+                revert(fallbackRevertMessage);
+            }
+            if (fallbackMockType == MockType.OutOfGas) {
+                useAllGas();
+            }
+            result = fallbackExpectation;
+        }
+
+        // Record invocation as separate call so we don't rollback in case we are called with STATICCALL
+        (, bytes memory r) = address(this).call{gas: 100000}(
+            abi.encodeWithSignature(
+                "updateInvocationCount(bytes4,bytes)",
+                methodId,
+                msg.data
+            )
+        );
+        assert(r.length == 0);
+
+        assembly {
+            return(add(0x20, result), mload(result))
+        }
+    }
 }
 
-
 // File contracts/test/Token.sol
-
-
 
 interface Token {
     function transfer(address _to, uint256 value) external returns (bool);
 }
 
-
 // File contracts/interfaces/ViewStorageAccessible.sol
-
-
 
 /// @title ViewStorageAccessible - Interface on top of StorageAccessible base class to allow simulations from view functions
 /// @notice Adjusted version of https://github.com/gnosis/util-contracts/blob/3db1e531cb243a48ea91c60a800d537c1000612a/contracts/StorageAccessible.sol
@@ -3242,13 +3676,13 @@ interface ViewStorageAccessible {
      * @dev Same as `simulate` on StorageAccessible. Marked as view so that it can be called from external contracts
      * that want to run simulations from within view functions. Will revert if the invoked simulation attempts to change state.
      */
-    function simulate(address targetContract, bytes calldata calldataPayload) external view returns (bytes memory);
+    function simulate(address targetContract, bytes calldata calldataPayload)
+        external
+        view
+        returns (bytes memory);
 }
 
-
 // File contracts/libraries/CreateCall.sol
-
-
 
 /// @title Create Call - Allows to use the different create opcodes to deploy a contract
 /// @author Richard Meissner - <richard@gnosis.io>
@@ -3262,26 +3696,35 @@ contract CreateCall {
     ) public returns (address newContract) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            newContract := create2(value, add(0x20, deploymentData), mload(deploymentData), salt)
+            newContract := create2(
+                value,
+                add(0x20, deploymentData),
+                mload(deploymentData),
+                salt
+            )
         }
         require(newContract != address(0), "Could not deploy contract");
         emit ContractCreation(newContract);
     }
 
-    function performCreate(uint256 value, bytes memory deploymentData) public returns (address newContract) {
+    function performCreate(uint256 value, bytes memory deploymentData)
+        public
+        returns (address newContract)
+    {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            newContract := create(value, add(deploymentData, 0x20), mload(deploymentData))
+            newContract := create(
+                value,
+                add(deploymentData, 0x20),
+                mload(deploymentData)
+            )
         }
         require(newContract != address(0), "Could not deploy contract");
         emit ContractCreation(newContract);
     }
 }
 
-
 // File contracts/libraries/MultiSend.sol
-
-
 
 /// @title Multi Send - Allows to batch multiple transactions into one.
 /// @author Nick Dodson - <nick.dodson@consensys.net>
@@ -3306,7 +3749,10 @@ contract MultiSend {
     /// @notice This method is payable as delegatecalls keep the msg.value from the previous call
     ///         If the calling method (e.g. execTransaction) received ETH this would revert otherwise
     function multiSend(bytes memory transactions) public payable {
-        require(address(this) != multisendSingleton, "MultiSend should only be called via delegatecall");
+        require(
+            address(this) != multisendSingleton,
+            "MultiSend should only be called via delegatecall"
+        );
         // solhint-disable-next-line no-inline-assembly
         assembly {
             let length := mload(transactions)
@@ -3331,12 +3777,12 @@ contract MultiSend {
                 let data := add(transactions, add(i, 0x55))
                 let success := 0
                 switch operation
-                    case 0 {
-                        success := call(gas(), to, value, data, dataLength, 0, 0)
-                    }
-                    case 1 {
-                        success := delegatecall(gas(), to, data, dataLength, 0, 0)
-                    }
+                case 0 {
+                    success := call(gas(), to, value, data, dataLength, 0, 0)
+                }
+                case 1 {
+                    success := delegatecall(gas(), to, data, dataLength, 0, 0)
+                }
                 if eq(success, 0) {
                     revert(0, 0)
                 }
@@ -3347,10 +3793,7 @@ contract MultiSend {
     }
 }
 
-
 // File contracts/libraries/MultiSendCallOnly.sol
-
-
 
 /// @title Multi Send Call Only - Allows to batch multiple transactions into one, but only calls
 /// @author Stefan George - <stefan@gnosis.io>
@@ -3394,13 +3837,13 @@ contract MultiSendCallOnly {
                 let data := add(transactions, add(i, 0x55))
                 let success := 0
                 switch operation
-                    case 0 {
-                        success := call(gas(), to, value, data, dataLength, 0, 0)
-                    }
-                    // This version does not allow delegatecalls
-                    case 1 {
-                        revert(0, 0)
-                    }
+                case 0 {
+                    success := call(gas(), to, value, data, dataLength, 0, 0)
+                }
+                // This version does not allow delegatecalls
+                case 1 {
+                    revert(0, 0)
+                }
                 if eq(success, 0) {
                     revert(0, 0)
                 }
