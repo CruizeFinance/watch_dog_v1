@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.4;
+pragma solidity =0.8.6;
 
-library Vault {
+library Types {
     /************************************************
      *  IMMUTABLES & CONSTANTS
      ***********************************************/
@@ -21,15 +21,8 @@ library Vault {
         uint16 round;
         // Amount that is currently locked for selling options
         uint104 lockedAmount;
-        // Amount that was locked for selling options in the previous round
-        // used for calculating performance fee deduction
-        uint104 lastLockedAmount;
-        // 32 byte slot 2
-        // Stores the total tally of how much of `asset` there is
-        // to be used to mint rTHETA tokens
-        uint128 totalPending;
-        // Total amount of queued withdrawal shares from previous rounds (doesn't include the current round)
-        uint128 queuedWithdrawShares;
+        // Total  queued amount  for withdrawal.
+        uint128 queuedWithdrawalAmount;
     }
 
     struct DepositReceipt {
@@ -38,7 +31,7 @@ library Vault {
         // Deposit amount, max 20,282,409,603,651 or 20 trillion ETH deposit
         uint104 amount;
 //         locked Amount in the vault excluding pending amount.
-        uint128 lockedAmount;
+        uint104 lockedAmount;
     }
 
     struct Withdrawal {

@@ -127,8 +127,17 @@ describe("testing Gnosis Trnasfer fund", function () {
   it('deposit ERC20 token to contract',async()=>{
     await dai.approve(cruizeModule.address,parseEther('10'))
      await cruizeModule.deposit(dai.address,parseEther("5"));
-    
-    
+
+     await cruizeModule.deposit(dai.address,parseEther("5"));
+  })
+    it('close round',async()=>{
+
+     await cruizeModule.closeRound(dai.address);
+
+  })
+    it('deposit ERC20 token to contract',async()=>{
+    await dai.approve(cruizeModule.address,parseEther('10'))
+     await cruizeModule.deposit(dai.address,parseEther("5"));
   })
   it('deposit ETH token to contract',async()=>{
      await cruizeModule.deposit(ethers.constants.AddressZero,parseEther("1"),{value:parseEther("1")})
