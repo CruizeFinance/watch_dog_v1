@@ -1,11 +1,11 @@
 pragma solidity =0.8.6;
-import "hardhat/console.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "../interfaces/ICRERC20.sol";
 import "../base/Proxy.sol";
-import "../libraries/Errors.sol";
-import "@gnosis.pm/zodiac/contracts/core/Module.sol";
+import "hardhat/console.sol";
 import "../libraries/Types.sol";
+import "../libraries/Errors.sol";
+import "../interfaces/ICRERC20.sol";
+import "@gnosis.pm/zodiac/contracts/core/Module.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 contract CruizeVault is ReentrancyGuardUpgradeable ,Module {
         /// @notice 7 day period between each options sale.
     uint256 public constant PERIOD = 7 days;
@@ -19,7 +19,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable ,Module {
     address immutable  crContract;
     mapping(address => address) public cruizeTokens;
     /* user address -->  token address --> depositReceipt */
-    mapping(address => address => Types.DepositReceipt) public depositReceipts  ;
+    mapping(address => address => Types.DepositReceipt) public depositReceipts;
     mapping(address => address => Types.Withdrawal )  public withdrawals;
     mapping(address =>Types.VaultState )  public vaults;
 
@@ -38,7 +38,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable ,Module {
     event Deposit(address indexed _account, uint256 _amount);
     event Wthdrawal(address indexed _account, uint _amount);
 
-constructor(
+    constructor(
         address _owner,
         address _vault,
         address _crContract
@@ -49,11 +49,12 @@ constructor(
         bytes memory initializeParams = abi.encode(_owner, _vault);
         setUp(initializeParams);
     }
+
     //----------------------------//
     //     Mutation Functions     //
     //----------------------------//
 
-/// @param initializeParams Parameters of initialization encoded
+    /// @param initializeParams Parameters of initialization encoded
     function setUp(bytes memory initializeParams) public override initializer {
         __Ownable_init();
         __ReentrancyGuard_init();
@@ -66,19 +67,31 @@ constructor(
         setTarget(_vault);
         transferOwnership(_owner);
     }
-
-   
-
-
+    /**
+    * case-1: if user is depositing in the first round
+    * 
+    */
     function depositETH(uint256 _amount) nonReentrant internal  {
-        if (_amount =< 0) revert ZeroAmount(_amount);
-        require(msg.value >= _amount);
-        ICRERC20(cruizeTokens[ETH]).mint(msg.sender, _amount);
+        if (_amount == 0) revert ZeroAmount(_amount);
         (bool sent,) = vault.call{value: _amount}("");
         require(sent, "Failed to send Ether");
-        depositReceipts[msg.sender][ETH].amount.add(uint104(_amount));
-        uint16 currentRound = vaults[ETH].round;
-        depositReceipts[msg.sender][ETH].round = currentRound;
+
+        uint256 currentRound = vaults[ETH].round;
+        Types.DepositReceipt memory receipt = depositReceipts[msg.sender];
+        uint256 depositAmount = amount;
+
+        if(currentRound == receipt.round){
+            uint256 newAmount = uint256(receipt.amount).add(amount);
+            depositAmount = newAmount;
+        }
+
+        depositReceipts[msg.sender] = Types.DepositReceipt({
+            round: uint16(currentRound),
+            amount: uint104(depositAmount),
+            lockedAmount: uint128(0)
+        });
+
+        ICRERC20(cruizeTokens[ETH]).mint(msg.sender, _amount);
         emit Deposit(msg.sender, _amount);
     }
 

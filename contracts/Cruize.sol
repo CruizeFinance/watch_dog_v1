@@ -32,7 +32,7 @@ contract Cruize is CruizeVault, Proxy {
 
     function deposit(address token, uint256 amount) external payable {
         if (token == ETH) {
-            depositETH(amount);
+            depositETH(msg.value);
         } else {
             depositERC20(token, amount);
         }
