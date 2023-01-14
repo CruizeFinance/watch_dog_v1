@@ -32,18 +32,34 @@ contract Cruize is CruizeVault, Proxy {
 
     function deposit(address token, uint256 amount) external payable {
         if (token == ETH) {
-            depositETH(msg.value);
+            _depositETH(msg.value);
         } else {
-            depositERC20(token, amount);
+            _depositERC20(token, amount);
         }
     }
 
     function withdraw(
+        address token,
         address to,
-        bytes memory data,
-        Enum.Operation operation
+        bytes memory data
     ) external {
-        completeWithdrawal(to, data, operation);
+        _completeWithdrawal(token, to, data);
+    }
+
+    function initiateWithdrawal(uint256 amount, address token) external {
+        _initiateWithdraw(amount, token);
+    }
+
+    function withdrawInstantly(
+        address to,
+        uint256 amount,
+        address token
+    ) external {
+        _withdrawInstantly(to, amount, token);
+    }
+
+    function closeRound(address token) external {
+        _closeRound(token);
     }
 }
 

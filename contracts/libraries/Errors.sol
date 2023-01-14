@@ -10,4 +10,7 @@ pragma solidity ^0.8.0;
   error EmptyName();
   error EmptySymbol();
   error ZeroDecimal();
+  error InvalidRound(uint256 round);
+  error NotEnoughBalance(uint256 balance);
+ error NotEnoughWithdrawalBalance(uint256 balance);
 

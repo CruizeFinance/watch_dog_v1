@@ -38,7 +38,7 @@ library Types {
         // Maximum of 65535 rounds. Assuming 1 round is 7 days, maximum is 1256 years.
         uint16 round;
         // Number of shares withdrawn
-        uint128 shares;
+        uint128 amount;
     }
 
 
