@@ -11,6 +11,7 @@ pragma solidity ^0.8.0;
   error EmptySymbol();
   error ZeroDecimal();
   error InvalidWithdrawalRound(uint256 depositRoundOrWithdrawalRequestRound,uint256 currentRound);
-  error NotEnoughBalance(uint256 balance);
+ 
  error NotEnoughWithdrawalBalance(uint256 withdrawalBalance,uint256 withdrawalRequestBalance);
+ error InvalidVaultAddress(address invalidVaultAddress);
 

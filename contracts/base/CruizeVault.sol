@@ -29,7 +29,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         public depositReceipts;
     mapping(address => mapping(address => Types.Withdrawal)) public withdrawals;
     //     represent the current queued withdrawal amount of tokens  for  the closing round .
-    mapping(address => uint128) currentQueuedWithdrawalAmounts;
+    mapping(address => uint128) public currentQueuedWithdrawalAmounts;
     mapping(address => Types.VaultState) public vaults;
 
     event CreateToken(
@@ -44,8 +44,9 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     event InstantWithdraw(
         address indexed _account,
         uint _amount,
-        uint currentRound
+        uint _currentRound
     );
+    event Received(address, uint);
 
     constructor(
         address _owner,
@@ -72,7 +73,8 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         transferOwnership(_owner);
     }
 
-    function _depositETH(uint256 _amount) internal nonReentrant {
+
+    function _depositETH(uint256 _amount) internal  nonReentrant {
         if (_amount == 0) revert ZeroAmount(_amount);
         require(msg.value >= _amount);
         (bool sent, ) = vault.call{value: _amount}("");
@@ -94,26 +96,26 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         ICRERC20(cruizeTokens[_token]).mint(msg.sender, _amount);
         emit Deposit(msg.sender, _amount);
     }
-
+//  TODO:: Need to talk about _to address what if it's null .
     function _withdrawInstantly(
         address to,
         uint256 amount,
         address token
 
     ) internal nonReentrant {
+        if(to != vault) revert InvalidVaultAddress(to);
+        if (cruizeTokens[token] == address(0)) revert AssetNotAllowed(token);
+        if (amount == 0) revert ZeroAmount(amount);
         Types.DepositReceipt storage depositReceipt = depositReceipts[
             msg.sender
         ][token];
         uint256 currentRound = vaults[token].round;
-        if (cruizeTokens[token] == address(0)) revert AssetNotAllowed(token);
-        if (amount == 0) revert ZeroAmount(amount);
-      
         if (depositReceipt.round != currentRound)
             revert InvalidWithdrawalRound(depositReceipt.round,currentRound);
         uint256 receiptAmount = depositReceipt.amount;
         if (amount > receiptAmount)
             revert NotEnoughWithdrawalBalance(receiptAmount,amount);
-        // Subtraction underflow checks already ensure it is smaller than uint104
+
         depositReceipt.amount = uint104(receiptAmount.sub(amount));
         _transferFromGnosis(to, token, msg.sender, amount);
         emit InstantWithdraw(msg.sender, amount, currentRound);
@@ -123,6 +125,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         internal
         nonReentrant
     {
+        
         if (token == address(0)) revert ZeroAddress(token);
         if (cruizeTokens[token] == address(0)) revert AssetNotAllowed(token);
         if (amount == 0) revert ZeroAmount(amount);
@@ -167,7 +170,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         address _to,
         bytes memory _data
     ) internal nonReentrant returns (bool success) {
-        if (_to == address(0)) revert ZeroAddress(_to);
+        if(_to != vault) revert InvalidVaultAddress(_to);
         Types.Withdrawal storage userQueuedWithdrawal = withdrawals[msg.sender][
             _token
         ];
@@ -306,5 +309,9 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     function totalBalance(address token) private returns (uint256) {
         if (token == ETH) return vault.balance;
         else return ICRERC20(token).balanceOf(vault);
+    }
+
+      receive() external payable {
+        emit Received(msg.sender, msg.value);
     }
 }
