@@ -2,10 +2,10 @@
 import { AnyRecord } from "dns";
 import { Contract } from "ethers";
 import { parseEther } from "ethers/lib/utils";
-import hre, { ethers } from "hardhat";
+import { ethers } from "hardhat";
 
 
-    const depoloyContracts =async (contractName:any,signer:any)=>{
+    const deployContracts =async (contractName:any,signer:any)=>{
         const contract =  await ethers.getContractFactory(contractName, signer);
        const  deployedContract =  await contract.deploy();
         return deployedContract;
@@ -29,4 +29,4 @@ import hre, { ethers } from "hardhat";
       await cruizeModule.deposit(tokenContract.address, parseEther(amount));
    }
 
-export {depoloyContracts,createCruizeToken,DepositERC20}
+export {deployContracts,createCruizeToken,DepositERC20}

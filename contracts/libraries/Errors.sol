@@ -1,11 +1,12 @@
 pragma solidity ^0.8.0;
 
 /** 
-  * Error events
+  * Custom Error events
   */
   error ZeroAddress(address ZeroAddress);
   error AssetNotAllowed(address AssetNotAllowed);
-  error AssetAlreadyExists(address AssetAlreadyExists );
+  error WithdrawalAlreadyExists(uint256 WithdrawalAlreadyExists );
+  error AssetAlreadyExists (address AssetAlreadyExists);
   error ZeroAmount(uint256 ZeroAmount);
   error EmptyName();
   error EmptySymbol();

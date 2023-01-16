@@ -58,7 +58,7 @@ contract Cruize is CruizeVault, Proxy {
         _withdrawInstantly(to, amount, token);
     }
 
-    function closeRound(address token) external {
+    function closeRound(address token) external  nonReentrant onlyOwner {
         _closeRound(token);
     }
 }

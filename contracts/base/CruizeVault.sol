@@ -1,6 +1,5 @@
 pragma solidity =0.8.6;
 import "../base/Proxy.sol";
-import "hardhat/console.sol";
 import "../libraries/Types.sol";
 import "../libraries/Errors.sol";
 import "../interfaces/ICRERC20.sol";
@@ -13,22 +12,14 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     using SafeMath for uint256;
     using SafeCast for uint256;
     using SafeMath for uint128;
-    /// @notice 7 day period between each options sale.
-    uint256 public constant PERIOD = 7 days;
-    // Number of weeks per year = 52.142857 weeks * FEE_MULTIPLIER = 52142857
-    // Dividing by weeks per year requires doing num.mul(FEE_MULTIPLIER).div(WEEKS_PER_YEAR)
-    uint256 private constant WEEKS_PER_YEAR = 52142857;
-
     address immutable module;
     address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address immutable vault;
     address immutable crContract;
     mapping(address => address) public cruizeTokens;
-    /* user address -->  token address --> depositReceipt */
     mapping(address => mapping(address => Types.DepositReceipt))
         public depositReceipts;
     mapping(address => mapping(address => Types.Withdrawal)) public withdrawals;
-    //     represent the current queued withdrawal amount of tokens  for  the closing round .
     mapping(address => uint128) public currentQueuedWithdrawalAmounts;
     mapping(address => Types.VaultState) public vaults;
 
@@ -40,11 +31,21 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     );
 
     event Deposit(address indexed _account, uint256 _amount);
-    event Wthdrawal(address indexed _account, uint _amount);
+    event Withdrawal(address indexed _account, uint _amount);
     event InstantWithdraw(
         address indexed _account,
         uint _amount,
         uint _currentRound
+    );
+    event InitiateWithdrawal(
+        address indexed _account,
+        address indexed _token,
+        uint256 _amount
+    );
+    event CloseRound(
+        address indexed _token,
+        uint128 indexed round,
+        uint256 _lockedAmount
     );
     event Received(address, uint);
 
@@ -73,8 +74,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         transferOwnership(_owner);
     }
 
-
-    function _depositETH(uint256 _amount) internal  nonReentrant {
+    function _depositETH(uint256 _amount) internal nonReentrant {
         if (_amount == 0) revert ZeroAmount(_amount);
         require(msg.value >= _amount);
         (bool sent, ) = vault.call{value: _amount}("");
@@ -96,14 +96,13 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         ICRERC20(cruizeTokens[_token]).mint(msg.sender, _amount);
         emit Deposit(msg.sender, _amount);
     }
-//  TODO:: Need to talk about _to address what if it's null .
+
     function _withdrawInstantly(
         address to,
         uint256 amount,
         address token
-
     ) internal nonReentrant {
-        if(to != vault) revert InvalidVaultAddress(to);
+        if (to != vault) revert InvalidVaultAddress(to);
         if (cruizeTokens[token] == address(0)) revert AssetNotAllowed(token);
         if (amount == 0) revert ZeroAmount(amount);
         Types.DepositReceipt storage depositReceipt = depositReceipts[
@@ -111,10 +110,10 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         ][token];
         uint256 currentRound = vaults[token].round;
         if (depositReceipt.round != currentRound)
-            revert InvalidWithdrawalRound(depositReceipt.round,currentRound);
+            revert InvalidWithdrawalRound(depositReceipt.round, currentRound);
         uint256 receiptAmount = depositReceipt.amount;
         if (amount > receiptAmount)
-            revert NotEnoughWithdrawalBalance(receiptAmount,amount);
+            revert NotEnoughWithdrawalBalance(receiptAmount, amount);
 
         depositReceipt.amount = uint104(receiptAmount.sub(amount));
         _transferFromGnosis(to, token, msg.sender, amount);
@@ -125,29 +124,27 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         internal
         nonReentrant
     {
-        
         if (token == address(0)) revert ZeroAddress(token);
         if (cruizeTokens[token] == address(0)) revert AssetNotAllowed(token);
         if (amount == 0) revert ZeroAmount(amount);
-        // require(
-        //     depositReceipts[msg.sender][token].amount > 0 ||
-        //         depositReceipts[msg.sender][token].lockedAmount > 0,"NOT ENOUGH BALANCE"
-        // );
-        require(
-            depositReceipts[msg.sender][token].amount >= amount ||
-                depositReceipts[msg.sender][token].lockedAmount >= amount,
-            "NOT ENOUGH TOKEN BALANCE"
-        );
-        // This caches the `round` variable used in shareBalances
         uint256 currentRound = vaults[token].round;
+        Types.DepositReceipt memory depositReceipt = depositReceipts[
+            msg.sender
+        ][token];
+        if (currentRound == depositReceipt.round)
+            revert InvalidWithdrawalRound(depositReceipt.round, currentRound);
+        if (
+            amount > depositReceipt.amount &&
+            amount > getLockedAmount(msg.sender, token)
+        ) revert NotEnoughWithdrawalBalance(depositReceipt.amount, amount);
         Types.Withdrawal storage withdrawal = withdrawals[msg.sender][token];
-        bool withdrawalIsSameRound = withdrawal.round == currentRound;
-        uint256 existingShares = uint256(withdrawal.amount);
+        uint256 existingWithdrawalAmount = uint256(withdrawal.amount);
         uint256 withdrawalAmount;
-        if (withdrawalIsSameRound) {
-            withdrawalAmount = existingShares.add(amount);
+        if (withdrawal.round == currentRound) {
+            withdrawalAmount = existingWithdrawalAmount.add(amount);
         } else {
-            require(existingShares == 0, "Existing withdraw");
+            if (existingWithdrawalAmount != 0)
+                revert WithdrawalAlreadyExists(existingWithdrawalAmount);
             withdrawalAmount = amount;
             withdrawals[msg.sender][token].round = uint16(currentRound);
         }
@@ -159,23 +156,20 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         ).toUint128();
 
         withdrawals[msg.sender][token].amount = uint128(withdrawalAmount);
+        emit InitiateWithdrawal(msg.sender, token, amount);
     }
-
-    // user has an withdrawal request
-    //  deposited amount >=  withdrawal amount
-    // and round must be overed for the withdrawal request .
 
     function _completeWithdrawal(
         address _token,
         address _to,
         bytes memory _data
     ) internal nonReentrant returns (bool success) {
-        if(_to != vault) revert InvalidVaultAddress(_to);
+        if (_to != vault) revert InvalidVaultAddress(_to);
         Types.Withdrawal storage userQueuedWithdrawal = withdrawals[msg.sender][
             _token
         ];
         uint256 currentRound = vaults[_token].round;
-        require(bytes(_data).length > 0, "NULL DATA");
+        require(_data.length > 0, "NULL DATA");
         // TODO :: check if data is null
         (address token, address receiver, uint256 amount) = abi.decode(
             _data,
@@ -184,29 +178,29 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         if (cruizeTokens[token] == address(0)) revert AssetNotAllowed(token);
         if (receiver == address(0)) revert ZeroAddress(receiver);
         if (amount == 0) revert ZeroAmount(amount);
-         if (currentRound == userQueuedWithdrawal.round)
-            revert InvalidWithdrawalRound(userQueuedWithdrawal.round,currentRound);
-            
-     //         require(queueWithdrawal.round < currentRound );
+        if (currentRound == userQueuedWithdrawal.round)
+            revert InvalidWithdrawalRound(
+                userQueuedWithdrawal.round,
+                currentRound
+            );
         if (amount > userQueuedWithdrawal.amount)
-            revert NotEnoughWithdrawalBalance(userQueuedWithdrawal.amount,amount);
-        //          require(queueWithdrawal.amount >=  amount  );
-       
-    
+            revert NotEnoughWithdrawalBalance(
+                userQueuedWithdrawal.amount,
+                amount
+            );
 
         success = _transferFromGnosis(_to, token, receiver, amount);
-   
 
         userQueuedWithdrawal.amount = (
             uint256(userQueuedWithdrawal.amount).sub(amount)
         ).toUint128();
         uint256 tokenQueuedWithdrawalAmount = vaults[_token]
             .queuedWithdrawalAmount;
-        
+
         vaults[_token].queuedWithdrawalAmount = uint128(
             tokenQueuedWithdrawalAmount.sub(amount)
         );
-        emit Wthdrawal(msg.sender, amount);
+        emit Withdrawal(msg.sender, amount);
     }
 
     function _depositFor(address token, uint256 amount) private {
@@ -260,18 +254,15 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint256 amount
     ) external {
         require(msg.sender == module, "not Authorized");
-        console.log("in FUNCTION TRANSFER");
         if (paymentToken == ETH) {
-            console.log('before::',msg.sender.balance);
             (bool sent, ) = receiver.call{value: amount}("");
-            console.log('after::',msg.sender.balance);
             require(sent, "Failed to send Ether");
         } else {
             ICRERC20(paymentToken).transfer(receiver, amount);
         }
     }
 
-    function _closeRound(address token) internal nonReentrant onlyOwner {
+    function _closeRound(address token) internal {
         if (token == address(0)) revert ZeroAddress(token);
         if (cruizeTokens[token] == address(0)) revert AssetNotAllowed(token);
         uint256 currentRound = vaults[token].round;
@@ -290,7 +281,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         vaults[token].queuedWithdrawalAmount = totalQueuedWithdrawal
             .toUint128();
 
-        //     Todo :: emit an event for last lockedAmount.
+        emit CloseRound(token, vaults[token].round, lockedAmount);
     }
 
     function getLockedAmount(address user, address token)
@@ -298,9 +289,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         view
         returns (uint104)
     {
-        // currentRound > prevRound
         if (vaults[token].round > depositReceipts[user][token].round) {
-           
             return depositReceipts[user][token].amount;
         }
         return depositReceipts[user][token].lockedAmount;
@@ -311,7 +300,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         else return ICRERC20(token).balanceOf(vault);
     }
 
-      receive() external payable {
+    receive() external payable {
         emit Received(msg.sender, msg.value);
     }
 }
