@@ -10,9 +10,9 @@ contract Cruize is CruizeVault, Proxy {
     ) CruizeVault(_owner, _vault, _crContract) {}
 
     /**
-     * @notice createToken  will Clone CRTokenUpgradeable (ERC20 token).
-     * @param name name of   ERC20Upgradeable Contract.
-     * @param symbol symbol of   ERC20Upgradeable Contract.
+     * @notice createToken will Clone CRTokenUpgradeable (ERC20 token).
+     * @param name name of ERC20Upgradeable Contract.
+     * @param symbol symbol of ERC20Upgradeable Contract.
      * @param decimal decimal value of ERC20Upgradeable Contract.
      */
 
@@ -30,6 +30,11 @@ contract Cruize is CruizeVault, Proxy {
         emit CreateToken(address(crToken), name, symbol, decimal);
     }
 
+    /**
+     * @notice This function will be use for depositing assets
+     * @param token depositing token address
+     * @param amount user depositing amount
+     */
     function deposit(address token, uint256 amount) external payable {
         if (token == ETH) {
             _depositETH(msg.value);
@@ -38,6 +43,12 @@ contract Cruize is CruizeVault, Proxy {
         }
     }
 
+    /**
+     * @notice This function will be use for depositing assets
+     * @param token depositing token address
+     * @param to Safe Gnosis address
+     * @param data will contain encoded (receiver , amount)
+     */
     function withdraw(
         address token,
         address to,
@@ -46,10 +57,22 @@ contract Cruize is CruizeVault, Proxy {
         _completeWithdrawal(token, to, data);
     }
 
+    /**
+     * @notice This function will be use for initiating withdrawal request
+     * before the round closing.
+     * @param amount withdrawal amount
+     * @param token depositing token address
+     */
     function initiateWithdrawal(uint256 amount, address token) external {
         _initiateWithdraw(amount, token);
     }
 
+    /**
+     * @notice This function will be use for instant withdraws
+     * @param to Gnosis Safe address
+     * @param amount user withdrawal amount
+     * @param token withdrawal token address
+     */
     function withdrawInstantly(
         address to,
         uint256 amount,
@@ -58,10 +81,12 @@ contract Cruize is CruizeVault, Proxy {
         _withdrawInstantly(to, amount, token);
     }
 
-    function closeRound(address token) external  nonReentrant onlyOwner {
+    /**
+     * @notice This function will be responsible for closing current
+     * round
+     * @param token token address
+     */
+    function closeRound(address token) external nonReentrant onlyOwner {
         _closeRound(token);
     }
 }
-
-// to = Module
-// user -> Vault -> Safe ->  DELLEGATECALL(Module).Withdraw -> Safe

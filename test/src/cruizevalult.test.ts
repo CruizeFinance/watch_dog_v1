@@ -68,7 +68,7 @@ describe("work flow form curize vault to cruize contract", function () {
     hre.tracer.nameTags[signer.address] = "singer";
   });
 
-  it("approve module on gnosis", async () => {
+  it.only("approve module on gnosis", async () => {
     // cruizeModule -  deployed address of Cruize module.
     const data = abi.simpleEncode(
       "enableModule(address)",
@@ -95,7 +95,7 @@ describe("work flow form curize vault to cruize contract", function () {
     );
   });
 
-  it("create crtokens", async () => {
+  it.only("create crtokens", async () => {
     let tx = await createCruizeToken(
       cruizeModule,
       "cruzie Dai",
@@ -116,7 +116,7 @@ describe("work flow form curize vault to cruize contract", function () {
     hre.tracer.nameTags[tx] = "CRETH";
   });
 
-  it("deposit ERC20 token to contract in 1st Deposit Round", async () => {
+  it.only("deposit ERC20 token to contract in 1st Deposit Round", async () => {
     await DepositERC20(cruizeModule, dai, "10");
     const vault = await cruizeModule.callStatic.vaults(dai.address);
     expect(vault.round).to.be.equal(1);
@@ -132,7 +132,7 @@ describe("work flow form curize vault to cruize contract", function () {
     expect(receipt.lockedAmount).to.be.equal(parseEther("0"));
   });
 
-  it("deposit ETH coin to contract", async () => {
+  it.only("deposit ETH coin to contract", async () => {
     await cruizeModule.deposit(ETHADDRESS, parseEther("1"), {
       value: parseEther("1"),
     });
@@ -151,7 +151,7 @@ describe("work flow form curize vault to cruize contract", function () {
     expect(receipt.lockedAmount).to.be.equal(parseEther("0"));
   });
 
-  it("withdrawInstantly if cruizemodule address is null", async () => {
+  it.only("withdrawInstantly if cruizemodule address is null", async () => {
     await expect(
       cruizeModule.withdrawInstantly(
         ethers.constants.AddressZero,
@@ -163,7 +163,7 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(ethers.constants.AddressZero);
   });
 
-  it("withdrawInstantly if amount is zero", async () => {
+  it.only("withdrawInstantly if amount is zero", async () => {
     await expect(
       cruizeModule.withdrawInstantly(
         cruizeSafe.address,
@@ -175,7 +175,7 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(0);
   });
 
-  it("withdrawInstantly if token address is null", async () => {
+  it.only("withdrawInstantly if token address is null", async () => {
     await expect(
       cruizeModule.withdrawInstantly(
         cruizeSafe.address,
@@ -187,11 +187,11 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(ethers.constants.AddressZero);
   });
 
-  it("close 1st ETH Deposit  round", async () => {
+  it.only("close 1st ETH Deposit  round", async () => {
     await cruizeModule.closeRound(ETHADDRESS);
   });
 
-  it("withdrawInstantly if round is not same", async () => {
+  it.only("withdrawInstantly if round is not same", async () => {
     await expect(
       cruizeModule.withdrawInstantly(
         cruizeSafe.address,
@@ -203,7 +203,7 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(1, 2);
   });
 
-  it("withdrawInstantly just after deposit", async () => {
+  it.only("withdrawInstantly just after deposit", async () => {
     const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
     expect(vault.lockedAmount).to.be.equal(parseEther("1"));
 
@@ -218,7 +218,7 @@ describe("work flow form curize vault to cruize contract", function () {
     );
   });
 
-  it("withdrawInstantly just after deposit if withdrawal amount is greater then deposit", async () => {
+  it.only("withdrawInstantly just after deposit if withdrawal amount is greater then deposit", async () => {
     await cruizeModule.deposit(ETHADDRESS, parseEther("3"), {
       value: parseEther("3"),
     });
@@ -233,7 +233,7 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(parseEther("3"), parseEther("4"));
   });
 
-  it("withdrawInstantly if asset is not allowed", async () => {
+  it.only("withdrawInstantly if asset is not allowed", async () => {
     await cruizeModule.deposit(ETHADDRESS, parseEther("1"), {
       value: parseEther("3"),
     });
@@ -248,7 +248,7 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(ethers.constants.AddressZero);
   });
 
-  it("initiateWithdrawal if  1st deposit Round is not Closed", async () => {
+  it.only("initiateWithdrawal if  1st deposit Round is not Closed", async () => {
     await expect(cruizeModule.initiateWithdrawal(parseEther("10"), dai.address))
       .to.be.revertedWithCustomError(cruizeModule, "InvalidWithdrawalRound")
       .withArgs(1, 1);
@@ -263,7 +263,8 @@ describe("work flow form curize vault to cruize contract", function () {
       await cruizeModule.currentQueuedWithdrawalAmounts(dai.address)
     ).to.be.equal(BigNumber.from(0));
   });
-  it("initiateWithdrawal when 1st Dai deposit Round is not  Closed", async () => {
+
+  it.only("initiateWithdrawal when 1st Dai deposit Round is not  Closed", async () => {
     const withdrawal = await cruizeModule.callStatic.withdrawals(
       signer.address,
       dai.address
@@ -278,11 +279,11 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(1, 1);
   });
 
-  it("close   1st  Deposit Round  for Dai", async () => {
+  it.only("close 1st Deposit Round  for Dai", async () => {
     await cruizeModule.closeRound(dai.address);
   });
 
-  it("initiateWithdrawal with wrong withdrawal amount", async () => {
+  it.only("initiateWithdrawal with wrong withdrawal amount", async () => {
     await expect(
       cruizeModule.initiateWithdrawal(parseEther("2000"), dai.address)
     )
@@ -290,7 +291,7 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(parseEther("10"), parseEther("2000"));
   });
 
-  it("initiateWithdrawal if  token is not allowed", async () => {
+  it.only("initiateWithdrawal if  token is not allowed", async () => {
     await expect(
       cruizeModule.initiateWithdrawal(parseEther("100"), cruizeModule.address)
     )
@@ -298,14 +299,14 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(cruizeModule.address);
   });
 
-  it("initiateWithdrawal if withdrawal amount is greater then  the deposited amount", async () => {
+  it.only("initiateWithdrawal if withdrawal amount is greater then  the deposited amount", async () => {
     cruizeModule.initiateWithdrawal(parseEther("100"), dai.address);
   });
 
-  it("complete withdrawal when  withdrawal is not initiate", async () => {
+  it.only("complete withdrawal when  withdrawal is not initiate", async () => {
     const data = abi.rawEncode(
-      ["address", "address", "uint256"],
-      [dai.address, signer.address, 100000000000000]
+      ["address", "uint256"],
+      [ signer.address, 100000000000000]
     );
     await expect(
       cruizeModule.withdraw(
@@ -318,7 +319,7 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(0, 100000000000000);
   });
 
-  it("initiateWithdrawal if Dai 1st deposit Round is  Closed", async () => {
+  it.only("initiateWithdrawal if Dai 1st deposit Round is  Closed", async () => {
     await cruizeModule.initiateWithdrawal(parseEther("10"), dai.address);
 
     const withdrawal = await cruizeModule.callStatic.withdrawals(
@@ -333,14 +334,15 @@ describe("work flow form curize vault to cruize contract", function () {
     ).to.be.equal(parseEther("10"));
   });
 
-  it("get total withdrawal amount for given asset", async () => {
+  it.only("get total withdrawal amount for given asset", async () => {
     let res = await cruizeModule.vaults(dai.address);
     // console.log("total withdrawal amount for an round", res)
   });
-  it("complete withdrawal if Dai 1st Protection is Round not closed", async () => {
+
+  it.only("complete withdrawal if Dai 1st Protection is Round not closed", async () => {
     const data = abi.rawEncode(
-      ["address", "address", "uint256"],
-      [dai.address, signer.address, 100000000000000]
+      ["address", "uint256"],
+      [signer.address, 100000000000000]
     );
     await expect(
       cruizeModule.withdraw(
@@ -352,7 +354,8 @@ describe("work flow form curize vault to cruize contract", function () {
       .to.be.revertedWithCustomError(cruizeModule, "InvalidWithdrawalRound")
       .withArgs(2, 2);
   });
-  it("withdrawinstantly in the 1st  Protection round of Dai ", async () => {
+
+  it.only("withdrawinstantly in the 1st  Protection round of Dai ", async () => {
     const vault = await cruizeModule.callStatic.vaults(dai.address);
     expect(vault.lockedAmount).to.be.equal(parseEther("10"));
     await expect(
@@ -365,20 +368,21 @@ describe("work flow form curize vault to cruize contract", function () {
       .to.be.revertedWithCustomError(cruizeModule, "InvalidWithdrawalRound")
       .withArgs(1, 2);
   });
-  it("close Dai 1st Protection Round", async () => {
+  
+  it.only("close Dai 1st Protection Round", async () => {
     await cruizeModule.closeRound(dai.address);
   });
 
-  it("initiateWithdrawal if you already  made and withdrawal request", async () => {
+  it.only("initiateWithdrawal if you already  made and withdrawal request", async () => {
     await expect(cruizeModule.initiateWithdrawal(parseEther("10"), dai.address))
       .to.be.revertedWithCustomError(cruizeModule, "WithdrawalAlreadyExists")
       .withArgs(parseEther("10"));
   });
 
-  it("complete withdrawal if Dai 1st Protection Round has been closed", async () => {
+  it.only("complete withdrawal if Dai 1st Protection Round has been closed", async () => {
     const data = abi.rawEncode(
-      ["address", "address", "uint256"],
-      [dai.address, signer.address, 100000000000000]
+      ["address", "uint256"],
+      [ signer.address, 100000000000000]
     );
     await cruizeModule.withdraw(
       dai.address,
