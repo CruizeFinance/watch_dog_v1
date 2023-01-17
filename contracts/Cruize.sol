@@ -1,7 +1,7 @@
 pragma solidity =0.8.6;
 import "hardhat/console.sol";
 import "./base/CruizeVault.sol";
-
+import "./base/Proxy.sol";
 contract Cruize is CruizeVault, Proxy {
     constructor(
         address _owner,
@@ -31,11 +31,11 @@ contract Cruize is CruizeVault, Proxy {
     }
 
     /**
-     * @notice This function will be use for depositing assets
-     * @param token depositing token address
-     * @param amount user depositing amount
+     * @notice This function will be use for depositing assets.
+     * @param token depositing token address.
+     * @param amount user depositing amount.
      */
-    function deposit(address token, uint256 amount) external payable {
+    function deposit(address token, uint256 amount) nonReentrant  external payable {
         if (token == ETH) {
             _depositETH(msg.value);
         } else {
@@ -44,49 +44,48 @@ contract Cruize is CruizeVault, Proxy {
     }
 
     /**
-     * @notice This function will be use for depositing assets
-     * @param token depositing token address
-     * @param to Safe Gnosis address
-     * @param data will contain encoded (receiver , amount)
+     * @notice This function will be use for depositing assets.
+     * @param token depositing token address.
+     * @param to Safe Gnosis address.
+     * @param data will contain encoded (receiver , amount).
      */
     function withdraw(
         address token,
         address to,
         bytes memory data
-    ) external {
+    ) external nonReentrant  {
         _completeWithdrawal(token, to, data);
     }
 
     /**
      * @notice This function will be use for initiating withdrawal request
      * before the round closing.
-     * @param amount withdrawal amount
-     * @param token depositing token address
+     * @param amount withdrawal amount.
+     * @param token depositing token address.
      */
-    function initiateWithdrawal(uint256 amount, address token) external {
+    function initiateWithdrawal(uint256 amount, address token)  nonReentrant external {
         _initiateWithdraw(amount, token);
     }
 
     /**
-     * @notice This function will be use for instant withdraws
-     * @param to Gnosis Safe address
-     * @param amount user withdrawal amount
-     * @param token withdrawal token address
+     * @notice This function will be use for instant withdraws.
+     * @param to Gnosis Safe address.
+     * @param amount user withdrawal amount.
+     * @param token withdrawal token address.
      */
     function withdrawInstantly(
         address to,
         uint256 amount,
         address token
-    ) external {
+    ) external nonReentrant {
         _withdrawInstantly(to, amount, token);
     }
 
     /**
-     * @notice This function will be responsible for closing current
-     * round
-     * @param token token address
+     * @notice function closeRound  will be responsible for closing current round.
+     * @param token token address.
      */
-    function closeRound(address token) external nonReentrant onlyOwner {
+    function closeRound(address token) external   nonReentrant onlyOwner {
         _closeRound(token);
     }
 }

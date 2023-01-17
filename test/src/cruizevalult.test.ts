@@ -35,7 +35,7 @@ describe("work flow form curize vault to cruize contract", function () {
     singleton = await deployContracts("GnosisSafe", signer);
 
     masterProxy = await deployContracts(
-      "contracts/gnosis-safe/proxy.sol:GnosisSafeProxyFactory",
+      "contracts/gnosis-safe/Gnosis-proxy.sol:GnosisSafeProxyFactory",
       signer
     );
     dai = await deployContracts("DAI", signer);
@@ -47,7 +47,7 @@ describe("work flow form curize vault to cruize contract", function () {
     gProxyAddress = tx.events[1].args["proxy"];
 
     cruizeSafe = await ethers.getContractAt(
-      "GnosisSafe",
+      "contracts/safe.sol:GnosisSafe",
       gProxyAddress as Address,
       signer
     );
@@ -218,7 +218,7 @@ describe("work flow form curize vault to cruize contract", function () {
     );
   });
 
-  it.only("withdrawInstantly just after deposit if withdrawal amount is greater then deposit", async () => {
+  it.only("withdrawInstantly just after deposit if withdrawal amount is greater than deposit", async () => {
     await cruizeModule.deposit(ETHADDRESS, parseEther("3"), {
       value: parseEther("3"),
     });
@@ -299,7 +299,7 @@ describe("work flow form curize vault to cruize contract", function () {
       .withArgs(cruizeModule.address);
   });
 
-  it.only("initiateWithdrawal if withdrawal amount is greater then  the deposited amount", async () => {
+  it.only("initiateWithdrawal if withdrawal amount is greater than  the deposited amount", async () => {
     cruizeModule.initiateWithdrawal(parseEther("100"), dai.address);
   });
 

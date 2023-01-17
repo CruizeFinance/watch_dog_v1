@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.6;
+pragma solidity =0.8.6;
 /*
 The MIT License (MIT)
 Copyright (c) 2018 Murray Software, LLC.

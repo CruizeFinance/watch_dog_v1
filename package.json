@@ -6,14 +6,14 @@
   "scripts": {
     "test": "hardhat test --trace",
     "build": "hardhat compile",
-    "fork_node":"hardhat node --fork https://arb1.arbitrum.io/rpc --no-deploy --fork-ignore-unknown-tx-type true",
+    "fork_node": "hardhat node --fork https://arb1.arbitrum.io/rpc --no-deploy --fork-ignore-unknown-tx-type true",
     "test_mainnet": "hardhat test --logs ./test/src/1_asset-pool.spec.ts",
     "test_arbi": "hardhat test --config ./hardhat_arbi.config.ts ./test/src/2_aave-integration-v3.spec.ts --network localhost",
     "clean": "hardhat clean",
     "build:watch": "hardhat watch compilation",
     "test:watch": "hardhat watch test_mainnet",
     "deploy:network": "hardhat deploy --network",
-    "help":"hardhat node --help"
+    "help": "hardhat node --help"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
@@ -32,6 +32,7 @@
     "ethers": "^5.4.7",
     "hardhat": "^2.12.5",
     "hardhat-gas-reporter": "^1.0.8",
+    "slither-js": "^0.8.0",
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
     "typechain": "^8.1.0",
