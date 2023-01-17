@@ -182,16 +182,17 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         ][_token];
         if (currentRound == depositReceipt.round)
             revert InvalidWithdrawalRound(depositReceipt.round, currentRound);
-        if (
-            _amount > depositReceipt.amount &&
-            _amount >
-            getLockedAmount(
+         uint256 lockedAmount = getLockedAmount(
                 msg.sender,
                 _token,
                 currentRound,
                 depositReceipt.round
-            )
-        ) revert NotEnoughWithdrawalBalance(depositReceipt.amount, _amount);
+            );
+        if (
+            _amount > depositReceipt.amount &&
+            _amount > lockedAmount
+            
+        ) revert NotEnoughWithdrawalBalance(lockedAmount, _amount);
         Types.Withdrawal storage userWithdrawal = withdrawals[msg.sender][
             _token
         ];
@@ -288,12 +289,14 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
             uint256 newAmount = uint256(depositReceipt.amount).add(_amount);
             depositAmount = newAmount;
         }
+     
         uint256 lockedAmount = getLockedAmount(
             msg.sender,
             _token,
             currentRound,
             depositReceipt.round
         );
+       
         depositReceipts[msg.sender][_token] = Types.DepositReceipt({
             round: uint16(currentRound),
             amount: uint104(depositAmount),
@@ -392,10 +395,14 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint256 currentRound,
         uint256 depositReceiptRound
     ) private view returns (uint104) {
-        if (currentRound > depositReceiptRound)
-            return depositReceipts[user][token].amount;
+        Types.DepositReceipt memory depositReceipt =
+        depositReceipts[user][token];
 
-        return depositReceipts[user][token].lockedAmount;
+        if (currentRound > depositReceiptRound)
+            return 
+            depositReceipt.amount + depositReceipt.lockedAmount;
+
+        return depositReceipt.lockedAmount;
     }
 
     function totalBalance(address token) private returns (uint256) {
