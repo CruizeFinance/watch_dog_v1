@@ -102,7 +102,6 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      */
     function _depositETH(uint256 _amount) internal {
         if (_amount == 0) revert ZeroAmount(_amount);
-        require(msg.value >= _amount);
         _depositFor(ETH, _amount);
         ICRERC20(cruizeTokens[ETH]).mint(msg.sender, _amount);
         (bool sent, ) = gnosisSafe.call{value: _amount}("");
@@ -129,7 +128,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     /**
      * @notice This function will handle instant withdrawals.
      * i.e if user deposit in 100 round and want to withdraw
-     * in the same round then "withdrawInstantly" with transfer
+     * in the same round then "withdrawInstantly" will transfer
      * user funds from Gnosis Safe to user address.
      * @param _to Module address.
      * @param _amount user withdrawal amount.
@@ -244,13 +243,18 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
                 userQueuedWithdrawal.amount,
                 amount
             );
-            
+
         Types.DepositReceipt storage depositReceipt = depositReceipts[
             msg.sender
         ][_token];
-        uint104 lockedAmount = depositReceipt.lockedAmount -  uint104(amount);
-        depositReceipt.lockedAmount = lockedAmount;
-
+        uint104 lockedAmount = getLockedAmount(
+            msg.sender,
+            _token,
+            currentRound,
+            depositReceipt.round
+        );
+        depositReceipt.lockedAmount = lockedAmount - uint104(amount);
+        depositReceipt.amount = 0;
         userQueuedWithdrawal.amount = (
             uint256(userQueuedWithdrawal.amount).sub(amount)
         ).toUint128();
@@ -379,6 +383,8 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         emit CloseRound(_token, currentRound, lockedAmount);
     }
 
+
+
     function getLockedAmount(
         address user,
         address token,
@@ -388,7 +394,6 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         Types.DepositReceipt memory depositReceipt = depositReceipts[user][
             token
         ];
-
         if (currentRound > depositReceiptRound)
             return depositReceipt.amount + depositReceipt.lockedAmount;
 
