@@ -75,7 +75,7 @@ contract Cruize is CruizeVault, Proxy {
      */
     function withdrawInstantly(
         address to,
-        uint256 amount,
+        uint104 amount,
         address token
     ) external nonReentrant {
         _withdrawInstantly(to, amount, token);

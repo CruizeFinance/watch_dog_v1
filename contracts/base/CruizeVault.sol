@@ -16,7 +16,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     //     State Vairable         //
     //----------------------------//
     address immutable module;
-    address immutable vault;
+    address immutable gnosisSafe;
     address immutable crContract;
     address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -53,7 +53,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     );
     event CloseRound(
         address indexed token,
-        uint128 indexed round,
+        uint16 indexed round,
         uint256 lockedAmount
     );
   
@@ -68,7 +68,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         address _vault,
         address _crContract
     ) {
-        vault = _vault;
+        gnosisSafe = _vault;
         crContract = _crContract;
         module = address(this);
         bytes memory initializeParams = abi.encode(_owner, _vault);
@@ -106,7 +106,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         require(msg.value >= _amount);
         _depositFor(ETH, _amount);
         ICRERC20(cruizeTokens[ETH]).mint(msg.sender, _amount);
-        (bool sent, ) = vault.call{value: _amount}("");
+        (bool sent, ) = gnosisSafe.call{value: _amount}("");
         require(sent, "Failed to send Ether");
         emit Deposit(msg.sender, _amount);
     }
@@ -126,7 +126,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
         _depositFor(_token, _amount);
         ICRERC20(cruizeTokens[_token]).mint(msg.sender, _amount);
-        require(ICRERC20(_token).transferFrom(msg.sender, vault, _amount));
+        require(ICRERC20(_token).transferFrom(msg.sender, gnosisSafe, _amount));
         emit Deposit(msg.sender, _amount);
     }
 
@@ -135,30 +135,30 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * i.e if user deposit in 100 round and want to withdraw
      * in the same round then "withdrawInstantly" with transfer
      * user funds from Gnosis Safe to user address.
-     * @param _to Gnosis Safe address.
+     * @param _to Module address.
      * @param _amount user withdrawal amount.
      * @param _token withdrawal token address.
      */
     function _withdrawInstantly(
         address _to,
-        uint256 _amount,
+        uint104 _amount,
         address _token
     ) internal  {
-        if (_to != vault) revert InvalidVaultAddress(_to);
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
         if (_amount == 0) revert ZeroAmount(_amount);
         Types.DepositReceipt storage depositReceipt = depositReceipts[
             msg.sender
         ][_token];
-        uint256 currentRound = vaults[_token].round;
+        uint16 currentRound = vaults[_token].round;
         if (depositReceipt.round != currentRound)
             revert InvalidWithdrawalRound(depositReceipt.round, currentRound);
-        uint256 receiptAmount = depositReceipt.amount;
+        uint104 receiptAmount = depositReceipt.amount;
         if (_amount > receiptAmount)
             revert NotEnoughWithdrawalBalance(receiptAmount, _amount);
 
-        depositReceipt.amount = uint104(receiptAmount.sub(_amount));
-        _transferFromGnosis(_to, _token, msg.sender, _amount);
+        depositReceipt.amount = receiptAmount - _amount;
+        _transferFromGnosis(_to, _token, msg.sender, uint256(_amount));
+
         emit InstantWithdraw(msg.sender, _amount, currentRound);
     }
 
@@ -222,7 +222,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * and transfer the amount which is requested by user in the previous
      * round by calling intiateWithdraw.
      * @param _token withdrawal token address.
-     * @param _to Gnosis Safe address.
+     * @param _to Module address.
      * @param _data will contain encoded (receiver , amount).
      */
     function _completeWithdrawal(
@@ -231,7 +231,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         bytes memory _data
     ) internal  returns (bool success) {
          
-        if (_to != vault) revert InvalidVaultAddress(_to);
+        if (_to != gnosisSafe) revert InvalidVaultAddress(_to);
         Types.Withdrawal storage userQueuedWithdrawal = withdrawals[msg.sender][
             _token
         ];
@@ -307,7 +307,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     /**
      * @notice This function will be responsible for transfer token/ETH
      * the recipent address.
-     * @param _to Safe Gnosis address.
+     * @param _to Module address.
      * @param _token depositing token address.
      * @param _receiver recipient address.
      * @param _amount withdrawal amount.
@@ -318,17 +318,16 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         address _receiver,
         uint256 _amount
     )  private returns (bool success) {
-        
         ICRERC20 crtoken = ICRERC20(cruizeTokens[_token]);
         crtoken.burn(_receiver, _amount);
         bytes memory _data = abi.encodeWithSignature(
-            "_transfer(address,address,uint256)",
+            "TransferFromSafe(address,address,uint256)",
             _token,
             _receiver,
             _amount
         );
 
-        success = IAvatar(vault).execTransactionFromModule(
+        success = IAvatar(gnosisSafe).execTransactionFromModule(
             _to,
             0,
             _data,
@@ -345,19 +344,16 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * @param _receiver recipient address.
      * @param _amount withdrawal amount.
      */
-    function _transfer(
+    function TransferFromSafe(
         address _paymentToken,
         address _receiver,
         uint256 _amount
-    ) nonReentrant external {
+    ) nonReentrant external returns(bool sent) {
         require(msg.sender == module, "not Authorized");
-       
         if (_paymentToken == ETH) {
-
-            (bool sent, ) = _receiver.call{value: _amount}("");
-            require(sent, "Failed to send Ether");
+            ( sent, ) = _receiver.call{value: _amount}("");
         } else {
-            require(ICRERC20(_paymentToken).transfer(_receiver, _amount));
+            sent = ICRERC20(_paymentToken).transfer(_receiver, _amount);
         }
     }
 
@@ -369,7 +365,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     function _closeRound(address _token)  internal {
         if (_token == address(0)) revert ZeroAddress(_token);
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
-        uint256 currentRound = vaults[_token].round;
+        uint16 currentRound = vaults[_token].round;
         uint256 currentQueuedWithdrawalAmount = currentQueuedWithdrawalAmounts[
             _token
         ];
@@ -381,12 +377,11 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint256 totalAmount = totalBalance(_token);
         uint256 lockedAmount = totalAmount.sub(totalQueuedWithdrawal);
         tokenVaultState.lockedAmount = uint104(lockedAmount);
-        tokenVaultState.round = uint16(currentRound + 1);
+        tokenVaultState.round = currentRound + 1;
         currentQueuedWithdrawalAmounts[_token] = 0;
         tokenVaultState.queuedWithdrawalAmount = totalQueuedWithdrawal
             .toUint128();
-
-        emit CloseRound(_token, tokenVaultState.round, lockedAmount);
+        emit CloseRound(_token, currentRound, lockedAmount);
     }
 
     function getLockedAmount(
@@ -406,7 +401,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     }
 
     function totalBalance(address token) private returns (uint256) {
-        if (token == ETH) return vault.balance;
-        else return ICRERC20(token).balanceOf(vault);
+        if (token == ETH) return gnosisSafe.balance;
+        else return ICRERC20(token).balanceOf(gnosisSafe);
     }
 }
