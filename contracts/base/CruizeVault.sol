@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "hardhat/console.sol";
+
 contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     using SafeMath for uint256;
     using SafeCast for uint256;
@@ -56,10 +57,8 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint16 indexed round,
         uint256 lockedAmount
     );
-  
 
     receive() external payable {
-        
         revert();
     }
 
@@ -101,7 +100,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * mint crTokens against the deposited amount in 1:1.
      * @param _amount user depositing amount.
      */
-    function _depositETH(uint256 _amount) internal  {
+    function _depositETH(uint256 _amount) internal {
         if (_amount == 0) revert ZeroAmount(_amount);
         require(msg.value >= _amount);
         _depositFor(ETH, _amount);
@@ -117,10 +116,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * @param _token depositing token address.
      * @param _amount user depositing amount.
      */
-    function _depositERC20(address _token, uint256 _amount)
-        internal
-        
-    {
+    function _depositERC20(address _token, uint256 _amount) internal {
         if (_token == address(0)) revert ZeroAddress(_token);
         if (_amount == 0) revert ZeroAmount(_amount);
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
@@ -143,7 +139,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         address _to,
         uint104 _amount,
         address _token
-    ) internal  {
+    ) internal {
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
         if (_amount == 0) revert ZeroAmount(_amount);
         Types.DepositReceipt storage depositReceipt = depositReceipts[
@@ -169,10 +165,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * @param _amount user withdrawal amount.
      * @param _token withdrawal token address.
      */
-    function _initiateWithdraw(uint256 _amount, address _token)
-        internal
-        
-    {
+    function _initiateWithdraw(uint256 _amount, address _token) internal {
         if (_token == address(0)) revert ZeroAddress(_token);
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
         if (_amount == 0) revert ZeroAmount(_amount);
@@ -182,17 +175,14 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         ][_token];
         if (currentRound == depositReceipt.round)
             revert InvalidWithdrawalRound(depositReceipt.round, currentRound);
-         uint256 lockedAmount = getLockedAmount(
-                msg.sender,
-                _token,
-                currentRound,
-                depositReceipt.round
-            );
-        if (
-            _amount > depositReceipt.amount &&
-            _amount > lockedAmount
-            
-        ) revert NotEnoughWithdrawalBalance(lockedAmount, _amount);
+        uint256 lockedAmount = getLockedAmount(
+            msg.sender,
+            _token,
+            currentRound,
+            depositReceipt.round
+        );
+        if (_amount > depositReceipt.amount && _amount > lockedAmount)
+            revert NotEnoughWithdrawalBalance(lockedAmount, _amount);
         Types.Withdrawal storage userWithdrawal = withdrawals[msg.sender][
             _token
         ];
@@ -229,8 +219,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         address _token,
         address _to,
         bytes memory _data
-    ) internal  returns (bool success) {
-         
+    ) internal returns (bool success) {
         if (_to != gnosisSafe) revert InvalidVaultAddress(_to);
         Types.Withdrawal storage userQueuedWithdrawal = withdrawals[msg.sender][
             _token
@@ -255,6 +244,12 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
                 userQueuedWithdrawal.amount,
                 amount
             );
+            
+        Types.DepositReceipt storage depositReceipt = depositReceipts[
+            msg.sender
+        ][_token];
+        uint104 lockedAmount = depositReceipt.lockedAmount -  uint104(amount);
+        depositReceipt.lockedAmount = lockedAmount;
 
         userQueuedWithdrawal.amount = (
             uint256(userQueuedWithdrawal.amount).sub(amount)
@@ -266,7 +261,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         tokenQueuedWithdrawal.queuedWithdrawalAmount = uint128(
             tokenQueuedWithdrawalAmount.sub(amount)
         );
-         success = _transferFromGnosis(_to, _token, receiver, amount);
+        success = _transferFromGnosis(_to, _token, receiver, amount);
         emit Withdrawal(msg.sender, amount);
     }
 
@@ -276,7 +271,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * @param _token depositing token address.
      * @param _amount user depositing amount.
      */
-    function _depositFor(address _token, uint256 _amount)  private {
+    function _depositFor(address _token, uint256 _amount) private {
         uint256 currentRound = vaults[_token].round;
 
         Types.DepositReceipt memory depositReceipt = depositReceipts[
@@ -289,14 +284,14 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
             uint256 newAmount = uint256(depositReceipt.amount).add(_amount);
             depositAmount = newAmount;
         }
-     
+
         uint256 lockedAmount = getLockedAmount(
             msg.sender,
             _token,
             currentRound,
             depositReceipt.round
         );
-       
+
         depositReceipts[msg.sender][_token] = Types.DepositReceipt({
             round: uint16(currentRound),
             amount: uint104(depositAmount),
@@ -317,7 +312,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         address _token,
         address _receiver,
         uint256 _amount
-    )  private returns (bool success) {
+    ) private returns (bool success) {
         ICRERC20 crtoken = ICRERC20(cruizeTokens[_token]);
         crtoken.burn(_receiver, _amount);
         bytes memory _data = abi.encodeWithSignature(
@@ -348,10 +343,10 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         address _paymentToken,
         address _receiver,
         uint256 _amount
-    ) nonReentrant external returns(bool sent) {
+    ) external nonReentrant returns (bool sent) {
         require(msg.sender == module, "not Authorized");
         if (_paymentToken == ETH) {
-            ( sent, ) = _receiver.call{value: _amount}("");
+            (sent, ) = _receiver.call{value: _amount}("");
         } else {
             sent = ICRERC20(_paymentToken).transfer(_receiver, _amount);
         }
@@ -362,7 +357,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * round.
      * @param _token token address.
      */
-    function _closeRound(address _token)  internal {
+    function _closeRound(address _token) internal {
         if (_token == address(0)) revert ZeroAddress(_token);
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
         uint16 currentRound = vaults[_token].round;
@@ -390,12 +385,12 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint256 currentRound,
         uint256 depositReceiptRound
     ) private view returns (uint104) {
-        Types.DepositReceipt memory depositReceipt =
-        depositReceipts[user][token];
+        Types.DepositReceipt memory depositReceipt = depositReceipts[user][
+            token
+        ];
 
         if (currentRound > depositReceiptRound)
-            return 
-            depositReceipt.amount + depositReceipt.lockedAmount;
+            return depositReceipt.amount + depositReceipt.lockedAmount;
 
         return depositReceipt.lockedAmount;
     }
