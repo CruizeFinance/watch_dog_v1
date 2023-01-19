@@ -46,15 +46,13 @@ contract Cruize is CruizeVault, Proxy {
     /**
      * @notice This function will be use for depositing assets.
      * @param token depositing token address.
-     * @param to Safe Gnosis address.
      * @param data will contain encoded (receiver , amount).
      */
     function withdraw(
         address token,
-        address to,
         bytes memory data
     ) external nonReentrant  {
-        _completeWithdrawal(token, to, data);
+        _completeWithdrawal(token, data);
     }
 
     /**
@@ -69,16 +67,14 @@ contract Cruize is CruizeVault, Proxy {
 
     /**
      * @notice This function will be use for instant withdraws.
-     * @param to Gnosis Safe address.
      * @param amount user withdrawal amount.
      * @param token withdrawal token address.
      */
     function withdrawInstantly(
-        address to,
         uint104 amount,
         address token
     ) external nonReentrant {
-        _withdrawInstantly(to, amount, token);
+        _withdrawInstantly(amount, token);
     }
 
     /**

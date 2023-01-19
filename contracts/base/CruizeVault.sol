@@ -130,12 +130,10 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * i.e if user deposit in 100 round and want to withdraw
      * in the same round then "withdrawInstantly" will transfer
      * user funds from Gnosis Safe to user address.
-     * @param _to Module address.
      * @param _amount user withdrawal amount.
      * @param _token withdrawal token address.
      */
     function _withdrawInstantly(
-        address _to,
         uint104 _amount,
         address _token
     ) internal {
@@ -152,7 +150,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
             revert NotEnoughWithdrawalBalance(receiptAmount, _amount);
 
         depositReceipt.amount = receiptAmount - _amount;
-        _transferFromGnosis(_to, _token, msg.sender, uint256(_amount));
+        _transferFromGnosis(_token, msg.sender, uint256(_amount));
 
         emit InstantWithdraw(msg.sender, _amount, currentRound);
     }
@@ -211,15 +209,12 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * and transfer the amount which is requested by user in the previous
      * round by calling intiateWithdraw.
      * @param _token withdrawal token address.
-     * @param _to Module address.
      * @param _data will contain encoded (receiver , amount).
      */
     function _completeWithdrawal(
         address _token,
-        address _to,
         bytes memory _data
     ) internal returns (bool success) {
-        if (_to != gnosisSafe) revert InvalidVaultAddress(_to);
         Types.Withdrawal storage userQueuedWithdrawal = withdrawals[msg.sender][
             _token
         ];
@@ -265,7 +260,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         tokenQueuedWithdrawal.queuedWithdrawalAmount = uint128(
             tokenQueuedWithdrawalAmount.sub(amount)
         );
-        success = _transferFromGnosis(_to, _token, receiver, amount);
+        success = _transferFromGnosis( _token, receiver, amount);
         emit Withdrawal(msg.sender, amount);
     }
 
@@ -306,13 +301,11 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     /**
      * @notice This function will be responsible for transfer token/ETH
      * the recipent address.
-     * @param _to Module address.
      * @param _token depositing token address.
      * @param _receiver recipient address.
      * @param _amount withdrawal amount.
      */
     function _transferFromGnosis(
-        address _to,
         address _token,
         address _receiver,
         uint256 _amount
@@ -327,7 +320,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         );
 
         success = IAvatar(gnosisSafe).execTransactionFromModule(
-            _to,
+            module,
             0,
             _data,
             Enum.Operation.DelegateCall

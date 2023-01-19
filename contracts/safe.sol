@@ -45,7 +45,6 @@ contract Executor {
                     0
                 )
             }
-        console.log("Executor::execute",success);
 
         } else {
             // solhint-disable-next-line no-inline-assembly
