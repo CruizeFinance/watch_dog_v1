@@ -4,7 +4,6 @@ pragma solidity =0.8.6;
 import "../libraries/Errors.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
 contract CRTokenUpgradeable is ERC20Upgradeable, OwnableUpgradeable {
     uint8 internal _decimal;
 

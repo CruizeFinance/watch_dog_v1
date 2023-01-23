@@ -182,7 +182,7 @@ describe("work flow from curize vault to cruize contract", function () {
         .withArgs(signer.address, parseEther("1"));
 
       await expect(cruizeModule.withdrawInstantly(parseEther("1"), ETHADDRESS))
-        .emit(cruizeModule, "InstantWithdraw")
+        .emit(cruizeModule, "InstantWithdrawal")
         .withArgs(signer.address, parseEther("1"), 1);
 
       const receipt = await cruizeModule.callStatic.depositReceipts(

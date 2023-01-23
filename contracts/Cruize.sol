@@ -52,7 +52,7 @@ contract Cruize is CruizeVault, Proxy {
         address token,
         bytes memory data
     ) external nonReentrant  {
-        _completeWithdrawal(token, data);
+        _completeStandardWithdrawal(token, data);
     }
 
     /**
@@ -62,7 +62,7 @@ contract Cruize is CruizeVault, Proxy {
      * @param token depositing token address.
      */
     function initiateWithdrawal(uint256 amount, address token)  nonReentrant external {
-        _initiateWithdraw(amount, token);
+        _initiateStandardWithdrawal(amount, token);
     }
 
     /**
