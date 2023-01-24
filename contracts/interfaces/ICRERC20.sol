@@ -16,6 +16,8 @@ interface ICRERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 
     function balanceOf(address sender) external returns (uint256);
+    function totalSupply() external returns (uint256);
+    function decimals() external returns (uint256);
 
     function initialize(
         string memory name_,

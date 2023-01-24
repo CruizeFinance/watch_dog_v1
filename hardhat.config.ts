@@ -35,10 +35,10 @@ export default {
         accountsBalance: "100000000000000000000000000000000000000000",
         mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC
       },
-      forking:{
-        url:`https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`
+      // forking:{
+      //   url:`https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`
 
-      }
+      // }
     },
   
   },
