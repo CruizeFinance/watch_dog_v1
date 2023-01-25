@@ -46,13 +46,11 @@ contract Cruize is CruizeVault, Proxy {
     /**
      * @notice This function will be use for depositing assets.
      * @param token depositing token address.
-     * @param data will contain encoded (receiver , amount).
      */
     function withdraw(
-        address token,
-        bytes memory data
+        address token
     ) external nonReentrant  {
-        _completeWithdrawal(token, data);
+        _completeWithdrawal(token);
     }
 
     /**

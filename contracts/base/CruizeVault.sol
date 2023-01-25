@@ -187,44 +187,50 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * @notice This function will initiate withdrawal request during locking period
      * of user asset in the specific strategy, so after strategy completion user can
      * can claim his withdrawal request amount from the protocol.
-     * @param _amount user withdrawal amount.
+     * @param _shares user withdrawal amount.
      * @param _token withdrawal token address.
      */
-    function _initiateWithdraw(uint256 _amount, address _token) internal {
+    function _initiateWithdraw(uint256 _shares, address _token) internal {
         if (_token == address(0)) revert ZeroAddress(_token);
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
-        if (_amount == 0) revert ZeroAmount(_amount);
+        if (_shares == 0) revert ZeroAmount(_shares);
         uint256 currentRound = vaults[_token].round;
+        uint256 userShares = balanceInShares(msg.sender , _token);
         Types.DepositReceipt memory depositReceipt = depositReceipts[
             msg.sender
         ][_token];
+
         if (currentRound == depositReceipt.round)
             revert InvalidWithdrawalRound(depositReceipt.round, currentRound);
       
-        if (_amount > depositReceipt.amount)
-            revert NotEnoughWithdrawalBalance(0,_amount);
+        if (_shares > userShares)
+            revert NotEnoughWithdrawalBalance(0,_shares);
         Types.Withdrawal storage userWithdrawal = withdrawals[msg.sender][
             _token
         ];
-        uint256 existingWithdrawalAmount = uint256(userWithdrawal.amount);
-        uint256 withdrawalAmount;
+
+        uint256 existingWithdrawalShares = uint256(userWithdrawal.shares);
+        uint256 withdrawalShares;
+
         if (userWithdrawal.round == currentRound) {
-            withdrawalAmount = existingWithdrawalAmount.add(_amount);
+            withdrawalShares = existingWithdrawalShares.add(_shares);
         } else {
-            if (existingWithdrawalAmount != 0)
-                revert WithdrawalAlreadyExists(existingWithdrawalAmount);
-            withdrawalAmount = _amount;
+            if (existingWithdrawalShares != 0)
+                revert WithdrawalAlreadyExists(existingWithdrawalShares);
+            withdrawalShares = _shares;
             userWithdrawal.round = uint16(currentRound);
+            userWithdrawal.shares = uint128(withdrawalShares);
         }
-        uint256 currentQueuedWithdrawalAmount = currentQueuedWithdrawalShares[
+
+        uint256 currentQueuedWithdrawalShare= currentQueuedWithdrawalShares[
             _token
         ];
+
         currentQueuedWithdrawalShares[_token] = (
-            currentQueuedWithdrawalAmount.add(_amount)
+            currentQueuedWithdrawalShare.add(_shares)
         ).toUint128();
 
-        userWithdrawal.amount = uint128(withdrawalAmount);
-        emit InitiateWithdrawal(msg.sender, _token, _amount);
+        emit InitiateWithdrawal(msg.sender, _token, _shares);
     }
 
     /**
@@ -232,59 +238,43 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * and transfer the amount which is requested by user in the previous
      * round by calling intiateWithdraw.
      * @param _token withdrawal token address.
-     * @param _data will contain encoded (receiver , amount).
      */
-    function _completeWithdrawal(address _token, bytes memory _data)
+    function _completeWithdrawal(address _token)
         internal
         returns (bool success)
     {
-        Types.Withdrawal storage userQueuedWithdrawal = withdrawals[msg.sender][
+        if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
+        Types.Withdrawal storage withdrawal = withdrawals[msg.sender][
             _token
         ];
-        uint256 currentRound = vaults[_token].round;
-        require(_data.length > 0, "NULL DATA");
-        // TODO :: check if data is null
-        (address receiver, uint256 amount) = abi.decode(
-            _data,
-            (address, uint256)
-        );
-        if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
-        if (receiver == address(0)) revert ZeroAddress(receiver);
-        if (amount == 0) revert ZeroAmount(amount);
-        if (currentRound == userQueuedWithdrawal.round)
-            revert InvalidWithdrawalRound(
-                userQueuedWithdrawal.round,
-                currentRound
-            );
-        if (amount > userQueuedWithdrawal.amount)
-            revert NotEnoughWithdrawalBalance(
-                userQueuedWithdrawal.amount,
-                amount
-            );
+        Types.VaultState storage vaultState = vaults[_token];
+        uint256 withdrawalShares = withdrawal.shares;
+        uint16 withdrawalRound = withdrawal.round;
+        uint256 decimals =ICRERC20(cruizeTokens[_token]).decimals();
 
-        Types.DepositReceipt storage depositReceipt = depositReceipts[
-            msg.sender
-        ][_token];
-        
-        depositReceipt.amount = 0;
-        userQueuedWithdrawal.amount = (
-            uint256(userQueuedWithdrawal.amount).sub(amount)
-        ).toUint128();
-        Types.VaultState storage tokenQueuedWithdrawal = vaults[_token];
-        uint256 tokenQueuedWithdrawalAmount = tokenQueuedWithdrawal
-            .queuedWithdrawShares;
 
-        tokenQueuedWithdrawal.queuedWithdrawShares = uint128(
-            tokenQueuedWithdrawalAmount.sub(amount)
+        uint16 currentRound = vaults[_token].round;
+
+        // This checks if there is a withdrawal
+        require(withdrawalShares > 0, "Not initiated");
+
+        require(withdrawalRound < currentRound, "Round not closed");
+
+        withdrawal.shares = 0;
+        vaultState.queuedWithdrawShares = uint128(
+            uint256(vaultState.queuedWithdrawShares).sub(withdrawalShares)
         );
 
-        ///TODO: convert shares to amount 
-        // lastQueuedWithdrawAmounts[_token] = uint128(
-        //     uint256(lastQueuedWithdrawAmounts[_token]).sub(withdrawAmount)
-        // );
-
-        success = _transferFromGnosis(_token, receiver, amount);
-        emit Withdrawal(msg.sender, amount);
+        uint256 withdrawAmount =
+            ShareMath.sharesToAsset(
+                withdrawalShares,
+                roundPricePerShare[_token][withdrawalRound],
+                decimals
+            );
+        ICRERC20 crtoken = ICRERC20(cruizeTokens[_token]);
+        crtoken.burn(msg.sender, withdrawalShares);
+        success = _transferFromGnosis(_token, msg.sender, withdrawAmount);
+        emit Withdrawal(msg.sender, withdrawAmount);
     }
 
     /**
@@ -301,14 +291,6 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
             msg.sender
         ][_token];
 
-        // If we have an unprocessed pending deposit from the previous rounds, we have to process it.
-        // shares = ShareMath.getSharesFromReceipt(
-        //     currentRound,
-        //     _amount,
-        //     roundPricePerShare[_token][depositReceipt.round],
-        //     ICRERC20(cruizeTokens[_token]).decimals()
-        // );
-       uint256 totalAmount = 0;
         uint256 depositAmount = _amount;
         // If we have a pending deposit in the current round, we add on to the pending deposit
         if (currentRound == depositReceipt.round) {
@@ -342,8 +324,6 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         address _receiver,
         uint256 _amount
     ) private returns (bool success) {
-        ICRERC20 crtoken = ICRERC20(cruizeTokens[_token]);
-        crtoken.burn(_receiver, _amount);
         bytes memory _data = abi.encodeWithSignature(
             "TransferFromSafe(address,address,uint256)",
             _token,
@@ -406,6 +386,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         (uint256 lockedBalance ,uint256 queuedWithdrawAmount) = calculateQueuedWithdrawAmount(_token,newSharePerUnit);
         vaultState.totalPending = 0;
         vaultState.round = uint16(currentRound + 1);
+        roundPricePerShare[_token][vaultState.round] = 1e18; // for advance calculation
 
         lastQueuedWithdrawAmounts[_token] = queuedWithdrawAmount;
 
@@ -434,25 +415,15 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint256 currentShareSupply = ICRERC20(cruizeTokens[_token]).totalSupply();
         uint256 lastRoundPrice = vaultState.round == 1 ? 10**decimals :
           roundPricePerShare[_token][vaultState.round - 1] ;
-
-        // console.log("currentBalance::",currentBalance);
-        // console.log("pendingAmount::",pendingAmount);
-        // console.log("lastQueuedWithdrawShares::",lastQueuedWithdrawShares);
-        // console.log("lastQueuedWithdrawAmount::",lastQueuedWithdrawAmount);
-        // console.log("currentShareSupply::",currentShareSupply);
-        // console.log("lastRoundPrice::",lastRoundPrice);
-
-        // console.log("pricePerShare::totalAmount::",currentBalance.sub(lastQueuedWithdrawAmount).sub(pendingAmount));
-        // console.log("pricePerShare::principleAmount::",ShareMath.sharesToAsset(currentShareSupply.sub(lastQueuedWithdrawShares), lastRoundPrice, decimals).sub(pendingAmount));
-        // console.log("pricePerShare::lastPricePerUnit::", vaultState.round-1 != 0 ? roundPricePerShare[_token][vaultState.round - 1] : 10**decimals );
+        uint256 locked = vaultState.round == 1 ? currentBalance : vaultState.lockedAmount ;
 
         sharePrice = currentShareSupply != 0 ? ShareMath.pricePerShare(
                 currentBalance.sub(lastQueuedWithdrawAmount).sub(pendingAmount),     // subtract last queued withdraw amount from origianl asset balance
-                ShareMath.sharesToAsset(currentShareSupply.sub(lastQueuedWithdrawShares), lastRoundPrice, decimals).sub(pendingAmount), // subtract queued withdraw shares from total shares
+                // ShareMath.sharesToAsset(currentShareSupply.sub(lastQueuedWithdrawShares), lastRoundPrice, decimals).sub(pendingAmount), // subtract queued withdraw shares from total shares
+                locked,
                 lastRoundPrice, // sharePerUnit of previous round
                 decimals
             ) : 10**decimals;
-        // console.log("sharePrice::",sharePrice);
 
     }
 
@@ -468,35 +439,38 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
                     ICRERC20(cruizeTokens[_token]).decimals()
                 )
             );
+            console.log("calculateQueuedWithdrawAmount::queuedWithdrawAmount",queuedWithdrawAmount);
         return (currentBalance.sub(queuedWithdrawAmount),queuedWithdrawAmount);
     }
-
+    
     function totalBalance(address token) private returns (uint256) {
         if (token == ETH) return gnosisSafe.balance;
         else return ICRERC20(token).balanceOf(gnosisSafe);
     }
 
-
+    // crTokens = ( ( locked - lastDepositAmount) / currentRound_unitPerShare ) + (lastDepsositAmount *(lastRound_unitPershare/ depositTime_unitPershare ) )
     function balanceInShares(address account ,address token) public returns (uint256) {
         uint256 decimals = ICRERC20(cruizeTokens[token]).decimals();
         uint256 balance = ICRERC20(cruizeTokens[token]).balanceOf(account);
-         Types.DepositReceipt memory depositReceipt = depositReceipts[account][token];
-        if (vaults[token].round == 1 ) return balance;
-        console.log(balance.mul(10**decimals));
-        console.log(roundPricePerShare[token][vaults[token].round-1]);
-        // balance = 
-        // totalAPYtilltheround * totaldeposit / totalnumofRound
-        return balance.mul(10**decimals).div(roundPricePerShare[token][vaults[token].round-1]);
+        Types.DepositReceipt memory depositReceipt = depositReceipts[account][token];
+        uint256 priceOfLastRound = priceOfRound(token,vaults[token].round-1);
+        uint256 priceOfCurrentRound = priceOfRound(token,vaults[token].round);
+        uint256 priceOfLastDepositRound = roundPricePerShare[token][depositReceipt.round];
+
+        uint256 shares = balance.sub(depositReceipt.amount).mul(10**decimals).div(priceOfCurrentRound);
+        uint256 latestShares = uint256(depositReceipt.amount).mul(10**decimals).div(priceOfLastRound.mul(10**decimals).div(priceOfCurrentRound));
+        return shares.add(latestShares);
+    }
+
+    function priceOfRound(address token,uint16 round) private returns(uint256) {
+        if(round < 2) return 1e18;
+        return roundPricePerShare[token][round];
     }
 
     function balanceInAsset(address account ,address token) external returns (uint256) {
         uint256 shares = balanceInShares(account,token);
         uint256 decimals = ICRERC20(cruizeTokens[token]).decimals();
-        console.log("balanceInAsset",shares);
-
-         uint256 price = vaults[token].round == 1 ? 10**decimals :  roundPricePerShare[token][vaults[token].round-1];
-        console.log("price",price);
-        // uint256 price = roundPricePerShare[token][vaults[token].round-1].div(10**decimals);
+        uint256 price = priceOfRound(token,vaults[token].round-1);
         return shares.mul(price).div(10**decimals);
     }
 }

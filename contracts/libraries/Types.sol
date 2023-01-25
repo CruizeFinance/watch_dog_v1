@@ -38,7 +38,6 @@ library Types {
         // Number of shares withdrawn
         uint128 shares;
 
-        uint128 amount;
 
     }
 

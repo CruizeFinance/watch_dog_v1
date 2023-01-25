@@ -63,6 +63,9 @@ library ShareMath {
     ) internal view returns (uint256) {
         uint256 singleShare = 10**decimals;
         // ( AmountAfterStrategy / principle ) * rounds[n-1].UnitPerShare
+        console.log("totalAmount",totalAmount);
+        console.log("principleAmount",principleAmount);
+        console.log("lastPricePerUnit",lastPricePerUnit);
         return totalAmount.mul(lastPricePerUnit).div(principleAmount);
     }
 
