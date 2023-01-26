@@ -2,6 +2,7 @@
 pragma solidity =0.8.6;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Types} from "./Types.sol";
 import "hardhat/console.sol";
 
@@ -14,13 +15,12 @@ library ShareMath {
         uint256 assetAmount,
         uint256 assetPerShare,
         uint256 decimals
-    ) internal pure returns (uint256) {
+    ) internal view returns (uint256) {
         // If this throws, it means that vault's roundPricePerShare[currentRound] has not been set yet
         // which should never happen.
         // Has to be larger than 1 because `1` is used in `initRoundPricePerShares` to prevent cold writes.
         require(assetPerShare > PLACEHOLDER_UINT, "Invalid assetPerShare");
-
-        return assetAmount.mul(10**decimals).div(assetPerShare);
+        return Math.mulDiv(assetAmount,1e18,assetPerShare,Math.Rounding.Up);
     }
 
     function sharesToAsset(
@@ -32,7 +32,9 @@ library ShareMath {
         // which should never happen.
         // Has to be larger than 1 because `1` is used in `initRoundPricePerShares` to prevent cold writes.
         require(assetPerShare > PLACEHOLDER_UINT, "Invalid assetPerShare");
-        return shares.mul(assetPerShare).div(10**decimals);
+        return Math.mulDiv(shares,assetPerShare,1e18,Math.Rounding.Up);
+
+        // return shares.mul(assetPerShare);
     }
 
     /**
@@ -56,17 +58,18 @@ library ShareMath {
     }
 
     function pricePerShare(
-        uint256 totalAmount,
-        uint256 principleAmount,
-        uint256 lastPricePerUnit,
+        uint256 totalAssets,
+        uint256 totalShares,
         uint256 decimals
     ) internal view returns (uint256) {
         uint256 singleShare = 10**decimals;
         // ( AmountAfterStrategy / principle ) * rounds[n-1].UnitPerShare
-        console.log("totalAmount",totalAmount);
-        console.log("principleAmount",principleAmount);
-        console.log("lastPricePerUnit",lastPricePerUnit);
-        return totalAmount.mul(lastPricePerUnit).div(principleAmount);
+        console.log("totalAmount",totalAssets);
+        console.log("principleAmount",totalShares);
+
+        return Math.mulDiv(totalAssets,singleShare,totalShares,Math.Rounding.Up);
+        
+        // return totalAmount.mul(lastPricePerUnit).div(principleAmount);
     }
 
     /************************************************

@@ -271,6 +271,9 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
                 roundPricePerShare[_token][withdrawalRound],
                 decimals
             );
+
+        lastQueuedWithdrawAmounts[_token] = lastQueuedWithdrawAmounts[_token].sub(withdrawAmount);
+
         ICRERC20 crtoken = ICRERC20(cruizeTokens[_token]);
         crtoken.burn(msg.sender, withdrawalShares);
         success = _transferFromGnosis(_token, msg.sender, withdrawAmount);
@@ -303,7 +306,6 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         depositReceipts[msg.sender][_token] = Types.DepositReceipt({
             round: uint16(currentRound),
             amount: uint104(depositAmount)
-     
         });
 
         uint256 newTotalPending = uint256(vaultState.totalPending).add(_amount);
@@ -416,12 +418,15 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint256 lastRoundPrice = vaultState.round == 1 ? 10**decimals :
           roundPricePerShare[_token][vaultState.round - 1] ;
         uint256 locked = vaultState.round == 1 ? currentBalance : vaultState.lockedAmount ;
-
+        console.log(currentBalance,lastQueuedWithdrawAmount,pendingAmount);
         sharePrice = currentShareSupply != 0 ? ShareMath.pricePerShare(
+                    
                 currentBalance.sub(lastQueuedWithdrawAmount).sub(pendingAmount),     // subtract last queued withdraw amount from origianl asset balance
+                currentShareSupply.sub(lastQueuedWithdrawShares).sub(pendingAmount),
                 // ShareMath.sharesToAsset(currentShareSupply.sub(lastQueuedWithdrawShares), lastRoundPrice, decimals).sub(pendingAmount), // subtract queued withdraw shares from total shares
-                locked,
-                lastRoundPrice, // sharePerUnit of previous round
+                
+                // locked,
+                // lastRoundPrice, // sharePerUnit of previous round
                 decimals
             ) : 10**decimals;
 
@@ -439,6 +444,8 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
                     ICRERC20(cruizeTokens[_token]).decimals()
                 )
             );
+        console.log("lastQueuedWithdrawAmount::",lastQueuedWithdrawAmount);
+
             console.log("calculateQueuedWithdrawAmount::queuedWithdrawAmount",queuedWithdrawAmount);
         return (currentBalance.sub(queuedWithdrawAmount),queuedWithdrawAmount);
     }
@@ -449,20 +456,28 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     }
 
     // crTokens = ( ( locked - lastDepositAmount) / currentRound_unitPerShare ) + (lastDepsositAmount *(lastRound_unitPershare/ depositTime_unitPershare ) )
-    function balanceInShares(address account ,address token) public returns (uint256) {
+    function balanceInShares(address account ,address token) public view returns (uint256) {
         uint256 decimals = ICRERC20(cruizeTokens[token]).decimals();
         uint256 balance = ICRERC20(cruizeTokens[token]).balanceOf(account);
         Types.DepositReceipt memory depositReceipt = depositReceipts[account][token];
         uint256 priceOfLastRound = priceOfRound(token,vaults[token].round-1);
         uint256 priceOfCurrentRound = priceOfRound(token,vaults[token].round);
-        uint256 priceOfLastDepositRound = roundPricePerShare[token][depositReceipt.round];
+        uint256 priceOfLastDepositRound = priceOfRound(token,depositReceipt.round);
 
-        uint256 shares = balance.sub(depositReceipt.amount).mul(10**decimals).div(priceOfCurrentRound);
-        uint256 latestShares = uint256(depositReceipt.amount).mul(10**decimals).div(priceOfLastRound.mul(10**decimals).div(priceOfCurrentRound));
+        uint256 lastShares= ShareMath.assetToShares(depositReceipt.amount, priceOfLastDepositRound, decimals);
+        
+
+
+        uint256 shares = balance.sub(depositReceipt.amount).mul(10**decimals).div(priceOfLastRound);
+        // uint256 latestShares = uint256(depositReceipt.amount).mul(10**decimals).div(priceOfLastRound.mul(10**decimals).div(priceOfCurrentRound));
+        uint256 latestShares = uint256(depositReceipt.amount).mul(10**decimals).div(priceOfLastRound.mul(10**decimals).div(priceOfLastDepositRound));
+        console.log("shares",shares);
+        console.log("latestShares",latestShares);
+        console.log("totalShares",shares.add(latestShares));
         return shares.add(latestShares);
     }
 
-    function priceOfRound(address token,uint16 round) private returns(uint256) {
+    function priceOfRound(address token,uint16 round) private view returns(uint256) {
         if(round < 2) return 1e18;
         return roundPricePerShare[token][round];
     }
