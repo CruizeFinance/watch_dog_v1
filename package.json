@@ -6,6 +6,7 @@
   "scripts": {
     "test": "hardhat test --trace",
     "build": "hardhat compile",
+    "test:ci":"hardhat watch ci",
     "fork_node": "hardhat node --fork https://arb1.arbitrum.io/rpc --no-deploy --fork-ignore-unknown-tx-type true",
     "test_mainnet": "hardhat test --logs ./test/src/1_asset-pool.spec.ts",
     "test_arbi": "hardhat test --config ./hardhat_arbi.config.ts ./test/src/2_aave-integration-v3.spec.ts --network localhost",

@@ -15,12 +15,12 @@ library ShareMath {
         uint256 assetAmount,
         uint256 assetPerShare,
         uint256 decimals
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         // If this throws, it means that vault's roundPricePerShare[currentRound] has not been set yet
         // which should never happen.
         // Has to be larger than 1 because `1` is used in `initRoundPricePerShares` to prevent cold writes.
         require(assetPerShare > PLACEHOLDER_UINT, "Invalid assetPerShare");
-        return Math.mulDiv(assetAmount,1e18,assetPerShare,Math.Rounding.Up);
+        return assetAmount.mul(10**decimals).div(assetPerShare);
     }
 
     function sharesToAsset(
@@ -32,44 +32,46 @@ library ShareMath {
         // which should never happen.
         // Has to be larger than 1 because `1` is used in `initRoundPricePerShares` to prevent cold writes.
         require(assetPerShare > PLACEHOLDER_UINT, "Invalid assetPerShare");
-        return Math.mulDiv(shares,assetPerShare,1e18,Math.Rounding.Up);
-
-        // return shares.mul(assetPerShare);
+        return shares.mul(assetPerShare).div(10**decimals);
     }
 
-    /**
+   /**
      * @notice Returns the shares unredeemed by the user given their DepositReceipt
+     * @param depositReceipt is the user's deposit receipt
      * @param currentRound is the `round` stored on the vault
-     * @param amount is the price in asset per share
      * @param assetPerShare is the price in asset per share
-     * @param decimals is the price in asset per share
-     * @return shares is the user's virtual balance of shares that are owed
+     * @param decimals is the number of decimals the asset/shares use
+     * @return unredeemedShares is the user's virtual balance of shares that are owed
      */
     function getSharesFromReceipt(
-        uint256 currentRound,
-        uint256 amount,
+        Types.DepositReceipt memory depositReceipt,
+        uint256 currentRound, 
         uint256 assetPerShare,
         uint256 decimals
-    ) internal view returns (uint256 shares) {
-        if (currentRound == 1) {
-               return assetToShares(amount, 10**decimals,decimals);
+    ) internal pure returns (uint256 unredeemedShares) {
+        if (depositReceipt.round > 0 && depositReceipt.round < currentRound) {
+            uint256 sharesFromRound =
+                assetToShares(depositReceipt.amount, assetPerShare, decimals);
+
+            return
+                uint256(depositReceipt.unredeemedShares).add(sharesFromRound);
         }
-        return  assetToShares(amount, assetPerShare,decimals);
+        return depositReceipt.unredeemedShares;
     }
 
     function pricePerShare(
-        uint256 totalAssets,
-        uint256 totalShares,
+        uint256 totalSupply, 
+        uint256 totalBalance,
+        uint256 pendingAmount,
         uint256 decimals
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 singleShare = 10**decimals;
-        // ( AmountAfterStrategy / principle ) * rounds[n-1].UnitPerShare
-        console.log("totalAmount",totalAssets);
-        console.log("principleAmount",totalShares);
-
-        return Math.mulDiv(totalAssets,singleShare,totalShares,Math.Rounding.Up);
-        
-        // return totalAmount.mul(lastPricePerUnit).div(principleAmount);
+        return
+            totalSupply > 0
+                ? singleShare.mul(totalBalance.sub(pendingAmount)).div(
+                    totalSupply
+                )
+                : singleShare;
     }
 
     /************************************************

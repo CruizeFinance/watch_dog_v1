@@ -7,7 +7,6 @@ import "@gnosis.pm/zodiac/contracts/core/Module.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "hardhat/console.sol";
 
 contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     using SafeMath for uint256;
@@ -18,6 +17,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     //----------------------------//
     //     State Vairable         //
     //----------------------------//
+    uint256 public managementFee;
     address immutable module;
     address immutable gnosisSafe;
     address immutable crContract;
@@ -117,7 +117,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         for (uint16 i = 0; i < numRounds; i++) {
             uint16 index = _round + i;
             require(roundPricePerShare[token][index] == 0, "Initialized"); // AVOID OVERWRITING ACTUAL VALUES
-            roundPricePerShare[token][index] = Types.UNIT;
+            roundPricePerShare[token][index] = Types.PLACEHOLDER_UINT;
         }
     }
 
@@ -129,7 +129,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     function _depositETH(uint256 _amount) internal {
         if (_amount == 0) revert ZeroAmount(_amount);
         _depositFor(ETH, _amount);
-        ICRERC20(cruizeTokens[ETH]).mint(msg.sender, _amount);
+        // ICRERC20(cruizeTokens[ETH]).mint(msg.sender, _amount);
         (bool sent, ) = gnosisSafe.call{value: _amount}("");
         require(sent, "Failed to send Ether");
         emit Deposit(msg.sender, _amount);
@@ -146,7 +146,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         if (_amount == 0) revert ZeroAmount(_amount);
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
         _depositFor(_token, _amount);
-        ICRERC20(cruizeTokens[_token]).mint(msg.sender, _amount);
+        // ICRERC20(cruizeTokens[_token]).mint(msg.sender, _amount);
         require(ICRERC20(_token).transferFrom(msg.sender, gnosisSafe, _amount));
         emit Deposit(msg.sender, _amount);
     }
@@ -191,46 +191,82 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * @param _token withdrawal token address.
      */
     function _initiateWithdraw(uint256 _shares, address _token) internal {
+
         if (_token == address(0)) revert ZeroAddress(_token);
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
         if (_shares == 0) revert ZeroAmount(_shares);
-        uint256 currentRound = vaults[_token].round;
-        uint256 userShares = balanceInShares(msg.sender , _token);
-        Types.DepositReceipt memory depositReceipt = depositReceipts[
-            msg.sender
-        ][_token];
 
-        if (currentRound == depositReceipt.round)
-            revert InvalidWithdrawalRound(depositReceipt.round, currentRound);
-      
-        if (_shares > userShares)
-            revert NotEnoughWithdrawalBalance(0,_shares);
-        Types.Withdrawal storage userWithdrawal = withdrawals[msg.sender][
-            _token
-        ];
-
-        uint256 existingWithdrawalShares = uint256(userWithdrawal.shares);
-        uint256 withdrawalShares;
-
-        if (userWithdrawal.round == currentRound) {
-            withdrawalShares = existingWithdrawalShares.add(_shares);
-        } else {
-            if (existingWithdrawalShares != 0)
-                revert WithdrawalAlreadyExists(existingWithdrawalShares);
-            withdrawalShares = _shares;
-            userWithdrawal.round = uint16(currentRound);
-            userWithdrawal.shares = uint128(withdrawalShares);
+        if (
+            depositReceipts[msg.sender][_token].amount > 0 ||
+            depositReceipts[msg.sender][_token].unredeemedShares > 0
+        ) {
+            _redeem(_token,0, true);
         }
 
-        uint256 currentQueuedWithdrawalShare= currentQueuedWithdrawalShares[
-            _token
-        ];
+        uint256 currentRound = vaults[_token].round;
+        Types.Withdrawal storage withdrawal = withdrawals[msg.sender][_token];
 
-        currentQueuedWithdrawalShares[_token] = (
-            currentQueuedWithdrawalShare.add(_shares)
+        bool withdrawalIsSameRound = withdrawal.round == currentRound;
+
+        // emit InitiateWithdraw(msg.sender, numShares, currentRound);
+
+        uint256 existingShares = uint256(withdrawal.shares);
+
+        uint256 withdrawalShares;
+        if (withdrawalIsSameRound) {
+            withdrawalShares = existingShares.add(_shares);
+        } else {
+            require(existingShares == 0, "Existing withdraw");
+            withdrawalShares = _shares;
+            withdrawal.round = uint16(currentRound);
+        }
+
+        ShareMath.assertUint128(withdrawalShares);
+        withdrawal.shares = uint128(withdrawalShares);
+
+        currentQueuedWithdrawalShares[_token] = uint256(currentQueuedWithdrawalShares[_token]).add(
+            _shares
         ).toUint128();
 
         emit InitiateWithdrawal(msg.sender, _token, _shares);
+    }
+
+     function _redeem(address _token ,uint256 numShares, bool isMax) internal {
+        Types.DepositReceipt memory depositReceipt =
+            depositReceipts[msg.sender][_token];
+        Types.VaultState storage vaultState = vaults[_token];
+        
+
+        // This handles the null case when depositReceipt.round = 0
+        // Because we start with round = 1 at `initialize`
+        uint256 currentRound = vaults[_token].round;
+
+        uint256 unredeemedShares =
+            depositReceipt.getSharesFromReceipt(
+                currentRound,
+                roundPricePerShare[_token][depositReceipt.round],
+                ICRERC20(cruizeTokens[_token]).decimals()
+            );
+
+        numShares = isMax ? unredeemedShares : numShares;
+        if (numShares == 0) {
+            return;
+        }
+        require(numShares <= unredeemedShares, "Exceeds available");
+
+        // If we have a depositReceipt on the same round, BUT we have some unredeemed shares
+        // we debit from the unredeemedShares, but leave the amount field intact
+        // If the round has past, with no new deposits, we just zero it out for new deposits.
+        if (depositReceipt.round < currentRound) {
+            depositReceipts[msg.sender][_token].amount = 0;
+        }
+
+        // ShareMath.assertUint128(numShares);
+        depositReceipts[msg.sender][_token].unredeemedShares = uint128(
+            unredeemedShares.sub(numShares)
+        );
+        ICRERC20 crtoken = ICRERC20(cruizeTokens[_token]);
+        crtoken.transfer(msg.sender, numShares);
     }
 
     /**
@@ -247,6 +283,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         Types.Withdrawal storage withdrawal = withdrawals[msg.sender][
             _token
         ];
+
         Types.VaultState storage vaultState = vaults[_token];
         uint256 withdrawalShares = withdrawal.shares;
         uint16 withdrawalRound = withdrawal.round;
@@ -289,10 +326,18 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     function _depositFor(address _token, uint256 _amount) private {
         Types.VaultState storage vaultState = vaults[_token];
         uint256 currentRound = vaultState.round;
+        uint256 decimals = ICRERC20(cruizeTokens[_token]).decimals();
 
         Types.DepositReceipt memory depositReceipt = depositReceipts[
             msg.sender
         ][_token];
+
+        uint256 unredeemedShares =//10
+            depositReceipt.getSharesFromReceipt(
+                currentRound,
+                roundPricePerShare[_token][depositReceipt.round],
+                decimals
+            );
 
         uint256 depositAmount = _amount;
         // If we have a pending deposit in the current round, we add on to the pending deposit
@@ -305,7 +350,9 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
 
         depositReceipts[msg.sender][_token] = Types.DepositReceipt({
             round: uint16(currentRound),
-            amount: uint104(depositAmount)
+            amount: uint104(depositAmount),
+            unredeemedShares: uint128(unredeemedShares)
+
         });
 
         uint256 newTotalPending = uint256(vaultState.totalPending).add(_amount);
@@ -368,67 +415,129 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * round.
      * @param _token token address.
      */
-    function _closeRound(address _token) internal {
-        if (_token == address(0)) revert ZeroAddress(_token);
-        if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
-
-
+    function _closeRound(
+        address _token,
+        uint256 lastQueuedWithdrawAmount,
+        uint256 currentQueuedWithdrawShares
+        ) internal 
+        returns(
+            uint256 lockedBalance,
+            uint256 queuedWithdrawAmount) {
+        uint256 mintShares;
+        uint256 totalVaultFee;
+         {
         Types.VaultState storage vaultState = vaults[_token];
-        uint16 currentRound = vaultState.round;
 
-        uint256 currQueuedWithdrawalShares = currentQueuedWithdrawalShares[
-            _token
-        ];
+            uint256 newPricePerShare;
+            (
+                lockedBalance,
+                queuedWithdrawAmount,
+                newPricePerShare, 
+                mintShares,
+                totalVaultFee
+            ) = calculateSharePrice(
+                _token, 
+                Types.CloseParams(
+                    ICRERC20(cruizeTokens[_token]).decimals(),
+                    totalBalance(_token),
+                    totalSupply(_token),
+                    lastQueuedWithdrawAmount,
+                    managementFee,
+                    currentQueuedWithdrawShares
+                ) ); 
 
-        // Calculate new "unitPricePerShare" for the current round
-        uint256 newSharePerUnit = calculateSharePrice(_token);
-        roundPricePerShare[_token][currentRound] = newSharePerUnit;
+            // Finalize the pricePerShare at the end of the round
+            uint16 currentRound = vaultState.round;
+            roundPricePerShare[_token][currentRound] = newPricePerShare;
 
-        // Calculate new "lockedAmount" , queuedWithdrawAmount for the next round
-        (uint256 lockedBalance ,uint256 queuedWithdrawAmount) = calculateQueuedWithdrawAmount(_token,newSharePerUnit);
-        vaultState.totalPending = 0;
-        vaultState.round = uint16(currentRound + 1);
-        roundPricePerShare[_token][vaultState.round] = 1e18; // for advance calculation
+            vaultState.totalPending = 0;
+            vaultState.round = uint16(currentRound + 1);
+        }
 
-        lastQueuedWithdrawAmounts[_token] = queuedWithdrawAmount;
+        // _mint(address(this), mintShares);
+        ICRERC20(cruizeTokens[_token]).mint(address(this), mintShares);
 
-        uint256 newQueuedWithdrawShares =
-            uint256(vaultState.queuedWithdrawShares).add(
-                currQueuedWithdrawalShares
-            );
-        ShareMath.assertUint128(newQueuedWithdrawShares);
-        vaultState.queuedWithdrawShares = uint128(newQueuedWithdrawShares);
+        // if (totalVaultFee > 0) {
+        //     transferAsset(payable(recipient), totalVaultFee);
+        // }
 
-        currentQueuedWithdrawalShares[_token] = 0;
+        return (lockedBalance, queuedWithdrawAmount);
 
-        ShareMath.assertUint104(lockedBalance);
-        vaultState.lockedAmount = uint104(lockedBalance);
-
-        emit CloseRound(_token, currentRound,  newSharePerUnit,lockedBalance );
     }
 
-    function calculateSharePrice(address _token) private returns(uint256 sharePrice) {
+   
+    function calculateSharePrice(
+        address _token,
+        Types.CloseParams memory params
+        ) private
+        returns (
+            uint256 newLockedAmount,
+            uint256 queuedWithdrawAmount,
+            uint256 newPricePerShare,
+            uint256 mintShares,
+            uint256 totalVaultFee
+        ) 
+         {
         Types.VaultState memory vaultState = vaults[_token];
-        uint256 currentBalance = totalBalance(_token);
-        uint256 decimals =ICRERC20(cruizeTokens[_token]).decimals();
-        uint256 pendingAmount = currentBalance >  vaultState.totalPending ? vaultState.totalPending : 0; // just to constraint the 1st round
-        uint256 lastQueuedWithdrawShares = vaultState.queuedWithdrawShares;
-        uint256 lastQueuedWithdrawAmount = lastQueuedWithdrawAmounts[_token];
-        uint256 currentShareSupply = ICRERC20(cruizeTokens[_token]).totalSupply();
-        uint256 lastRoundPrice = vaultState.round == 1 ? 10**decimals :
-          roundPricePerShare[_token][vaultState.round - 1] ;
-        uint256 locked = vaultState.round == 1 ? currentBalance : vaultState.lockedAmount ;
-        console.log(currentBalance,lastQueuedWithdrawAmount,pendingAmount);
-        sharePrice = currentShareSupply != 0 ? ShareMath.pricePerShare(
-                    
-                currentBalance.sub(lastQueuedWithdrawAmount).sub(pendingAmount),     // subtract last queued withdraw amount from origianl asset balance
-                currentShareSupply.sub(lastQueuedWithdrawShares).sub(pendingAmount),
-                // ShareMath.sharesToAsset(currentShareSupply.sub(lastQueuedWithdrawShares), lastRoundPrice, decimals).sub(pendingAmount), // subtract queued withdraw shares from total shares
-                
-                // locked,
-                // lastRoundPrice, // sharePerUnit of previous round
-                decimals
-            ) : 10**decimals;
+        uint256 currentBalance = params.totalBalance;
+        uint256 pendingAmount = vaultState.totalPending;
+        // Total amount of queued withdrawal shares from previous rounds (doesn't include the current round)
+        uint256 lastQueuedWithdrawShares = vaultState.queuedWithdrawShares; 
+
+        // Deduct older queued withdraws so we don't charge fees on them
+        // uint256 balanceForVaultFees =
+        //     currentBalance.sub(params.lastQueuedWithdrawAmount);
+
+        // {
+        //     (performanceFeeInAsset, , totalVaultFee) = getVaultFees(
+        //         balanceForVaultFees,
+        //         vaultState.lastLockedAmount,
+        //         vaultState.totalPending,
+        //         params.performanceFee,
+        //         params.managementFee
+        //     );
+        // }
+        
+
+        // Take into account the fee
+        // so we can calculate the newPricePerShare
+        currentBalance = currentBalance.sub(totalVaultFee);
+
+        {
+            newPricePerShare = ShareMath.pricePerShare( 
+                params.currentShareSupply.sub(lastQueuedWithdrawShares),
+                currentBalance.sub(params.lastQueuedWithdrawAmount),
+                pendingAmount,
+                params.decimals
+            );
+            console.log("newPricePerShare",newPricePerShare);
+            
+            queuedWithdrawAmount = params.lastQueuedWithdrawAmount.add(
+                ShareMath.sharesToAsset(
+                    params.currentQueuedWithdrawShares,
+                    newPricePerShare,
+                    params.decimals
+                )
+            ); 
+
+            // After closing the short, if the options expire in-the-money
+            // vault pricePerShare would go down because vault's asset balance decreased.
+            // This ensures that the newly-minted shares do not take on the loss.
+            mintShares = ShareMath.assetToShares(
+                pendingAmount,
+                newPricePerShare,
+                params.decimals
+            ); 
+        }
+
+        return (
+            currentBalance.sub(queuedWithdrawAmount), // new locked balance subtracts the queued withdrawals
+            queuedWithdrawAmount,
+            newPricePerShare,
+            mintShares,
+            totalVaultFee
+        );
+       
 
     }
 
@@ -455,26 +564,34 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         else return ICRERC20(token).balanceOf(gnosisSafe);
     }
 
-    // crTokens = ( ( locked - lastDepositAmount) / currentRound_unitPerShare ) + (lastDepsositAmount *(lastRound_unitPershare/ depositTime_unitPershare ) )
-    function balanceInShares(address account ,address token) public view returns (uint256) {
-        uint256 decimals = ICRERC20(cruizeTokens[token]).decimals();
-        uint256 balance = ICRERC20(cruizeTokens[token]).balanceOf(account);
+     function totalSupply(address token) private returns (uint256) {
+        return ICRERC20(cruizeTokens[token]).totalSupply();
+    }
+
+    function shareBalances(address token,address account)
+        public
+        view
+        returns (uint256 heldByAccount, uint256 heldByVault)
+    {
         Types.DepositReceipt memory depositReceipt = depositReceipts[account][token];
-        uint256 priceOfLastRound = priceOfRound(token,vaults[token].round-1);
-        uint256 priceOfCurrentRound = priceOfRound(token,vaults[token].round);
-        uint256 priceOfLastDepositRound = priceOfRound(token,depositReceipt.round);
 
-        uint256 lastShares= ShareMath.assetToShares(depositReceipt.amount, priceOfLastDepositRound, decimals);
-        
+        if (depositReceipt.round < ShareMath.PLACEHOLDER_UINT) {
+            return (balanceOf(token,account), 0);
+        }
 
+        uint256 unredeemedShares =
+            depositReceipt.getSharesFromReceipt(
+                vaults[token].round,
+                roundPricePerShare[token][depositReceipt.round],
+                ICRERC20(cruizeTokens[token]).decimals()
+            );
 
-        uint256 shares = balance.sub(depositReceipt.amount).mul(10**decimals).div(priceOfLastRound);
-        // uint256 latestShares = uint256(depositReceipt.amount).mul(10**decimals).div(priceOfLastRound.mul(10**decimals).div(priceOfCurrentRound));
-        uint256 latestShares = uint256(depositReceipt.amount).mul(10**decimals).div(priceOfLastRound.mul(10**decimals).div(priceOfLastDepositRound));
-        console.log("shares",shares);
-        console.log("latestShares",latestShares);
-        console.log("totalShares",shares.add(latestShares));
-        return shares.add(latestShares);
+        return (balanceOf(token,account), unredeemedShares);
+    }
+
+    function balanceOf(address token, address account) public view returns(uint256) {
+        return ICRERC20(cruizeTokens[token]).balanceOf(account);
+
     }
 
     function priceOfRound(address token,uint16 round) private view returns(uint256) {
@@ -483,9 +600,9 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     }
 
     function balanceInAsset(address account ,address token) external returns (uint256) {
-        uint256 shares = balanceInShares(account,token);
-        uint256 decimals = ICRERC20(cruizeTokens[token]).decimals();
-        uint256 price = priceOfRound(token,vaults[token].round-1);
-        return shares.mul(price).div(10**decimals);
+        // uint256 shares = balanceInShares(account,token);
+        // uint256 decimals = ICRERC20(cruizeTokens[token]).decimals();
+        // uint256 price = priceOfRound(token,vaults[token].round-1);
+        // return shares.mul(price).div(10**decimals);
     }
 }

@@ -19,6 +19,8 @@ describe("work flow from curize vault to cruize contract", function () {
   let cruizeSafe: Contract;
   let cruizeModule: Contract;
   let dai: Contract;
+  let crETH: Contract;
+  let crDAI: Contract;
   let crContract: Contract;
   let user1: SignerWithAddress;
 
@@ -115,10 +117,13 @@ describe("work flow from curize vault to cruize contract", function () {
       await cruizeModule.initRounds(ETHADDRESS, BigNumber.from("1"));
       await cruizeModule.initRounds(dai.address, BigNumber.from("1"));
 
-      let crDAI = await cruizeModule.callStatic.cruizeTokens(dai.address);
-      let crETH = await cruizeModule.callStatic.cruizeTokens(ETHADDRESS);
-      hre.tracer.nameTags[crDAI] = "crDAI";
-      hre.tracer.nameTags[crETH] = "crETH";
+      let crDai = await cruizeModule.callStatic.cruizeTokens(dai.address);
+      let crEth = await cruizeModule.callStatic.cruizeTokens(ETHADDRESS);
+
+      crETH = await ethers.getContractAt("CRTokenUpgradeable",crEth)
+      crDAI = await ethers.getContractAt("CRTokenUpgradeable",crDai)
+      hre.tracer.nameTags[crDai] = "crDAI";
+      hre.tracer.nameTags[crEth] = "crETH";
     });
   });
 
@@ -154,7 +159,7 @@ describe("work flow from curize vault to cruize contract", function () {
           ETHADDRESS,
           BigNumber.from(1)
         )
-      ).to.be.equal(parseEther("1"));
+      ).to.be.equal(BigNumber.from(1));
 
       const receipt = await cruizeModule.callStatic.depositReceipts(
         signer.address,
@@ -164,7 +169,7 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(receipt.amount).to.be.equal(parseEther("10"));
     });
 
-    it.only("Initiate Withdrawal if Round is not Closed", async () => {
+    it("Initiate Withdrawal if Round is not Closed", async () => {
       await expect(cruizeModule.initiateWithdrawal(parseEther("1"), ETHADDRESS))
         .to.be.revertedWithCustomError(cruizeModule, "InvalidWithdrawalRound")
         .withArgs(1, 1);
@@ -213,31 +218,18 @@ describe("work flow from curize vault to cruize contract", function () {
       
     });
 
-    it.only("Close 1st ETH round", async () => {
-      expect( await cruizeModule.callStatic.balanceInShares(
-        signer.address,
-        ETHADDRESS
-      )).to.be.equal(parseEther("10"))
-
-      await expect(cruizeModule.closeRound(ETHADDRESS))
-        .emit(cruizeModule, "CloseRound")
-        .withArgs(ETHADDRESS, BigNumber.from(1),parseEther("1"), parseEther("10"));
+    it.only("Close 1st ETH round", async () => 
+    {
+      await cruizeModule.closeRound(ETHADDRESS)
       const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
-      const price = await cruizeModule.callStatic.roundPricePerShare(
+      expect(await cruizeModule.callStatic.roundPricePerShare(
         ETHADDRESS,
         BigNumber.from(1)
-      );
-      expect(price).to.be.equal(parseEther("1"));
+      )).to.be.equal(parseEther("1"));
       expect(vault.round).to.be.equal(2);
       expect(vault.totalPending).to.be.equal(parseEther("0"));
       expect(vault.lockedAmount).to.be.equal(parseEther("10"));
-      expect(vault.queuedWithdrawShares).to.be.equal(parseEther("0"));
-
-      expect( await cruizeModule.callStatic.balanceInShares(
-        signer.address,
-        ETHADDRESS
-      )).to.be.equal(parseEther("10"))
-
+      expect(await crETH.callStatic.totalSupply()).to.be.equal(parseEther("10"))
     });
   });
 
@@ -259,6 +251,12 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(vault.lockedAmount).to.be.equal(parseEther("10"));
       expect(vault.totalPending).to.be.equal(parseEther("10"));
       expect(vault.queuedWithdrawShares).to.be.equal(parseEther("0"));
+      expect(
+        await cruizeModule.callStatic.roundPricePerShare(
+          ETHADDRESS,
+          BigNumber.from(1)
+        )
+      ).to.be.equal(parseEther("1"));
 
       const receipt = await cruizeModule.callStatic.depositReceipts(
         signer.address,
@@ -266,12 +264,7 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       expect(receipt.round).to.be.equal(2);
       expect(receipt.amount).to.be.equal(parseEther("10"));
-
-      expect( await cruizeModule.callStatic.balanceInShares(
-        signer.address,
-        ETHADDRESS
-      )).to.be.equal(parseEther("20"))
-
+      expect(receipt.unredeemedShares).to.be.equal(parseEther("10"));
     });
 
     it.only("Simulate 20% APY", async () => {
@@ -283,47 +276,57 @@ describe("work flow from curize vault to cruize contract", function () {
 
     it.only("close 2nd ETH round", async () => {
 
-      expect( await cruizeModule.callStatic.balanceInShares(
-        signer.address,
-        ETHADDRESS
-      )).to.be.equal(parseEther("20"))
-
-      await expect(cruizeModule.closeRound(ETHADDRESS))
-        .emit(cruizeModule, "CloseRound")
-        .withArgs(ETHADDRESS, BigNumber.from(2),parseEther("1.2"), parseEther("22"));
-
+      await cruizeModule.closeRound(ETHADDRESS)
       const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
-      const price = await cruizeModule.callStatic.roundPricePerShare(
+      expect(await cruizeModule.callStatic.roundPricePerShare(
         ETHADDRESS,
         BigNumber.from(2)
-      );
-      expect(price).to.be.equal(parseEther("1.2"));
+      )).to.be.equal(parseEther("1.2"));
       expect(vault.round).to.be.equal(3);
       expect(vault.totalPending).to.be.equal(parseEther("0"));
       expect(vault.lockedAmount).to.be.equal(parseEther("22"));
-      expect(vault.queuedWithdrawShares).to.be.equal(parseEther("0"));
-
-      // // check user shares after round closing
-      expect( await cruizeModule.callStatic.balanceInShares(
-        signer.address,
-        ETHADDRESS
-      )).to.be.equal(parseEther("18.333333333333333333"))
-
-      expect( await cruizeModule.callStatic.balanceInAsset(
-        signer.address,
-        ETHADDRESS
-        )).to.be.equal(parseEther("21.999999999999999999"))
+      expect(await crETH.callStatic.totalSupply()).to.be.equal(parseEther("18.333333333333333333"))
   });
   });
 
   describe("3rd round", () => {
-    it.only("Initiate Withdraw: Throw error if balance is not enough", async () => {
+    it.only("deposit ETH", async () => {
+      await expect(
+        cruizeModule.connect(user1).deposit(ETHADDRESS, parseEther("10"), {
+          value: parseEther("10"),
+        })
+      )
+        .emit(cruizeModule, "Deposit")
+        .withArgs(user1.address, parseEther("10"));
+
+      const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
+      expect(vault.round).to.be.equal(3);
+      expect(vault.lockedAmount).to.be.equal(parseEther("22"));
+      expect(vault.totalPending).to.be.equal(parseEther("10"));
+      expect(vault.queuedWithdrawShares).to.be.equal(parseEther("0"));
+      const receipt = await cruizeModule.callStatic.depositReceipts(
+        user1.address,
+        ETHADDRESS
+      );
+      expect(receipt.round).to.be.equal(3);
+      expect(receipt.amount).to.be.equal(parseEther("10"));
+      expect(receipt.unredeemedShares).to.be.equal(parseEther("0"));
+    });
+
+    it.only("Simulate 50% APY", async () => {
+      await signer.sendTransaction({
+        to: cruizeSafe.address,
+        value: parseEther("11"),
+      });
+    });
+
+    it("Initiate Withdraw: Throw error if balance is not enough", async () => {
       await expect(
         cruizeModule.initiateWithdrawal(parseEther("30"), ETHADDRESS)
       ).reverted;
     });
 
-    it.only("Initiate ETH Withdrawal", async () => {
+    it("Initiate ETH Withdrawal", async () => {
 
       let totalShares:BigNumber = await cruizeModule.callStatic.balanceInShares(
         signer.address,
@@ -350,18 +353,19 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it.only("close 3rd ETH round", async () => {
-      await expect(cruizeModule.closeRound(ETHADDRESS))
-        .emit(cruizeModule, "CloseRound")
-        .withArgs(ETHADDRESS, BigNumber.from(3), parseEther("1.1"),parseEther("11.916666666666666667"));
-
+      await cruizeModule.closeRound(ETHADDRESS)
       const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
+      expect(await cruizeModule.callStatic.roundPricePerShare(
+        ETHADDRESS,
+        BigNumber.from(3)
+      )).to.be.equal(parseEther("1.8"));
       expect(vault.round).to.be.equal(4);
-      expect(vault.lockedAmount).to.be.equal(parseEther("11.916666666666666667"));
       expect(vault.totalPending).to.be.equal(parseEther("0"));
-      expect(vault.queuedWithdrawShares).to.be.equal(parseEther("9.166666666666666666"));
+      expect(vault.lockedAmount).to.be.equal(parseEther("43"));
+      expect(await crETH.callStatic.totalSupply()).to.be.equal(parseEther("23.888888888888888888"))
     });
 
-    it.only("Complete withdrawal", async () => {
+    it("Complete withdrawal", async () => {
       await expect(cruizeModule.withdraw(ETHADDRESS))
         .emit(cruizeModule, "Withdrawal")
         .withArgs(signer.address, parseEther("10.083333333333333333"));
@@ -386,7 +390,14 @@ describe("work flow from curize vault to cruize contract", function () {
 
   describe("4th round", () => {
 
-    it.only("deposit ETH", async () => {
+    it.only("Simulate 10% APY", async () => {
+      await signer.sendTransaction({
+        to: cruizeSafe.address,
+        value: parseEther("4.3"),
+      });
+    });
+
+    it("deposit ETH", async () => {
       await cruizeModule.connect(user1).deposit(ETHADDRESS, parseEther("10"), {
         value: parseEther("10"),
       });
@@ -412,13 +423,13 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(receipt.amount).to.be.equal(parseEther("10"));
     });
 
-    it.only("WithdrawInstantly: Throw, if amount is zero", async () => {
+    it("WithdrawInstantly: Throw, if amount is zero", async () => {
       await expect(cruizeModule.withdrawInstantly(parseEther("0"), ETHADDRESS))
         .to.be.revertedWithCustomError(cruizeModule, "ZeroAmount")
         .withArgs(0);
     });
 
-    it.only("WithdrawInstantly: Throw, if token address is zero-address", async () => {
+    it("WithdrawInstantly: Throw, if token address is zero-address", async () => {
       await expect(
         cruizeModule.withdrawInstantly(
           parseEther("1"),
@@ -429,7 +440,7 @@ describe("work flow from curize vault to cruize contract", function () {
         .withArgs(ethers.constants.AddressZero);
     });
 
-    it.only("Simulate 55% APY", async () => {
+    it("Simulate 55% APY", async () => {
       await signer.sendTransaction({
         to: cruizeSafe.address,
         value: parseEther("5.5"),
@@ -437,38 +448,16 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it.only("close 4th ETH round", async () => {
-
-      console.log(await cruizeModule.callStatic.balanceInShares(
-        signer.address,
-        ETHADDRESS
-      ))
-      // right now signer is the only participant in 4th round
-      // so signer will have the shares equal to the principle + apy in the round 4th
-      expect(await cruizeModule.callStatic.balanceInAsset(
-        signer.address,
-        ETHADDRESS
-      )).to.be.equal(parseEther("12.833333333333333341"))
-
       await cruizeModule.closeRound(ETHADDRESS)
-
-      console.log(await cruizeModule.callStatic.balanceInAsset(
-        signer.address,
-        ETHADDRESS
-      ))
-
-      console.log(await cruizeModule.callStatic.balanceInAsset(
-        user1.address,
-        ETHADDRESS
-      ))
-
-      // await expect(cruizeModule.closeRound(ETHADDRESS))
-      //   .emit(cruizeModule, "CloseRound")
-      //   .withArgs(ETHADDRESS, BigNumber.from(4),parseEther("0.6") ,parseEther("26.500000000000000001"));
-
-      // const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
-      // expect(vault.round).to.be.equal(5);
-      // expect(vault.lockedAmount).to.be.equal(parseEther("2"));
-      // expect(vault.queuedWithdrawalAmount).to.be.equal(parseEther("0"));
+      const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
+      expect(await cruizeModule.callStatic.roundPricePerShare(
+        ETHADDRESS,
+        BigNumber.from(4)
+      )).to.be.equal(parseEther("1.980000000000000000"));
+      expect(vault.round).to.be.equal(5);
+      expect(vault.totalPending).to.be.equal(parseEther("0"));
+      expect(vault.lockedAmount).to.be.equal(parseEther("47.3"));
+      expect(await crETH.callStatic.totalSupply()).to.be.equal(parseEther("23.888888888888888888"))
     });
 
     it("withdrawInstantly if round is not same", async () => {
@@ -478,7 +467,54 @@ describe("work flow from curize vault to cruize contract", function () {
     });
   });
 
-  describe("5th round::withdrawInstantly", () => {
+  describe("5th round", () => {
+
+    it.only("Simulate 10% APY", async () => {
+      await signer.sendTransaction({
+        to: cruizeSafe.address,
+        value: parseEther("4.73"),
+      });
+    });
+
+    it.only("Initiate ETH Withdrawal", async () => {
+
+      let shares = await cruizeModule.callStatic.shareBalances(
+        ETHADDRESS,
+        user1.address,
+      )
+      let totalShares = BigNumber.from(shares.heldByVault)
+      await expect(cruizeModule.connect(user1).initiateWithdrawal(totalShares, ETHADDRESS))
+        .emit(cruizeModule, "InitiateWithdrawal")
+        .withArgs(user1.address, ETHADDRESS, totalShares);
+
+      const withdrawal = await cruizeModule.callStatic.withdrawals(
+        user1.address,
+        ETHADDRESS
+      );
+      expect(withdrawal.round).to.be.equal(5);
+      expect(withdrawal.shares).to.be.equal(totalShares);
+      expect(
+        await cruizeModule.currentQueuedWithdrawalShares(ETHADDRESS)
+      ).to.be.equal(totalShares);
+
+      const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
+      expect(vault.round).to.be.equal(5);
+      expect(vault.lockedAmount).to.be.equal(parseEther("47.3"));
+    });
+
+    it.only("close 5th ETH round", async () => {
+      await cruizeModule.closeRound(ETHADDRESS)
+      const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
+      expect(await cruizeModule.callStatic.roundPricePerShare(
+        ETHADDRESS,
+        BigNumber.from(5)
+      )).to.be.equal(parseEther("2.178000000000000000"));
+      expect(vault.round).to.be.equal(6);
+      expect(vault.totalPending).to.be.equal(parseEther("0"));
+      expect(vault.lockedAmount).to.be.equal(parseEther("39.930000000000000002"));
+      expect(await crETH.callStatic.totalSupply()).to.be.equal(parseEther("23.888888888888888888"))
+    });
+
     it("deposit ETH", async () => {
       await cruizeModule.deposit(ETHADDRESS, parseEther("1"), {
         value: parseEther("1"),
@@ -524,7 +560,7 @@ describe("work flow from curize vault to cruize contract", function () {
     });
   });
 
-  describe("6th round: Standard withdrawal", () => {
+  describe("6th round", () => {
     it("initiateWithdrawal if withdrawal amount is greater than  the deposited amount", async () => {
       await expect(
         cruizeModule.initiateWithdrawal(parseEther("2000"), ETHADDRESS)
@@ -559,34 +595,41 @@ describe("work flow from curize vault to cruize contract", function () {
         .withArgs(0, 100000000000000);
     });
 
-    it("initiateWithdrawal for ETH ", async () => {
-      await cruizeModule.initiateWithdrawal(parseEther("2"), ETHADDRESS);
+    it.only("initiateWithdrawal for ETH ", async () => {
+      
+      let shares = await cruizeModule.callStatic.shareBalances(
+        ETHADDRESS,
+        signer.address,
+        )
+        let totalShares = BigNumber.from(shares.heldByVault)
+        await cruizeModule.initiateWithdrawal(totalShares, ETHADDRESS);
 
       const withdrawal = await cruizeModule.callStatic.withdrawals(
         signer.address,
         ETHADDRESS
       );
       expect(withdrawal.round).to.be.equal(6);
-      expect(withdrawal.amount).to.be.equal(parseEther("2"));
+      expect(withdrawal.shares).to.be.equal(totalShares);
       expect(
-        await cruizeModule.currentQueuedWithdrawalAmounts(ETHADDRESS)
-      ).to.be.equal(parseEther("2"));
-    });
-
-    it("close 6th ETH round", async () => {
-      await expect(cruizeModule.closeRound(ETHADDRESS))
-        .emit(cruizeModule, "CloseRound")
-        .withArgs(ETHADDRESS, BigNumber.from(6), parseEther("0"));
+        await cruizeModule.currentQueuedWithdrawalShares(ETHADDRESS)
+      ).to.be.equal(totalShares);
 
       const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
+      expect(vault.round).to.be.equal(6);
+      expect(vault.lockedAmount).to.be.equal(parseEther("39.930000000000000002"));
+    });
+
+    it.only("close 6th ETH round", async () => {
+      await cruizeModule.closeRound(ETHADDRESS)
+      const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
+      expect(await cruizeModule.callStatic.roundPricePerShare(
+        ETHADDRESS,
+        BigNumber.from(6)
+      )).to.be.equal(parseEther("2.178000000000000000"));
       expect(vault.round).to.be.equal(7);
-      expect(vault.lockedAmount).to.be.equal(parseEther("0"));
-      expect(vault.queuedWithdrawalAmount).to.be.equal(parseEther("2"));
-      const currentQueuedWithdrawalAmounts =
-        await cruizeModule.callStatic.currentQueuedWithdrawalAmounts(
-          ETHADDRESS
-        );
-      expect(currentQueuedWithdrawalAmounts).to.be.equal(parseEther("0"));
+      expect(vault.totalPending).to.be.equal(parseEther("0"));
+      expect(vault.lockedAmount).to.be.equal(BigNumber.from(3));
+      expect(await crETH.callStatic.totalSupply()).to.be.equal(parseEther("23.888888888888888888"))
     });
 
     it("initiateWithdrawal if you already made withdrawal request", async () => {
@@ -609,48 +652,14 @@ describe("work flow from curize vault to cruize contract", function () {
       await cruizeModule.withdraw(ETHADDRESS, data);
     });
   });
+
+
+  describe("7th round", ()=>{
+    it.only("user:1 complete withdrawal", async () => {
+     
+      await cruizeModule.connect(user1).withdraw(ETHADDRESS)
+      await cruizeModule.connect(signer).withdraw(ETHADDRESS)
+      
+    });
+  })
 });
-
-/**
- * r#1 {principle:0 , deposit:10 , apy:0 , UnitPerShare:1 , AmountAfterStrategy:0 , unredeemShares:10 } start
- * crTokens = 10
- * 
-*
-* r#1 {principle:10 , deposit: , apy:0 , UnitPerShare:1 , AmountAfterStrategy:10 , unredeemShares:10 } close
-
-* r#2 {principle:10 , deposit:0 , apy:20 , UnitPerShare:1 , AmountAfterStrategy:12 , pending: 0} start
-* r#2 {principle:10 , deposit:10 , apy:20 , UnitPerShare:1 , AmountAfterStrategy:12 , pending: 10} deposit
-
-crTokens = 20
-
- * Calculate UnitPerShare = ( AmountAfterStrategy / principle ) * rounds[n-1].UnitPerShare
- * Calculate UnitPerShare = ( 12 / 10 ) * 1
- * UnitPerShare = 1.2 = 1ETH
-
-* r#2 {principle:10 , deposit:0 , apy:20 , UnitPerShare:1.2 , AmountAfterStrategy:12 , pending: 10} close
-
-
-* r#3 {principle:22 , deposit:0 , apy:20 , UnitPerShare:? , AmountAfterStrategy:? , pending: 0} start
-
-crTokens = ( locked - lastDepositAmount) / 1.2
-          =  ( 20 - 10 ) / 1.2
-          = 8.33 + lastDepsositAmount / currentRound_unitPershare
-          = 8.33 + 10 / 1
-          = 18.33
-
- * Calculate UnitPerShare = ( AmountAfterStrategy / principle ) * rounds[n-1].UnitPerShare
- * Calculate UnitPerShare = ( 26.4 / 22 ) * 1.2
- * UnitPerShare = 1.44 = 1ETH
- * 
-* r#3 {principle:22 , deposit:0 , apy:20 , UnitPerShare:1.44 , AmountAfterStrategy:26.4 , pending: 0} close
-crTokens = ( ( locked - lastDepositAmount) / 1.44 )+ (lastDepsositAmount / (currentRound_unitPershare/ depositTime_unitPershare ) )
-  crTokens = ( locked - lastDepositAmount) / 1.44
-          =  ( 20 - 10 ) / 1.44
-          = 6.94 + (lastDepsositAmount / (currentRound_unitPershare/ depositTime_unitPershare ) )
-          = 6.94 + (10 /  ( 1.44 / 1.2 ))
-          = 6.94 + 8.33
-          = 15.27 shares
-
-* r#2 {principle:26.4 , deposit:0 , apy:20 , UnitPerShare:? , AmountAfterStrategy:? , pending: 0} start
-* r#2 {principle:26.4 , deposit:10 , apy:20 , UnitPerShare:? , AmountAfterStrategy:? , pending: 10} deposit
-*/
