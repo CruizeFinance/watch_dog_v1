@@ -8,8 +8,8 @@ contract Cruize is CruizeVault, Proxy {
     constructor(
         address _owner,
         address _vault,
-        address _crContract
-    ) CruizeVault(_owner, _vault, _crContract) {}
+        address _crContract,uint256 _managementFee
+    ) CruizeVault(_owner, _vault, _crContract,_managementFee) {}
 
     /**
      * @notice createToken will Clone CRTokenUpgradeable (ERC20 token).

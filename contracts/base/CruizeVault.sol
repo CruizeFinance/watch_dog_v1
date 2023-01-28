@@ -17,6 +17,8 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     //----------------------------//
     //     State Vairable         //
     //----------------------------//
+   // @notice Fee recipient for the performance and management fees
+    address public feeRecipient;
     uint256 public managementFee;
     address immutable module;
     address immutable gnosisSafe;
@@ -76,10 +78,13 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     constructor(
         address _owner,
         address _vault,
-        address _crContract
+        address _crContract,
+        uint256 _managementFee
     ) {
         gnosisSafe = _vault;
         crContract = _crContract;
+        feeRecipient = _owner;
+        managementFee = _managementFee;
         module = address(this);
         bytes memory initializeParams = abi.encode(_owner, _vault);
         setUp(initializeParams);
@@ -453,13 +458,13 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
             vaultState.totalPending = 0;
             vaultState.round = uint16(currentRound + 1);
         }
-
+    
         // _mint(address(this), mintShares);
         ICRERC20(cruizeTokens[_token]).mint(address(this), mintShares);
 
-        // if (totalVaultFee > 0) {
-        //     transferAsset(payable(recipient), totalVaultFee);
-        // }
+        if (totalVaultFee > 0) {
+            _transferFromGnosis(_token,payable(feeRecipient), totalVaultFee);
+        }
 
         return (lockedBalance, queuedWithdrawAmount);
 
@@ -481,27 +486,35 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         Types.VaultState memory vaultState = vaults[_token];
         uint256 currentBalance = params.totalBalance;
         uint256 pendingAmount = vaultState.totalPending;
+        uint256 lastLockedAmount = vaultState.lockedAmount;
+
         // Total amount of queued withdrawal shares from previous rounds (doesn't include the current round)
         uint256 lastQueuedWithdrawShares = vaultState.queuedWithdrawShares; 
+      uint256 decimals;
 
-        // Deduct older queued withdraws so we don't charge fees on them
-        // uint256 balanceForVaultFees =
-        //     currentBalance.sub(params.lastQueuedWithdrawAmount);
+      if (_token == ETH){
+        decimals = 18;
+      }
+      else{
+        decimals = ICRERC20(_token).decimals();
+      }
 
         // {
-        //     (performanceFeeInAsset, , totalVaultFee) = getVaultFees(
-        //         balanceForVaultFees,
-        //         vaultState.lastLockedAmount,
-        //         vaultState.totalPending,
-        //         params.performanceFee,
-        //         params.managementFee
-        //     );
+            ( totalVaultFee) = getVaultFees(
+                currentBalance,
+                pendingAmount,
+                lastLockedAmount,
+                decimals
+            );
         // }
         
 
         // Take into account the fee
         // so we can calculate the newPricePerShare
-        currentBalance = currentBalance.sub(totalVaultFee);
+        if(vaultState.round >  1){
+         currentBalance = currentBalance.sub(totalVaultFee);
+        }
+      
 
         {
             newPricePerShare = ShareMath.pricePerShare( 
@@ -510,7 +523,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
                 pendingAmount,
                 params.decimals
             );
-            console.log("newPricePerShare",newPricePerShare);
+  
             
             queuedWithdrawAmount = params.lastQueuedWithdrawAmount.add(
                 ShareMath.sharesToAsset(
@@ -528,6 +541,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
                 newPricePerShare,
                 params.decimals
             ); 
+            
         }
 
         return (
@@ -541,7 +555,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
 
     }
 
-     function calculateQueuedWithdrawAmount(address _token,uint256 sharePerUnit) private returns(uint256 lockedBalance, uint256 queuedWithdrawAmount) {
+     function calculateQueuedWithdrawAmount(address _token,uint256 sharePerUnit) view private returns(uint256 lockedBalance, uint256 queuedWithdrawAmount) {
         uint256 currentBalance = totalBalance(_token);
         uint256 lastQueuedWithdrawAmount = lastQueuedWithdrawAmounts[_token];
         uint128 currentQueuedWithdrawShares = currentQueuedWithdrawalShares[_token];
@@ -553,24 +567,28 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
                     ICRERC20(cruizeTokens[_token]).decimals()
                 )
             );
-        console.log("lastQueuedWithdrawAmount::",lastQueuedWithdrawAmount);
-
-            console.log("calculateQueuedWithdrawAmount::queuedWithdrawAmount",queuedWithdrawAmount);
         return (currentBalance.sub(queuedWithdrawAmount),queuedWithdrawAmount);
     }
+    function getVaultFees(uint256 totalTokenBalance , uint256 pendingAmount, uint256 lastLockedAmount,uint256 decimals ) public view returns(uint256 vaultFee){
+        uint256 roundBalanceWithAPY = totalTokenBalance.sub(pendingAmount);
+        uint256 roundTotalAPY = roundBalanceWithAPY.sub(lastLockedAmount);
+
+        vaultFee =  roundTotalAPY.mul(managementFee.div(10**decimals)).div(100);
+       
+}
     
-    function totalBalance(address token) private returns (uint256) {
+    function totalBalance(address token) private view returns (uint256) {
         if (token == ETH) return gnosisSafe.balance;
         else return ICRERC20(token).balanceOf(gnosisSafe);
     }
 
-     function totalSupply(address token) private returns (uint256) {
+     function totalSupply(address token)  view private returns (uint256) {
         return ICRERC20(cruizeTokens[token]).totalSupply();
     }
 
     function shareBalances(address token,address account)
         public
-        view
+        
         returns (uint256 heldByAccount, uint256 heldByVault)
     {
         Types.DepositReceipt memory depositReceipt = depositReceipts[account][token];
@@ -605,4 +623,23 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         // uint256 price = priceOfRound(token,vaults[token].round-1);
         // return shares.mul(price).div(10**decimals);
     }
+    function setFeeRecipient(address feeRecipient_) external onlyOwner {
+        require(feeRecipient_ != address(0));
+        feeRecipient = feeRecipient_;
+    }
+
+    function setManagementFee(uint256 managementFee_) external onlyOwner {
+        require(managementFee_ > 0);
+        managementFee = managementFee_;
+    }
+
+    function getManagementFee() external view onlyOwner returns (uint256) {
+        return managementFee;
+    }
+
+    function getFeeRecipient() external view onlyOwner returns (address) {
+        return feeRecipient;
+    }
+
+
 }
