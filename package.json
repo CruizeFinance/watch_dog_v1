@@ -6,7 +6,7 @@
   "scripts": {
     "test": "hardhat test --trace",
     "build": "hardhat compile",
-    "test:ci":"hardhat watch ci",
+    "test:ci": "hardhat watch ci",
     "fork_node": "hardhat node --fork https://arb1.arbitrum.io/rpc --no-deploy --fork-ignore-unknown-tx-type true",
     "test_mainnet": "hardhat test --logs ./test/src/1_asset-pool.spec.ts",
     "test_arbi": "hardhat test --config ./hardhat_arbi.config.ts ./test/src/2_aave-integration-v3.spec.ts --network localhost",
@@ -41,12 +41,16 @@
   },
   "dependencies": {
     "@gnosis.pm/zodiac": "^2.1.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.8.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "@types/ethereumjs-abi": "^0.6.3",
     "dotenv": "^16.0.3",
     "ethereumjs-abi": "^0.6.8",
+    "hardhat-abi-exporter": "^2.10.1",
     "hardhat-deploy": "^0.11.22",
-    "hardhat-tracer": "^1.2.1"
+    "hardhat-tracer": "^1.2.1",
+    "hardhat-watcher": "^2.5.0",
+    "yargs": "^17.6.2"
   }
 }

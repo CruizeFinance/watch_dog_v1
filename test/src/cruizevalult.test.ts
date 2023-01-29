@@ -1,11 +1,7 @@
 import { expect } from "chai";
 import { BigNumber, Contract } from "ethers";
 import hre, { ethers } from "hardhat";
-import {
-  DepositERC20,
-  createCruizeToken,
-  deployContracts,
-} from "./utilites/common.test";
+import { DepositERC20, deployContracts } from "./utilites/common.test";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Address } from "hardhat-deploy/dist/types";
 import abi from "ethereumjs-abi";
@@ -64,7 +60,8 @@ describe("work flow from curize vault to cruize contract", function () {
     cruizeModule = await CRUIZEMODULE.deploy(
       signer.address,
       gProxyAddress,
-      crContract.address,parseEther("10")
+      crContract.address,
+      parseEther("10")
     );
 
     hre.tracer.nameTags[cruizeSafe.address] = "Cruize safe";
@@ -107,11 +104,23 @@ describe("work flow from curize vault to cruize contract", function () {
 
     it.only("create crtokens", async () => {
       await expect(
-        cruizeModule.createToken("cruzie Dai", "crdai", dai.address, 18)
+        cruizeModule.createToken(
+          "cruzie Dai",
+          "crdai",
+          dai.address,
+          18,
+          parseEther("1000")
+        )
       ).to.be.emit(cruizeModule, "CreateToken");
 
       await expect(
-        cruizeModule.createToken("cruzie ETH", "crETH", ETHADDRESS, 18)
+        cruizeModule.createToken(
+          "cruzie ETH",
+          "crETH",
+          ETHADDRESS,
+          18,
+          parseEther("1000")
+        )
       ).to.be.emit(cruizeModule, "CreateToken");
 
       await cruizeModule.initRounds(ETHADDRESS, BigNumber.from("1"));
@@ -250,7 +259,7 @@ describe("work flow from curize vault to cruize contract", function () {
         })
       )
         .emit(cruizeModule, "Deposit")
-        .withArgs(signer.address, parseEther("10"));
+        .withArgs(signer.address, parseEther("10"), ETHADDRESS);
 
       const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
       expect(vault.round).to.be.equal(2);
@@ -306,7 +315,7 @@ describe("work flow from curize vault to cruize contract", function () {
         })
       )
         .emit(cruizeModule, "Deposit")
-        .withArgs(user1.address, parseEther("10"));
+        .withArgs(user1.address, parseEther("10"), ETHADDRESS);
 
       const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
       expect(vault.round).to.be.equal(3);
@@ -502,7 +511,7 @@ describe("work flow from curize vault to cruize contract", function () {
       await expect(
         cruizeModule.connect(user1).initiateWithdrawal(totalShares, ETHADDRESS)
       )
-        .emit(cruizeModule, "InitiateWithdrawal")
+        .emit(cruizeModule, "initiateStandardWithdrawal")
         .withArgs(user1.address, ETHADDRESS, totalShares);
 
       const withdrawal = await cruizeModule.callStatic.withdrawals(
@@ -536,6 +545,13 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       expect(await crETH.callStatic.totalSupply()).to.be.equal(
         parseEther("24.319111630625365282")
+      );
+    });
+    it("transferFromSafe", async () => {
+      const vault = await cruizeModule.transferFromSafe(
+        signer.address,
+        ETHADDRESS,
+        parseEther("10")
       );
     });
 

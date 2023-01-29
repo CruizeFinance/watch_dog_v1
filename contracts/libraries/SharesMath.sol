@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.6;
-
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Types} from "./Types.sol";
-import "hardhat/console.sol";
 
 library ShareMath {
     using SafeMath for uint256;
@@ -15,7 +13,7 @@ library ShareMath {
         uint256 assetAmount,
         uint256 assetPerShare,
         uint256 decimals
-    ) internal returns (uint256) {
+    ) internal pure returns (uint256) {
         // If this throws, it means that vault's roundPricePerShare[currentRound] has not been set yet
         // which should never happen.
         // Has to be larger than 1 because `1` is used in `initRoundPricePerShares` to prevent cold writes.
@@ -49,7 +47,7 @@ library ShareMath {
         uint256 currentRound,
         uint256 assetPerShare,
         uint256 decimals
-    ) internal returns (uint256 unredeemedShares) {
+    ) internal pure returns (uint256 unredeemedShares) {
         if (depositReceipt.round > 0 && depositReceipt.round < currentRound) {
             uint256 sharesFromRound = assetToShares(
                 depositReceipt.amount,
@@ -68,7 +66,7 @@ library ShareMath {
         uint256 totalBalance,
         uint256 pendingAmount,
         uint256 decimals
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 singleShare = 10**decimals;
 
         return
