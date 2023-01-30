@@ -178,7 +178,7 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it("Initiate Withdrawal if Round is not Closed", async () => {
-      await expect(cruizeModule.initiateWithdrawal(parseEther("1"), ETHADDRESS))
+      await expect(cruizeModule.initiateWithdrawal(ETHADDRESS,parseEther("1")))
         .to.be.revertedWithCustomError(cruizeModule, "InvalidWithdrawalRound")
         .withArgs(1, 1);
 
@@ -212,7 +212,7 @@ describe("work flow from curize vault to cruize contract", function () {
       await expect(
         cruizeModule
           .connect(user1)
-          .withdrawInstantly(parseEther("1"), ETHADDRESS)
+          .instantWithdraw(ETHADDRESS,parseEther("1"))
       )
         .emit(cruizeModule, "InstantWithdraw")
         .withArgs(user1.address, parseEther("1"), 1);
@@ -339,7 +339,7 @@ describe("work flow from curize vault to cruize contract", function () {
 
     it("Initiate Withdraw: Throw error if balance is not enough", async () => {
       await expect(
-        cruizeModule.initiateWithdrawal(parseEther("30"), ETHADDRESS)
+        cruizeModule.initiateWithdrawal(ETHADDRESS,parseEther("30"))
       ).reverted;
     });
 
@@ -350,7 +350,7 @@ describe("work flow from curize vault to cruize contract", function () {
           ETHADDRESS
         );
       totalShares = totalShares.div(BigNumber.from(2));
-      await expect(cruizeModule.initiateWithdrawal(totalShares, ETHADDRESS))
+      await expect(cruizeModule.initiateWithdrawal(ETHADDRESS,totalShares))
         .emit(cruizeModule, "InitiateWithdrawal")
         .withArgs(signer.address, ETHADDRESS, totalShares);
 
@@ -387,7 +387,7 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it("Complete withdrawal", async () => {
-      await expect(cruizeModule.withdraw(ETHADDRESS))
+      await expect(cruizeModule.standardWithdraw(ETHADDRESS))
         .emit(cruizeModule, "Withdrawal")
         .withArgs(signer.address, parseEther("10.083333333333333333"));
 
@@ -446,16 +446,16 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it("WithdrawInstantly: Throw, if amount is zero", async () => {
-      await expect(cruizeModule.withdrawInstantly(parseEther("0"), ETHADDRESS))
+      await expect(cruizeModule.instantWithdraw(ETHADDRESS,parseEther("0")))
         .to.be.revertedWithCustomError(cruizeModule, "ZeroAmount")
         .withArgs(0);
     });
 
     it("WithdrawInstantly: Throw, if token address is zero-address", async () => {
       await expect(
-        cruizeModule.withdrawInstantly(
-          parseEther("1"),
-          ethers.constants.AddressZero
+        cruizeModule.instantWithdraw(
+          ethers.constants.AddressZero,
+          parseEther("1")
         )
       )
         .to.be.revertedWithCustomError(cruizeModule, "AssetNotAllowed")
@@ -486,8 +486,8 @@ describe("work flow from curize vault to cruize contract", function () {
       );
     });
 
-    it("withdrawInstantly if round is not same", async () => {
-      await expect(cruizeModule.withdrawInstantly(parseEther("1"), ETHADDRESS))
+    it("instantWithdraw if round is not same", async () => {
+      await expect(cruizeModule.instantWithdraw(ETHADDRESS,parseEther("1")))
         .to.be.revertedWithCustomError(cruizeModule, "InvalidWithdrawalRound")
         .withArgs(4, 5);
     });
@@ -508,7 +508,7 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       let totalShares = BigNumber.from(shares.heldByVault);
       await expect(
-        cruizeModule.connect(user1).initiateWithdrawal(totalShares, ETHADDRESS)
+        cruizeModule.connect(user1).initiateWithdrawal(ETHADDRESS,totalShares)
       )
         .emit(cruizeModule, "initiateStandardWithdrawal")
         .withArgs(user1.address, ETHADDRESS, totalShares);
@@ -560,8 +560,8 @@ describe("work flow from curize vault to cruize contract", function () {
       });
     });
 
-    it("withdrawInstantly just after deposit if withdrawal amount is greater than deposit", async () => {
-      await expect(cruizeModule.withdrawInstantly(parseEther("4"), ETHADDRESS))
+    it("instantWithdraw just after deposit if withdrawal amount is greater than deposit", async () => {
+      await expect(cruizeModule.instantWithdraw(ETHADDRESS,parseEther("4")))
         .to.be.revertedWithCustomError(
           cruizeModule,
           "NotEnoughWithdrawalBalance"
@@ -569,19 +569,19 @@ describe("work flow from curize vault to cruize contract", function () {
         .withArgs(parseEther("1"), parseEther("4"));
     });
 
-    it("withdrawInstantly if asset is not allowed", async () => {
+    it("instantWithdraw if asset is not allowed", async () => {
       await expect(
-        cruizeModule.withdrawInstantly(
-          parseEther("4"),
-          ethers.constants.AddressZero
+        cruizeModule.instantWithdraw(
+          ethers.constants.AddressZero,
+          parseEther("4")
         )
       )
         .to.be.revertedWithCustomError(cruizeModule, "AssetNotAllowed")
         .withArgs(ethers.constants.AddressZero);
     });
 
-    it("withdrawInstantly just after deposit", async () => {
-      await cruizeModule.withdrawInstantly(parseEther("1"), ETHADDRESS);
+    it("instantWithdraw just after deposit", async () => {
+      await cruizeModule.instantWithdraw(parseEther("1"), ETHADDRESS);
 
       const vault = await cruizeModule.callStatic.vaults(ETHADDRESS);
       expect(vault.lockedAmount).to.be.equal(parseEther("2"));
@@ -602,7 +602,7 @@ describe("work flow from curize vault to cruize contract", function () {
   describe("6th round", () => {
     it("initiateWithdrawal if withdrawal amount is greater than  the deposited amount", async () => {
       await expect(
-        cruizeModule.initiateWithdrawal(parseEther("2000"), ETHADDRESS)
+        cruizeModule.initiateWithdrawal(ETHADDRESS,parseEther("2000"))
       )
         .to.be.revertedWithCustomError(
           cruizeModule,
@@ -613,7 +613,7 @@ describe("work flow from curize vault to cruize contract", function () {
 
     it("initiateWithdrawal if  token is not allowed", async () => {
       await expect(
-        cruizeModule.initiateWithdrawal(parseEther("100"), cruizeModule.address)
+        cruizeModule.initiateWithdrawal(cruizeModule.address,parseEther("100"))
       )
         .to.be.revertedWithCustomError(cruizeModule, "AssetNotAllowed")
         .withArgs(cruizeModule.address);
@@ -625,7 +625,7 @@ describe("work flow from curize vault to cruize contract", function () {
         [signer.address, 100000000000000]
       );
       await expect(
-        cruizeModule.withdraw(dai.address, "0x" + data.toString("hex"))
+        cruizeModule.standardWithdraw(dai.address, "0x" + data.toString("hex"))
       )
         .to.be.revertedWithCustomError(
           cruizeModule,
@@ -640,7 +640,7 @@ describe("work flow from curize vault to cruize contract", function () {
         signer.address
       );
       let totalShares = BigNumber.from(shares.heldByVault);
-      await cruizeModule.initiateWithdrawal(totalShares, ETHADDRESS);
+      await cruizeModule.initiateWithdrawal(ETHADDRESS,totalShares);
 
       const withdrawal = await cruizeModule.callStatic.withdrawals(
         signer.address,
@@ -677,7 +677,7 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it("initiateWithdrawal if you already made withdrawal request", async () => {
-      await expect(cruizeModule.initiateWithdrawal(parseEther("1"), ETHADDRESS))
+      await expect(cruizeModule.initiateWithdrawal(ETHADDRESS,parseEther("1")))
         .to.be.revertedWithCustomError(cruizeModule, "WithdrawalAlreadyExists")
         .withArgs(parseEther("2"));
 
@@ -693,14 +693,14 @@ describe("work flow from curize vault to cruize contract", function () {
         ["address", "uint256"],
         [signer.address, parseEther("2")]
       );
-      await cruizeModule.withdraw(ETHADDRESS, data);
+      await cruizeModule.standardWithdraw(ETHADDRESS, data);
     });
   });
 
   describe("7th round", () => {
     it.only("user:1 complete withdrawal", async () => {
-      await cruizeModule.connect(user1).withdraw(ETHADDRESS);
-      await cruizeModule.connect(signer).withdraw(ETHADDRESS);
+      await cruizeModule.connect(user1).standardWithdraw(ETHADDRESS);
+      await cruizeModule.connect(signer).standardWithdraw(ETHADDRESS);
     });
   });
 });

@@ -171,9 +171,9 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         if (_token == address(0)) revert ZeroAddress(_token);
         if (_amount == 0) revert ZeroAmount(_amount);
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
+        IERC20 token = IERC20(_token);
         if (token.balanceOf(gnosisSafe) == vaults[_token].cap)
             revert TokenReachedDepositLimit(vaults[_token].cap);
-        IERC20 token = IERC20(_token);
         _updateDepositInfo(_token, _amount);
         IERC20(_token).safeTransferFrom(msg.sender, gnosisSafe, _amount);
         emit Deposit(msg.sender, _amount, _token);
@@ -187,7 +187,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * @param _amount user withdrawal amount.
      * @param _token withdrawal token address.
      */
-    function _withdrawInstantly(uint104 _amount, address _token) internal {
+    function _instantWithdraw(uint104 _amount, address _token) internal {
         if (cruizeTokens[_token] == address(0)) revert AssetNotAllowed(_token);
         if (_amount == 0) revert ZeroAmount(_amount);
         Types.DepositReceipt storage depositReceipt = depositReceipts[

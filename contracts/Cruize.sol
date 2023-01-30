@@ -6,6 +6,8 @@ import "./base/Proxy.sol";
 
 contract Cruize is CruizeVault, Proxy {
     using SafeMath for uint256;
+    using SafeCast for uint256;
+
 
     constructor(
         address _owner,
@@ -58,7 +60,7 @@ contract Cruize is CruizeVault, Proxy {
      * @notice This function will be use for depositing assets.
      * @param token depositing token address.
      */
-    function withdraw(address token) external nonReentrant {
+    function standardWithdraw(address token) external nonReentrant {
         _completeStandardWithdrawal(token);
     }
 
@@ -68,7 +70,7 @@ contract Cruize is CruizeVault, Proxy {
      * @param amount withdrawal amount.
      * @param token depositing token address.
      */
-    function initiateWithdrawal(uint256 amount, address token)
+    function initiateWithdrawal(address token , uint256 amount)
         external
         nonReentrant
     {
@@ -80,11 +82,11 @@ contract Cruize is CruizeVault, Proxy {
      * @param amount user withdrawal amount.
      * @param token withdrawal token address.
      */
-    function withdrawInstantly(uint104 amount, address token)
+    function instantWithdraw(address token , uint256 amount)
         external
         nonReentrant
     {
-        _withdrawInstantly(amount, token);
+        _instantWithdraw(amount.toUint104(), token);
     }
 
     /**
