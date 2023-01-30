@@ -1,39 +1,10 @@
-// import yargs from "yargs";
-import * as dotenv from "dotenv";
-import 'hardhat-deploy';
-import 'hardhat-tracer';
-import 'hardhat-watcher';
-import "solidity-coverage";
-import "@typechain/hardhat";
-import 'hardhat-abi-exporter';
-import "hardhat-gas-reporter";
-import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-etherscan";
 import "@nomicfoundation/hardhat-toolbox";
-import { HardhatUserConfig, task } from "hardhat/config";
-import type { HttpNetworkUserConfig } from "hardhat/types";
-
+import * as dotenv from "dotenv";
+import 'hardhat-tracer';
+import "hardhat-deploy";
+import "@nomiclabs/hardhat-etherscan";
+import { HttpNetworkUserConfig } from "hardhat/types";
 dotenv.config({path:__dirname+'/.env'});
-
-
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners();
-
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
-
-
-// const argv = yargs.option("network", {
-//   type: "string",
-//   default: "hardhat"
-// })
-//   .help(false)
-//   .version(false).argv;
 
 const DEFAULT_MNEMONIC:string = process.env.MNEMONIC || "";
 
@@ -43,6 +14,7 @@ const sharedNetworkConfig: HttpNetworkUserConfig = {
   timeout: 8000000,
   gasPrice: "auto",
 };
+
 if (process.env.PRIVATE_KEY) {
   sharedNetworkConfig.accounts = [process.env.PRIVATE_KEY];
 } else {
@@ -50,7 +22,19 @@ if (process.env.PRIVATE_KEY) {
     mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
   };
 }
+
 export default {
+  namedAccounts: {
+    deployer: 1
+  },
+  paths: {
+    tests: "./test",
+    cache: "./cache",
+    deploy: "./src/deploy",
+    sources: "./contracts",
+    deployments: "./deployments",
+    artifacts: "./artifacts",
+  },
 
   solidity: {
     compilers: [
@@ -82,15 +66,25 @@ export default {
         mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC
       },
     },
-
     goerli: {
-       ...sharedNetworkConfig,
-        url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
-        chainId: 5,
-    },
-    
-  },
+      ...sharedNetworkConfig,
+       url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+      //  chainId: 5,
+   },
+   arbitrum_goerli: {
+    ...sharedNetworkConfig,
+     url: `https://arbitrum-goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+ },
 
+ shardeum_testnet: {
+  ...sharedNetworkConfig,
+   url: `https://liberty20.shardeum.org/`,
+},
+
+
+//  
+  
+  },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },

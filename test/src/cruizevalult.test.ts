@@ -97,8 +97,7 @@ describe("work flow from curize vault to cruize contract", function () {
           "0x0000000000000000000000000000000000000000",
           signature
         )
-      )
-        .emit(cruizeSafe, "EnabledModule")
+      ).emit(cruizeSafe, "EnabledModule")
         .withArgs(cruizeModule.address);
     });
 
@@ -705,6 +704,7 @@ describe("work flow from curize vault to cruize contract", function () {
     });
   });
 });
+
 /**
  * 1  deposit 10 ETH , total amount 10 , minted share = 10 
  

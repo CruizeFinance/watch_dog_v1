@@ -539,27 +539,6 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         );
     }
 
-    function calculateQueuedWithdrawAmount(address _token, uint256 sharePerUnit)
-        private
-        view
-        returns (uint256 lockedBalance, uint256 queuedWithdrawAmount)
-    {
-        uint256 currentBalance = totalBalance(_token);
-        uint256 lastQueuedWithdrawAmount = lastQueuedWithdrawAmounts[_token];
-        uint128 currentQueuedWithdrawShares = currentQueuedWithdrawalShares[
-            _token
-        ];
-
-        queuedWithdrawAmount = lastQueuedWithdrawAmount.add(
-            ShareMath.sharesToAsset(
-                currentQueuedWithdrawShares,
-                sharePerUnit,
-                ICRERC20(cruizeTokens[_token]).decimals()
-            )
-        );
-        return (currentBalance.sub(queuedWithdrawAmount), queuedWithdrawAmount);
-    }
-
     function getVaultFees(
         uint256 totalTokenBalance,
         uint256 pendingAmount,
@@ -567,7 +546,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     ) private view returns (uint256 vaultFee) {
         uint256 roundBalanceWithAPY = totalTokenBalance.sub(pendingAmount);
         uint256 roundApy = roundBalanceWithAPY.sub(lastLockedAmount);
-        vaultFee = roundApy.mul(managementFee.div(10**18)).div(100);
+        vaultFee = roundApy.mul(managementFee).div(10**18).div(100);
     }
 
     function totalBalance(address token) private view returns (uint256) {
