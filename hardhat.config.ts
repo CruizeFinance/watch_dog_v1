@@ -50,7 +50,7 @@ export default {
     ],
     // compile file with give version
     overrides: {
-      "contracts/safe.sol": {
+      "contracts/gnosis-safe/safe.sol": {
         version: "0.7.6",
         settings: { }
       }

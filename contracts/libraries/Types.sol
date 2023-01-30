@@ -19,6 +19,7 @@ library Types {
         uint128 totalPending;
         // Total amount of queued withdrawal shares from previous rounds (doesn't include the current round)
         uint128 queuedWithdrawShares;
+        //  Total amount that can be held in a vault.
         uint104 cap;
     }
 
@@ -29,6 +30,9 @@ library Types {
         uint104 amount;
         // Unredeemed shares balance
         uint128 unredeemedShares;
+        //  total locked amount.
+       uint104 lockedAmount;
+    
     }
 
     struct Withdrawal {
@@ -39,11 +43,17 @@ library Types {
     }
 
     struct CloseParams {
+        // Decimals of  token
         uint256 decimals;
+        // Total balance of token.
         uint256 totalBalance;
+        //  Total share supply for an round.
         uint256 currentShareSupply;
+        //  Total queued withdrawal from the last round.
         uint256 lastQueuedWithdrawAmount;
+        //  Management fee.
         uint256 managementFee;
+        //  Total  current round queued withdrawal.
         uint256 currentQueuedWithdrawShares;
     }
 }

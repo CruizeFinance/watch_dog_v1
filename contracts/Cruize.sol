@@ -116,4 +116,8 @@ contract Cruize is CruizeVault, Proxy {
         ShareMath.assertUint104(lockedBalance);
         vaultState.lockedAmount = uint104(lockedBalance);
     }
+
+    function getUserLockedAmount(address user, address token) external returns(uint256 amount){
+        amount = getLockedAmount(user,token);
+    }
 }

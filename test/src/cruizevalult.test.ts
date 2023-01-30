@@ -50,7 +50,7 @@ describe("work flow from curize vault to cruize contract", function () {
     gProxyAddress = tx.events[1].args["proxy"];
 
     cruizeSafe = await ethers.getContractAt(
-      "contracts/safe.sol:GnosisSafe",
+      "contracts/gnosis-safe/safe.sol:GnosisSafe",
       gProxyAddress as Address,
       signer
     );
@@ -304,8 +304,12 @@ describe("work flow from curize vault to cruize contract", function () {
         parseEther("18.474576271186440677")
       );
     });
+    it.only("get user balance",async()=>{
+      const vault = await cruizeModule.callStatic.getUserLockedAmount(signer.address,ETHADDRESS);
+      console.log(vault);
+    })
   });
-
+  
   describe("3rd round", () => {
     it.only("deposit ETH", async () => {
       await expect(
