@@ -1,0 +1,28 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "reason-string": ["off", { "maxLength": 32 }],
+    "func-visibility": ["warn", { "ignoreConstructors": true }],
+    "code-complexity": ["warn", 7],
+    "max-states-count": ["warn", 15],
+    "no-empty-blocks": "warn",
+    "no-unused-vars": "warn",
+    "payable-fallback": "warn",
+    "var-name-mixedcase": "off",
+
+    "reentrancy": "warn",
+    "avoid-sha3": "warn",
+    "avoid-throw": "warn",
+    "avoid-suicide": "warn",
+    "multiple-sends": "warn",
+    "avoid-tx-origin": "warn",
+    "not-rely-on-time": "warn",
+    "avoid-call-value": "warn",
+    "state-visibility": "warn",
+    "check-send-result": "warn",
+    "no-inline-assembly": "warn",
+    "no-complex-fallback": "warn",
+    "avoid-low-level-calls": "warn",
+    "not-rely-on-block-hash": "warn"
+  }
+}

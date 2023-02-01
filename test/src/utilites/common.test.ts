@@ -1,6 +1,7 @@
-import { Contract, Signer } from "ethers";
+import { BigNumber, Contract, Signer } from "ethers";
 import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
+import { Address } from "hardhat-deploy/types";
 
 const deployContracts = async (contractName: string, signer: Signer) => {
   const contract = await ethers.getContractFactory(contractName, signer);
@@ -8,26 +9,42 @@ const deployContracts = async (contractName: string, signer: Signer) => {
   return deployedContract;
 };
 
-const createCruizeToken = async (
-  contract: Contract,
-  name: string,
-  symbol: string,
-  decimal: any,
-  tokenaddress: any
-) => {
-  const res = await contract.createToken(name, symbol, tokenaddress, decimal);
-  let tx = await res.wait();
-  tx = await contract.cruizeTokens(tokenaddress);
-  return tx;
-};
 
-const DepositERC20 = async (
+
+const depositERC20 = async (
   cruizeModule: Contract,
   tokenContract: Contract,
   amount: any
 ) => {
-  await tokenContract.approve(cruizeModule.address, parseEther(amount));
+  await tokenContract.approve(cruizeModule.address, parseEther("1000"));
   await cruizeModule.deposit(tokenContract.address, parseEther(amount));
 };
 
-export { deployContracts, createCruizeToken, DepositERC20 };
+const createCruizeToken = async (
+  name: string,
+  symbol: string,
+  address: Address,
+  decimals: number,
+  cap: string,
+  cruizeContract: Contract
+) => {
+  const tx = await cruizeContract.createToken(
+    name,
+    symbol,
+    address,
+    decimals,
+    parseEther(cap)
+  );
+  return tx;
+};
+const toBigNumber = (Number:number) =>{
+  return BigNumber.from(Number).toString()
+}
+const str = (BN:BigNumber)=>{
+  return BN.toString()
+}
+const errorContext = (expectedBN:BigNumber,actualBN:BigNumber) => {
+  return`excepted ${expectedBN} actule ${actualBN}`
+}
+
+export {toBigNumber, errorContext,deployContracts, createCruizeToken, depositERC20,str };

@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "slither": "slither .",
     "test": "hardhat test --trace",
     "build": "hardhat compile",
     "test:ci": "hardhat watch ci",
