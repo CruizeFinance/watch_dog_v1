@@ -1,10 +1,40 @@
 import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 import 'hardhat-tracer';
-dotenv.config({path:__dirname+'/test.env'});
+import "hardhat-deploy";
+import "@nomiclabs/hardhat-etherscan";
+import { HttpNetworkUserConfig } from "hardhat/types";
+dotenv.config({path:__dirname+'/.env'});
 
 const DEFAULT_MNEMONIC:string = process.env.MNEMONIC || "";
+
+const sharedNetworkConfig: HttpNetworkUserConfig = {
+  live: true,
+  saveDeployments: true,
+  timeout: 8000000,
+  gasPrice: "auto",
+};
+
+if (process.env.PRIVATE_KEY) {
+  sharedNetworkConfig.accounts = [process.env.PRIVATE_KEY];
+} else {
+  sharedNetworkConfig.accounts = {
+    mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
+  };
+}
+
 export default {
+  namedAccounts: {
+    deployer: 1
+  },
+  paths: {
+    tests: "./test",
+    cache: "./cache",
+    deploy: "./src/deploy",
+    sources: "./contracts",
+    deployments: "./deployments",
+    artifacts: "./artifacts",
+  },
 
   solidity: {
     compilers: [
@@ -20,7 +50,7 @@ export default {
     ],
     // compile file with give version
     overrides: {
-      "contracts/safe.sol": {
+      "contracts/gnosis-safe/safe.sol": {
         version: "0.7.6",
         settings: { }
       }
@@ -35,12 +65,28 @@ export default {
         accountsBalance: "100000000000000000000000000000000000000000",
         mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC
       },
-      forking:{
-        url:`https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`
-
-      }
     },
+    goerli: {
+      ...sharedNetworkConfig,
+       url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+      //  chainId: 5,
+   },
+   arbitrum_goerli: {
+    ...sharedNetworkConfig,
+     url: `https://arbitrum-goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+ },
+
+ shardeum_testnet: {
+  ...sharedNetworkConfig,
+   url: `https://liberty20.shardeum.org/`,
+},
+
+
+//  
   
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
   watcher: {
     /* run npx hardhat watch compilation */
