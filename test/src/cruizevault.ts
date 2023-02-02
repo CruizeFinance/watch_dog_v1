@@ -56,7 +56,7 @@ describe("work flow from curize vault to cruize contract", function () {
       const tx = await enableGnosisModule(
         cruizeSafe,
         cruizeModule.address,
-        signer.address
+        signer
       );
       await expect(tx)
         .emit(cruizeSafe, "EnabledModule")
@@ -185,7 +185,7 @@ describe("work flow from curize vault to cruize contract", function () {
     //  2 , 10dai 12 dai
     // 2 -
     it.only("close 2nd ETH round", async () => {
-      await cruizeModule.closeRound(daiAddress);
+      await cruizeModule.closeRound(ethers.constants.AddressZero);
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       assert.equal(vault.round, 3);
       assert.equal(
@@ -304,7 +304,7 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it.only("close 3rd ETH round", async () => {
-      await cruizeModule.closeRound(daiAddress);
+      await cruizeModule.closeRound(ethers.constants.AddressZero);
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       expect(vault.round).to.be.equal(4);
       expect(vault.totalPending).to.be.equal(parseEther("0"));
@@ -397,7 +397,7 @@ describe("work flow from curize vault to cruize contract", function () {
 
     it.only("close 4th ETH round", async () => {
       await depositERC20(cruizeModule, dai, "10");
-      await cruizeModule.closeRound(daiAddress);
+      await cruizeModule.closeRound(ethers.constants.AddressZero);
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       expect(vault.round).to.be.equal(5);
       expect(vault.totalPending).to.be.equal(parseEther("0"));
@@ -521,7 +521,7 @@ describe("work flow from curize vault to cruize contract", function () {
       // assert.equal(recepit.toString(), parseEther("21.56"));
     });
     it.only("close 5th round ", async () => {
-      await cruizeModule.closeRound(daiAddress);
+      await cruizeModule.closeRound(ethers.constants.AddressZero);
       const roundPrice = await cruizeModule.callStatic.roundPricePerShare(
         daiAddress,
         BigNumber.from(5)

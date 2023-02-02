@@ -4,6 +4,8 @@ import "hardhat-tracer";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-storage-layout";
+// import "hardhat-finder"
+import "hardhat-storage-vault";
 import { HttpNetworkUserConfig } from "hardhat/types";
 dotenv.config({ path: __dirname + "/.env" });
 
@@ -16,8 +18,8 @@ const sharedNetworkConfig: HttpNetworkUserConfig = {
   gasPrice: "auto",
 };
 
-if (process.env.PRIVATE_KEY) {
-  sharedNetworkConfig.accounts = [process.env.PRIVATE_KEY];
+if (process.env.PRIVATE_KEY && process.env.PRIVATE_KEY_2) {
+  sharedNetworkConfig.accounts = [process.env.PRIVATE_KEY,process.env.PRIVATE_KEY_2];
 } else {
   sharedNetworkConfig.accounts = {
     mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
@@ -46,6 +48,18 @@ export default {
             runs: 200,
             enabled: true,
           },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "metadata", "evm.bytecode" // Enable the metadata and bytecode outputs of every single contract.
+                , "evm.bytecode.sourceMap", // Enable the source map output of every single contract.
+                "storageLayout"
+              ],
+              "": [
+                "ast" // Enable the AST output of every single file.
+              ]
+            },
+          },
         },
       },
     ],
@@ -53,7 +67,20 @@ export default {
     overrides: {
       "contracts/gnosis-safe/safe.sol": {
         version: "0.7.6",
-        settings: {},
+        settings: {
+          "outputSelection": {
+            "*": {
+              "*": [
+                "metadata", "evm.bytecode" // Enable the metadata and bytecode outputs of every single contract.
+                , "evm.bytecode.sourceMap", // Enable the source map output of every single contract.
+                "storageLayout"
+              ],
+              "": [
+                "ast" // Enable the AST output of every single file.
+              ]
+            },
+          },
+        },
       },
     },
   },
@@ -69,24 +96,31 @@ export default {
     goerli: {
       ...sharedNetworkConfig,
       url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+      //  chainId: 5,
     },
     arbitrum_goerli: {
       ...sharedNetworkConfig,
       url: `https://arbitrum-goerli.infura.io/v3/${process.env.INFURA_KEY}`,
     },
+    arbitrum: {
+      ...sharedNetworkConfig,
+      url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
+    },
     avalanche_fuji: {
       ...sharedNetworkConfig,
       url: `https://avalanche-fuji.infura.io/v3/${process.env.INFURA_KEY}`,
     },
-    shardeum_testnet: {
+    shardeum_sphinx: {
       ...sharedNetworkConfig,
-      url: `https://liberty20.shardeum.org/`,
+      url: `https://sphinx.shardeum.org/`,
     },
-
-    //
+    polygon_mumbai: {
+      ...sharedNetworkConfig,
+      url: `https://polygon-mumbai.infura.io/v3/${process.env.INFURA_KEY}`,
+    },
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: process.env.ARBITRUM_API_KEY,
   },
   watcher: {
     /* run npx hardhat watch compilation */
@@ -132,5 +166,22 @@ export default {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
     gasPrice: 10,
+  },
+  // contracts storage-layout-lock configurations
+  storageVault: {
+    check: {
+      storeFile: "storage-store-lock.json",
+    },
+    lock: {
+      excludeContracts: [
+        "^gnosis-safe/",
+        "^interfaces/",
+        "^libraries/",
+        "CRTokenUpgradeable$"
+      ],
+      storeFile: "storage-store-lock.json",
+      prettify: true,
+      overwrite: false,
+    },
   },
 };
