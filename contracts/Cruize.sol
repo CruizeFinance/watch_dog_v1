@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.6;
-import "hardhat/console.sol";
 import "./base/CruizeVault.sol";
-import "./base/Proxy.sol";
+import "./proxies/CloneProxy.sol";
 
 contract Cruize is CruizeVault, Proxy {
     using SafeMath for uint256;
@@ -11,22 +10,40 @@ contract Cruize is CruizeVault, Proxy {
     /************************************************
      *  CONSTRUCTOR & INITIALIZATION
      ***********************************************/
+    /**
+     * @notice Initializes the gnosis Module contract with storage variables.
+     * @dev Initialize function, will be triggered when a new Cruize contract deployed.
+     * @param initializeParams Parameters of initialization encoded.
+     */
 
-    constructor(
-        address _owner,
-        address _vault,
-        address _crContract,
-        uint256 _managementFee,
-        uint _performanceFee
-    )
-        CruizeVault(
-            _owner,
-            _vault,
-            _crContract,
-            _managementFee,
-            _performanceFee
-        )
-    {}
+    function setUp(bytes memory initializeParams) public  virtual override initializer {
+        __Ownable_init();
+        __ReentrancyGuard_init();
+        (
+            address _owner,
+            address _vault,
+            address _crContract,
+            address _cruizeProxy,
+            address _logic,
+            uint256 _managementFee,
+            uint256 _performanceFee
+        ) = abi.decode(
+                initializeParams,
+                (address, address,address,address,address, uint256, uint256)
+            );
+        gnosisSafe = _vault;
+        crContract = _crContract;
+        feeRecipient = _owner;
+        cruizeProxy = _cruizeProxy;
+        module =_logic;
+        isPerformanceFeeEnabled = true;
+        isManagementFeeEnable = true;
+        setManagementFee(_managementFee);
+        setPerformanceFee(_performanceFee);
+        setAvatar(_owner);
+        setTarget(_vault);
+        transferOwnership(_owner);
+    }
 
     /**
      * @notice createToken will Clone CRTokenUpgradeable (ERC20 token).
@@ -47,7 +64,14 @@ contract Cruize is CruizeVault, Proxy {
         crToken.initialize(name, symbol, decimal);
         vaults[token].round = 1;
         vaults[token].cap = tokenCap;
-        emit CreateToken(token,address(crToken), name, symbol, decimal, tokenCap);
+        emit CreateToken(
+            token,
+            address(crToken),
+            name,
+            symbol,
+            decimal,
+            tokenCap
+        );
     }
 
     /**
@@ -75,7 +99,11 @@ contract Cruize is CruizeVault, Proxy {
      * @notice Completes a scheduled withdrawal from a past round. Uses finalized pps for the round
      * @param token depositing token address.
      */
-    function standardWithdrawal(address token) external nonReentrant isDisabled(token) {
+    function standardWithdrawal(address token)
+        external
+        nonReentrant
+        isDisabled(token)
+    {
         _completeStandardWithdrawal(token);
     }
 

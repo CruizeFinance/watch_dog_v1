@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "slither": "slither .",
+    "check-storage": "hardhat check",
     "test": "hardhat test --trace",
     "build": "hardhat compile",
     "test:ci": "hardhat watch ci",
@@ -31,6 +32,7 @@
     "ethers": "^5.4.7",
     "hardhat": "^2.12.5",
     "hardhat-gas-reporter": "^1.0.8",
+    "hardhat-storage-layout": "^0.1.7",
     "slither-js": "^0.8.0",
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
