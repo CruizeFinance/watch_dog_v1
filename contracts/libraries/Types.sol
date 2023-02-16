@@ -5,8 +5,6 @@ library Types {
     /************************************************
      *  IMMUTABLES & CONSTANTS
      ***********************************************/
-
-    // Fees are 6-decimal places. For example: 20 * 10**6 = 20%
     uint256 internal constant UNIT = 10**18;
     uint256 internal constant PLACEHOLDER_UINT = 1;
 
@@ -31,8 +29,8 @@ library Types {
         // Unredeemed shares balance
         uint128 unredeemedShares;
         //  total locked amount.
-       uint104 lockedAmount;
-    
+        uint104 totalDeposit;
+
     }
 
     struct Withdrawal {
@@ -51,8 +49,6 @@ library Types {
         uint256 currentShareSupply;
         //  Total queued withdrawal from the last round.
         uint256 lastQueuedWithdrawAmount;
-        //  Management fee.
-        uint256 managementFee;
         //  Total  current round queued withdrawal.
         uint256 currentQueuedWithdrawShares;
     }

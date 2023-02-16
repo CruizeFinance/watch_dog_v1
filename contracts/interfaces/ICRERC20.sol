@@ -7,16 +7,6 @@ interface ICRERC20 {
 
     function burn(address, uint256) external;
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external returns (bool);
-
-    function transfer(address to, uint256 amount) external returns (bool);
-
-    function balanceOf(address sender) external view returns (uint256);
-    function totalSupply() external view returns (uint256);
     function decimals() external view returns (uint256);
 
     function initialize(
@@ -24,6 +14,4 @@ interface ICRERC20 {
         string memory symbol_,
         uint8 decimal_
     ) external;
-
-    function approve(address spender, uint256 amount) external returns (bool);
 }
