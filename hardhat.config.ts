@@ -3,6 +3,7 @@ import * as dotenv from "dotenv";
 import "hardhat-tracer";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-etherscan";
+import "hardhat-storage-layout";
 import { HttpNetworkUserConfig } from "hardhat/types";
 dotenv.config({ path: __dirname + "/.env" });
 

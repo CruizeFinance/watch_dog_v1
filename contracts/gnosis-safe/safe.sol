@@ -33,7 +33,10 @@ contract Executor {
         Enum.Operation operation,
         uint256 txGas
     ) internal returns (bool success) {
+
         if (operation == Enum.Operation.DelegateCall) {
+   
+
             // solhint-disable-next-line no-inline-assembly
             assembly {
                 success := delegatecall(
@@ -45,6 +48,7 @@ contract Executor {
                     0
                 )
             }
+            
 
         } else {
             // solhint-disable-next-line no-inline-assembly
@@ -60,6 +64,7 @@ contract Executor {
                 )
             }
         }
+            
     }
 }
 
@@ -343,11 +348,13 @@ contract ModuleManager is SelfAuthorized, Executor {
         bytes memory data,
         Enum.Operation operation
     ) public virtual returns (bool success) {
+
         // Only whitelisted modules are allowed.
         require(
             msg.sender != SENTINEL_MODULES && modules[msg.sender] != address(0),
             "GS104"
         );
+ 
         // Execute transaction without further confirmations.
         success = execute(to, value, data, operation, type(uint256).max);
         if (success) emit ExecutionFromModuleSuccess(msg.sender);

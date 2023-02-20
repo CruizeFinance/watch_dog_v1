@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.6;
 import "../libraries/Types.sol";
+import "../storage/CruizeStorage.sol";
 import "../libraries/Errors.sol";
 import "../libraries/SharesMath.sol";
 import "../interfaces/ICRERC20.sol";
@@ -10,61 +11,18 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "hardhat/console.sol";
 
-contract CruizeVault is ReentrancyGuardUpgradeable, Module {
+abstract contract CruizeVault is
+    CruizeStorage,
+    Module,
+    ReentrancyGuardUpgradeable
+{
     using SafeMath for uint256;
     using SafeCast for uint256;
     using SafeMath for uint128;
     using ShareMath for Types.DepositReceipt;
     using SafeERC20 for IERC20;
-    /************************************************
-     *  IMMUTABLES & CONSTANTS
-     ***********************************************/
-
-    /// @notice Fee recipient for the management fees
-    address public feeRecipient;
-    /// @notice Performance fee charged on premiums earned in rollToNextOption. Only charged when there is no loss.
-    uint256 public performanceFee;
-    bool public isPerformanceFeeEnabled = true;
-    /// @notice Management fee charged on entire AUM in rollToNextOption. Only charged when there is no loss.
-    uint256 public managementFee;
-    bool public isManagementFeeEnable = true;
-    /// @notice role in charge of weekly vault operations such as transfer fund and burn tokens
-    address public immutable module;
-
-    /// @notice gnosis safe address where all the fund will be locked
-    address public immutable gnosisSafe;
-    /// @notice crContract address that will be used to create new crcontract clone
-    address public immutable crContract;
-    /// @notice ETH 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
-    address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    // Fees are 6-decimal places. For example: 20 * 10**8 = 20%
-    uint256 internal constant FEE_MULTIPLIER = 10**18;
-    // Number of weeks per year = 52.142857 weeks * FEE_MULTIPLIER = 52142857
-    // Dividing by weeks per year requires doing num.mul(FEE_MULTIPLIER).div(WEEKS_PER_YEAR)
-    uint256 private constant WEEKS_PER_YEAR = 52142857;
-    //----------------------------//
-    //        Mappings            //
-    //----------------------------//
-    /// @notice crtokens mint for user's share's
-    mapping(address => address) public cruizeTokens;
-    /// @notice Enable/Disable tokens
-    mapping(address => bool) public isDisable;
-    /// @notice Stores vaults state for every round
-    mapping(address => Types.VaultState) public vaults;
-    /// @notice Queued withdrawal amount in the last round
-    mapping(address => uint256) public lastQueuedWithdrawAmounts;
-    /// @notice Queued withdraw shares for the current round
-    mapping(address => uint128) public currentQueuedWithdrawalShares;
-    /// @notice Stores pending user withdrawals
-    mapping(address => mapping(address => Types.Withdrawal)) public withdrawals;
-    /// @notice Stores the user's pending deposit for the round
-    mapping(address => mapping(address => Types.DepositReceipt))
-        public depositReceipts;
-    /// @notice On every round's close, the pricePerShare value of an crToken token is stored
-    /// This is used to determine the number of shares to be returned
-    /// to a user with their DepositReceipt.depositAmount
-    mapping(address => mapping(uint16 => uint256)) public roundPricePerShare;
 
     /************************************************
      *  EVENTS
@@ -105,7 +63,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint256 lockedAmount
     );
     event ManagementFeeSet(uint256 managementFee, uint256 newManagementFee);
-    event CapSet(address indexed token,uint256 oldCap, uint256 newCap);
+    event CapSet(address indexed token, uint256 oldCap, uint256 newCap);
     event PerformanceFeeSet(uint256 performanceFee, uint256 newPerformanceFee);
     event CollectVaultFee(address indexed token, uint256 round);
     event ChangeAssetStatus(address indexed token, bool status);
@@ -115,60 +73,14 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     }
 
     /************************************************
-     *  CONSTRUCTOR & INITIALIZATION
-     ***********************************************/
-
-    /**
-     * @notice Initializes the contract with immutable variables.
-     * @param _owner is the Cruize contract owner.
-     * @param _vault is the gnosis Safe address.
-     * @param _crContract is the Crtoken address.
-     * @param _managementFee is the fee charged on premiums earned in the stragey.
-     */
-    constructor(
-        address _owner,
-        address _vault,
-        address _crContract,
-        uint256 _managementFee,
-        uint256 _performanceFee
-    ) {
-        gnosisSafe = _vault;
-        crContract = _crContract;
-        feeRecipient = _owner;
-        managementFee = _managementFee;
-        performanceFee = _performanceFee;
-        module = address(this);
-        bytes memory initializeParams = abi.encode(_owner, _vault);
-        setUp(initializeParams);
-    }
-
-    /**
-     * @notice Initializes the gnosis Module contract with storage variables.
-     * @dev Initialize function, will be triggered when a new Cruize contract deployed.
-     * @param initializeParams Parameters of initialization encoded.
-     */
-
-    function setUp(bytes memory initializeParams) public override initializer {
-        __Ownable_init();
-        __ReentrancyGuard_init();
-        (address _owner, address _vault) = abi.decode(
-            initializeParams,
-            (address, address)
-        );
-
-        setAvatar(_owner);
-        setTarget(_vault);
-        transferOwnership(_owner);
-    }
-
-    /************************************************
      * MODIFIERS
      ***********************************************/
     /**
      * @dev Throws if called by any account other than the module.
      */
-    modifier onlyModule() {
-        if (msg.sender != module) revert NotAuthorized(msg.sender, module);
+    modifier onlyModule(address _cruizeProxy) {
+        if (msg.sender != _cruizeProxy)
+            revert NotAuthorized(msg.sender, _cruizeProxy);
         _;
     }
     /**
@@ -194,7 +106,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     }
 
     modifier isDisabled(address token) {
-        if(isDisable[token]) revert DisabledAsset(token);
+        if (isDisable[token]) revert DisabledAsset(token);
         _;
     }
 
@@ -214,7 +126,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     {
         ShareMath.assertUint104(newCap);
         Types.VaultState storage vault = vaults[token];
-        emit CapSet(token ,vault.cap, newCap);
+        emit CapSet(token, vault.cap, newCap);
         vault.cap = uint104(newCap);
     }
 
@@ -248,7 +160,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * @param newManagementFee is the management fee (18 decimals). ex: 2 * 10 ** 18 = 2%
      */
     function setManagementFee(uint256 newManagementFee)
-        external
+        public
         onlyOwner
         numberIsNotZero(newManagementFee)
     {
@@ -259,6 +171,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         );
         emit ManagementFeeSet(managementFee, newManagementFee);
         managementFee = tmpManagementFee;
+        console.log("managementFee::",managementFee);
     }
 
     /**
@@ -266,7 +179,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
      * @param newPerformanceFee is the performance fee (18 decimals). ex: 20 * 10 ** 18 = 20%
      */
     function setPerformanceFee(uint256 newPerformanceFee)
-        external
+        public
         numberIsNotZero(newPerformanceFee)
         onlyOwner
     {
@@ -276,13 +189,17 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     }
 
     /**
-    * @notice Enable or Disable the asset status, so cruize can stop/resume token operations
-    * @param token asset address
-    * @param status enable/disable status of asset
-    */
-    function changeAssetStatus(address token,bool status) public onlyOwner addressIsValid(token) {
+     * @notice Enable or Disable the asset status, so cruize can stop/resume token operations
+     * @param token asset address
+     * @param status enable/disable status of asset
+     */
+    function changeAssetStatus(address token, bool status)
+        public
+        onlyOwner
+        addressIsValid(token)
+    {
         isDisable[token] = status;
-        emit ChangeAssetStatus(token,status);
+        emit ChangeAssetStatus(token, status);
     }
 
     /************************************************
@@ -389,12 +306,14 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         if (_amount > receiptAmount)
             revert NotEnoughWithdrawalBalance(receiptAmount, _amount);
         ShareMath.assertUint104(_amount);
+
         depositReceipt.amount = uint104(receiptAmount.sub(_amount));
         depositReceipt.totalDeposit = depositReceipt.totalDeposit - _amount;
         vaultState.totalPending = uint128(
             uint256(vaultState.totalPending).sub(_amount)
         );
         _transferHelper(_token, msg.sender, uint256(_amount));
+
         emit InstantWithdrawal(msg.sender, _amount, currentRound, _token);
     }
 
@@ -603,9 +522,7 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         vaultState.totalPending = 0;
         vaultState.round = uint16(currentRound + 1);
 
-        // _mint(address(this), mintShares);
         ICRERC20(cruizeTokens[token]).mint(address(this), mintShares);
-
         if (totalVaultFee > 0) {
             _transferHelper(token, payable(feeRecipient), totalVaultFee);
             emit CollectVaultFee(token, totalVaultFee);
@@ -627,19 +544,26 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint256 _amount
     ) private {
         bytes memory _data = abi.encodeWithSignature(
-            "transferFromSafe(address,address,uint256)",
+            "transferFromSafe(address,address,address,uint256)",
             _token,
             _receiver,
+            cruizeProxy,
             _amount
         );
 
-        require(IAvatar(gnosisSafe).execTransactionFromModule(
-            module,
-            0,
-            _data,
-            Enum.Operation.DelegateCall
-        ));
+        require(
+            IAvatar(gnosisSafe).execTransactionFromModule(
+                module,
+                0,
+                _data,
+                Enum.Operation.DelegateCall
+            ),
+            "failed to transfer funds"
+        );
     }
+
+    // CruizeProxy -> cruizeModuleLogic -> gProxyAddress -> GnosisSafe(DELEGATE) -> transferFromSafe
+    //
 
     /**
      * @notice Main function to make delegatecall on Gnosis Safe to transfer either an
@@ -651,13 +575,15 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     function transferFromSafe(
         address _paymentToken,
         address _receiver,
+        address cruizeProxy,
         uint256 _amount
-    ) external onlyModule nonReentrant {
+    ) external onlyModule(cruizeProxy) nonReentrant {
         if (_paymentToken == ETH) {
             (bool sent, ) = _receiver.call{value: _amount}("");
             if (!sent) revert FailedToTransferETH();
             return;
         }
+
         IERC20(_paymentToken).safeTransfer(_receiver, _amount);
     }
 
@@ -718,7 +644,6 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
                     params.decimals
                 )
             );
-
             // After closing the short, if the options expire in-the-money
             // vault pricePerShare would go down because vault's asset balance decreased.
             // This ensures that the newly-minted shares do not take on the loss.
@@ -765,19 +690,21 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
 
         if (lockedBalance > lastLockedAmount) {
             // performance fee will be applied on round APY
-            if (isPerformanceFeeEnabled)
+            if (isPerformanceFeeEnabled) {
                 _performanceFeeInAsset = performanceFee > 0
                     ? getPerformanceFee(
                         lockedBalance.sub(lastLockedAmount),
-                        decimal
+                        FEE_MULTIPLIER
                     )
                     : 0;
+            }
 
             // management fee will be applied on locked amount
-            if (isManagementFeeEnable)
+            if (isManagementFeeEnable) {
                 _managementFeeInAsset = managementFee > 0
-                    ? getManagementFee(lockedBalance, decimal)
+                    ? getManagementFee(lockedBalance, FEE_MULTIPLIER)
                     : 0;
+            }
         }
         vaultFee = _performanceFeeInAsset.add(_managementFeeInAsset);
     }
@@ -821,10 +748,10 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
     }
 
     /*
-    * @notice Returns the user total locked amount in the strategy
-    * @params token asset address
-    * @params account user address
-    */
+     * @notice Returns the user total locked amount in the strategy
+     * @params token asset address
+     * @params account user address
+     */
     function balanceOfUser(address token, address account)
         public
         view
@@ -928,11 +855,12 @@ contract CruizeVault is ReentrancyGuardUpgradeable, Module {
         uint256 amount,
         uint256 decimal,
         uint256 feePercent
-    ) internal pure returns (uint256 feeInAsset) {
-        feeInAsset = feePercent.mul(decimal).mul(amount).div(FEE_MULTIPLIER).div(100*decimal);
-        // uint256 tokenfeeParcent = feePercent * decimal;
-        // tokenfeeParcent = tokenfeeParcent / FEE_MULTIPLIER;
-        // feeInAsset = amount.mul(tokenfeeParcent).div(100 * decimal);
+    ) internal view returns (uint256 feeInAsset) {
+        feeInAsset = feePercent
+            .mul(decimal)
+            .mul(amount)
+            .div(FEE_MULTIPLIER)
+            .div(100 * decimal);
     }
 
     /**
