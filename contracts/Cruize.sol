@@ -3,6 +3,7 @@ pragma solidity =0.8.6;
 import "./base/CruizeVault.sol";
 import "./proxies/CloneProxy.sol";
 
+
 contract Cruize is CruizeVault, Proxy {
     using SafeMath for uint256;
     using SafeCast for uint256;
@@ -16,7 +17,9 @@ contract Cruize is CruizeVault, Proxy {
      * @param initializeParams Parameters of initialization encoded.
      */
 
-    function setUp(bytes memory initializeParams) public  virtual override initializer {
+    function setUp(
+        bytes memory initializeParams
+    ) public virtual override initializer {
         __Ownable_init();
         __ReentrancyGuard_init();
         (
@@ -29,13 +32,13 @@ contract Cruize is CruizeVault, Proxy {
             uint256 _performanceFee
         ) = abi.decode(
                 initializeParams,
-                (address, address,address,address,address, uint256, uint256)
+                (address, address, address, address, address, uint256, uint256)
             );
         gnosisSafe = _vault;
         crContract = _crContract;
         feeRecipient = _owner;
         cruizeProxy = _cruizeProxy;
-        module =_logic;
+        module = _logic;
         isPerformanceFeeEnabled = true;
         isManagementFeeEnable = true;
         setManagementFee(_managementFee);
@@ -79,10 +82,15 @@ contract Cruize is CruizeVault, Proxy {
      * @param token depositing token address.
      * @param amount user depositing amount.
      */
-    function deposit(address token, uint256 amount)
+    function deposit(
+        address token,
+        uint256 amount
+    )
         external
         payable
         nonReentrant
+        tokenIsAllowed(_token)
+        numberIsNotZero(_amount)
         isDisabled(token)
     {
         if (token == ETH) {
@@ -99,11 +107,9 @@ contract Cruize is CruizeVault, Proxy {
      * @notice Completes a scheduled withdrawal from a past round. Uses finalized pps for the round
      * @param token depositing token address.
      */
-    function standardWithdrawal(address token)
-        external
-        nonReentrant
-        isDisabled(token)
-    {
+    function standardWithdrawal(
+        address token
+    ) external nonReentrant isDisabled(token) {
         _completeStandardWithdrawal(token);
     }
 
@@ -113,11 +119,10 @@ contract Cruize is CruizeVault, Proxy {
      * @param numShares is the number of shares to withdraw
      * @param token withdrawal `asset` address.
      */
-    function initiateWithdrawal(address token, uint256 numShares)
-        external
-        nonReentrant
-        isDisabled(token)
-    {
+    function initiateWithdrawal(
+        address token,
+        uint256 numShares
+    ) external nonReentrant isDisabled(token) {
         _initiateStandardWithdrawal(token, numShares);
     }
 
@@ -126,11 +131,10 @@ contract Cruize is CruizeVault, Proxy {
      * @param amount is the amount to withdraw.
      * @param token withdrawal `asset` address.
      */
-    function instantWithdrawal(address token, uint256 amount)
-        external
-        nonReentrant
-        isDisabled(token)
-    {
+    function instantWithdrawal(
+        address token,
+        uint256 amount
+    ) external nonReentrant isDisabled(token) {
         ShareMath.assertUint104(amount);
         _instantWithdrawal(token, amount.toUint104());
     }
