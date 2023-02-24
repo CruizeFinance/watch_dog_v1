@@ -34,7 +34,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
         uint256 _performanceFeeInAsset;
         //slither-disable-next-line uninitialized-local
         uint256 _managementFeeInAsset;
-        uint256 decimal = 10 ** decimals(token);
+        uint256 decimal = 10 ** decimalsOf(token);
 
         if (lockedBalance > lastLockedAmount) {
             // performance fee will be applied on round APY
@@ -89,7 +89,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
         uint256 unredeemedShares = depositReceipt.getSharesFromReceipt(
             vaults[token].round,
             priceOfRound(token, depositReceipt.round),
-            decimals(token)
+            decimalsOf(token)
         );
         return (
             balanceOf(token, account),
@@ -118,7 +118,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
         ];
         Types.VaultState memory vaultState = vaults[token];
         uint16 currentRound = vaultState.round;
-        uint256 decimal = decimals(token);
+        uint256 decimal = decimalsOf(token);
 
         // calculate total unredeemed shares of user's
         uint256 unredeemedShares = depositReceipt.getSharesFromReceipt( // 0
@@ -223,7 +223,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
                 totalSupply(token),
                 totalBalance(token),
                 vaults[token].totalPending,
-                decimals(token)
+                decimalsOf(token)
             );
     }
 
@@ -247,7 +247,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
      * @notice Returns the token decimals.
      */
 
-    function decimals(address _token) internal view returns (uint256 decimal) {
+    function decimalsOf(address _token) internal view returns (uint256 decimal) {
         if (_token == ETH) decimal = 18;
         else decimal = ICRERC20(_token).decimals();
     }

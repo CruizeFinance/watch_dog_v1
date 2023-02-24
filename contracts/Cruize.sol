@@ -60,7 +60,7 @@ contract Cruize is CruizeVault, Proxy {
         address token,
         uint104 tokenCap
     ) external numberIsNotZero(tokenCap) onlyOwner {
-        uint8 decimal = uint8(decimals(token));
+        uint8 decimal = uint8(decimalsOf(token));
         if (cruizeTokens[token] != address(0)) revert AssetAlreadyExists(token);
         ICRERC20 crToken = ICRERC20(createClone(crContract));
         cruizeTokens[token] = address(crToken);

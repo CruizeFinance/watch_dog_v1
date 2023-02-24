@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.6;
-import "../libraries/SharesMath.sol";
+import "./getters/Getters.sol";
+import "../helper/Helper.sol";
+import "./setters/Setters.sol";
 import "../interfaces/ICRERC20.sol";
+import "../libraries/SharesMath.sol";
 import "../module/zodiac/contracts/core/Module.sol";
+import "../module/pausable/PausableUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "../module/reentrancyGuard/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./getters/Getters.sol";
-import "./setters/Setters.sol";
-import "../helper/Helper.sol";
-import "../module/pausable/PausableUpgradeable.sol";
+import "../module/reentrancyGuard/ReentrancyGuardUpgradeable.sol";
 
 abstract contract CruizeVault is
     Setters,
@@ -34,7 +34,7 @@ abstract contract CruizeVault is
     function _updateDepositInfo(address _token, uint256 _amount) internal {
         Types.VaultState storage vaultState = vaults[_token];
         uint16 currentRound = vaultState.round;
-        uint256 decimal = decimals(_token);
+        uint256 decimal = decimalsOf(_token);
 
         Types.DepositReceipt memory depositReceipt = depositReceipts[
             msg.sender
@@ -112,7 +112,7 @@ abstract contract CruizeVault is
         uint256 unredeemedShares = depositReceipt.getSharesFromReceipt(
             currentRound,
             roundPricePerShare[_token][depositReceipt.round],
-            decimals(_token)
+            decimalsOf(_token)
         );
         // If we have a pending deposit in the current round.
         // We do a max redeem before initiating a withdrawal.
@@ -159,7 +159,7 @@ abstract contract CruizeVault is
         Types.VaultState storage vaultState = vaults[_token];
         uint256 withdrawalShares = withdrawal.shares;
         uint16 withdrawalRound = withdrawal.round;
-        uint256 decimal = decimals(_token);
+        uint256 decimal = decimalsOf(_token);
         uint16 currentRound = vaults[_token].round;
 
         if (withdrawalShares == 0) revert ZeroWithdrawalShare();
@@ -228,7 +228,7 @@ abstract contract CruizeVault is
         ) = calculateSharePrice(
             token,
             Types.CloseParams(
-                decimals(token),
+                decimalsOf(token),
                 totalBalance(token),
                 totalSupply(token),
                 lastQueuedWithdrawAmount,

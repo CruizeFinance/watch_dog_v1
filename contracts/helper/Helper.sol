@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.6;
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../module/zodiac/contracts/interfaces/IAvatar.sol";
 import "../libraries/Types.sol";
 import "../libraries/SharesMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../storage/CruizeStorage.sol";
 import "../base/getters/Getters.sol";
-contract Helper is CruizeStorage,Getters {
+import "../storage/CruizeStorage.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "../module/zodiac/contracts/interfaces/IAvatar.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+contract Helper is Getters {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -67,7 +68,8 @@ contract Helper is CruizeStorage,Getters {
             "failed to transfer funds"
         );
     }
-        /**
+
+    /**
      * @notice Calculate the shares to mint, new price per share, and amount of funds to re-allocate as collateral for the new round
      * @param _token  `asset` address.
      *  @param params is the  parameters passed to compute the next round state.
