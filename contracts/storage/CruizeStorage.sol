@@ -27,11 +27,11 @@ contract CruizeStorage {
     /// @notice ETH 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
     address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     // Fees are 6-decimal places. For example: 20 * 10**18 = 20%
-    uint256 internal constant FEE_MULTIPLIER = 10**18;
+    uint256 internal constant FEE_MULTIPLIER = 10 ** 18;
     // Number of weeks per year = 52.142857 weeks * FEE_MULTIPLIER = 52142857
     // Dividing by weeks per year requires doing num.mul(FEE_MULTIPLIER).div(WEEKS_PER_YEAR)
     uint256 internal constant WEEKS_PER_YEAR = 52.142857 ether;
-    // 0.4219178093751 
+    // 0.4219178093751
 
     //----------------------------//
     //        Mappings            //
@@ -55,12 +55,12 @@ contract CruizeStorage {
     /// This is used to determine the number of shares to be returned
     /// to a user with their DepositReceipt.depositAmount
     mapping(address => mapping(uint16 => uint256)) public roundPricePerShare;
-
-     /**
+    address[] public tokens;
+    /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-     
+
     uint256[50] private __cruize_gap;
 }

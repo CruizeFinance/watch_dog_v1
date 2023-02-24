@@ -1,6 +1,6 @@
-
-library Events {
-    
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract Events {
     /************************************************
      *  EVENTS
      ***********************************************/
@@ -38,6 +38,11 @@ library Events {
         uint16 indexed round,
         uint256 SharePerUnit,
         uint256 lockedAmount
+    );
+    event TransferFromSafe(
+        address indexed account,
+        uint256 amount,
+        address indexed token
     );
     event ManagementFeeSet(uint256 managementFee, uint256 newManagementFee);
     event CapSet(address indexed token, uint256 oldCap, uint256 newCap);

@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.6;
 import "../../modifiers/Modifiers.sol";
-import "../../storage/CruizeStorage.sol";
 import "../../module/ownable/OwnableUpgradeable.sol";
 import "../../libraries/SharesMath.sol";
-import "../../libraries/Events.sol";
 import "../../interfaces/ICRERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Getters is Modifiers, OwnableUpgradeable {
+abstract contract Getters is Modifiers, OwnableUpgradeable {
     using SafeMath for uint256;
     using ShareMath for Types.DepositReceipt;
 
@@ -28,7 +26,7 @@ contract Getters is Modifiers, OwnableUpgradeable {
         uint256 currentBalance,
         uint256 pendingAmount,
         uint256 lastLockedAmount
-    ) private view returns (uint256 vaultFee) {
+    ) internal view returns (uint256 vaultFee) {
         uint256 lockedBalance = currentBalance > pendingAmount
             ? currentBalance.sub(pendingAmount)
             : 0;
@@ -141,7 +139,7 @@ contract Getters is Modifiers, OwnableUpgradeable {
      * @notice Returns the vault's total balance, including the amounts locked into a strategy.
      * @return total balance of the vault, including the amounts locked in strategy.
      */
-    function totalBalance(address token) private view returns (uint256) {
+    function totalBalance(address token) internal view returns (uint256) {
         if (token == ETH) return gnosisSafe.balance;
         else return IERC20(token).balanceOf(gnosisSafe);
     }
@@ -150,12 +148,12 @@ contract Getters is Modifiers, OwnableUpgradeable {
      * @notice Returns the `asset` total supply.
      * @return total supply of the asset.
      */
-    function totalSupply(address token) private view returns (uint256) {
+    function totalSupply(address token) internal view returns (uint256) {
         return IERC20(cruizeTokens[token]).totalSupply();
     }
 
     /**
-     * @notice Returns the `asset` balance.
+     * @notice Returns the cr`token` balance.
      */
     function balanceOf(
         address token,
@@ -219,6 +217,16 @@ contract Getters is Modifiers, OwnableUpgradeable {
             .div(100 * decimal);
     }
 
+    function pricePerShare(address token) external view returns (uint256) {
+        return
+            ShareMath.pricePerShare(
+                totalSupply(token),
+                totalBalance(token),
+                vaults[token].totalPending,
+                decimals(token)
+            );
+    }
+
     /**
      * @notice Returns the vault feeRecipient.
      */
@@ -241,6 +249,6 @@ contract Getters is Modifiers, OwnableUpgradeable {
 
     function decimals(address _token) internal view returns (uint256 decimal) {
         if (_token == ETH) decimal = 18;
-        else decimal = ICRERC20(cruizeTokens[_token]).decimals();
+        else decimal = ICRERC20(_token).decimals();
     }
 }

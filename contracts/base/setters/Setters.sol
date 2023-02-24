@@ -4,8 +4,10 @@ import "../../modifiers/Modifiers.sol";
 import "../../module/ownable/OwnableUpgradeable.sol";
 import "../../libraries/SharesMath.sol";
 import "../../libraries/Events.sol";
-contract Setters is Modifiers,OwnableUpgradeable {
+
+contract Setters is Modifiers, Events, OwnableUpgradeable {
     using SafeMath for uint256;
+
     /************************************************
      *  SETTERS
      ***********************************************/
@@ -20,7 +22,7 @@ contract Setters is Modifiers,OwnableUpgradeable {
     ) external onlyOwner tokenIsAllowed(token) numberIsNotZero(newCap) {
         ShareMath.assertUint104(newCap);
         Types.VaultState storage vault = vaults[token];
-        emit Events.CapSet(token, vault.cap, newCap);
+        emit CapSet(token, vault.cap, newCap);
         vault.cap = uint104(newCap);
     }
 
@@ -59,7 +61,7 @@ contract Setters is Modifiers,OwnableUpgradeable {
         uint256 tmpManagementFee = newManagementFee.mul(FEE_MULTIPLIER).div(
             WEEKS_PER_YEAR
         );
-        emit Events.ManagementFeeSet(managementFee, newManagementFee);
+        emit ManagementFeeSet(managementFee, newManagementFee);
         managementFee = tmpManagementFee;
     }
 
@@ -71,7 +73,7 @@ contract Setters is Modifiers,OwnableUpgradeable {
         uint256 newPerformanceFee
     ) public numberIsNotZero(newPerformanceFee) onlyOwner {
         if (newPerformanceFee > 100 * FEE_MULTIPLIER) revert InvalidFee();
-        emit Events.PerformanceFeeSet(performanceFee, newPerformanceFee);
+        emit PerformanceFeeSet(performanceFee, newPerformanceFee);
         performanceFee = newPerformanceFee;
     }
 
@@ -85,6 +87,6 @@ contract Setters is Modifiers,OwnableUpgradeable {
         bool status
     ) public onlyOwner addressIsValid(token) {
         isDisable[token] = status;
-        emit Events.ChangeAssetStatus(token, status);
+        emit ChangeAssetStatus(token, status);
     }
 }

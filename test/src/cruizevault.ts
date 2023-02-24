@@ -28,17 +28,17 @@ describe("work flow from curize vault to cruize contract", function () {
   let deployer: SignerWithAddress;
   let cruizeLogic: Contract;
   let daiAddress: Address = "";
-  let crContract:Contract;
+  let crContract: Contract;
   let ETHADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
   before(async () => {
     [signer, deployer] = await ethers.getSigners();
-    const cruizeContract = await deployCruizeContract(signer,deployer);
+    const cruizeContract = await deployCruizeContract(signer, deployer);
     cruizeSafe = cruizeContract.CruizeSafe;
     cruizeModule = cruizeContract.cruizeModule;
     gProxyAddress = cruizeContract.gProxyAddress;
     singleton = cruizeContract.singleton;
     dai = cruizeContract.dai;
-    crContract = cruizeContract.crContract
+    crContract = cruizeContract.crContract;
     cruizeLogic = cruizeContract.cruizeLogic;
     cruizeProxy = cruizeContract.cruizeModuleProxy;
     daiAddress = dai.address;
@@ -53,7 +53,6 @@ describe("work flow from curize vault to cruize contract", function () {
 
   describe("setting up Cruize Module and Gnosis", () => {
     it.only("approve Cruize Module from Gnosis Safe to access gnosis funds", async () => {
-      
       const tx = await enableGnosisModule(
         cruizeSafe,
         cruizeModule.address,
@@ -138,7 +137,7 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(receipt.amount).to.be.equal(parseEther("10"));
     });
     it.only("Close 1st ETH round", async () => {
-      await cruizeModule.closeRound(daiAddress);
+      await cruizeModule.closeRound(ethers.constants.AddressZero);
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       const roundPrice = await cruizeModule.callStatic.roundPricePerShare(
         dai.address,
@@ -183,7 +182,7 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("Simulate 20% APY", async () => {
       await dai.transfer(cruizeSafe.address, parseEther("2"));
     });
-    //  2 , 10dai 12 dai 
+    //  2 , 10dai 12 dai
     // 2 -
     it.only("close 2nd ETH round", async () => {
       await cruizeModule.closeRound(daiAddress);
@@ -210,7 +209,7 @@ describe("work flow from curize vault to cruize contract", function () {
         daiAddress,
         BigNumber.from(2)
       );
-      expect(roundPrice.toString()).equal(parseEther('1.179539726026136235'));
+      expect(roundPrice.toString()).equal(parseEther("1.179539726026136235"));
     });
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.balanceOfUser(
@@ -220,7 +219,8 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(recepit).to.be.equal(parseEther("21.795397260261362349"));
     });
   });
-  /**  round 3 deposit 10 dai locked 21.56 */
+
+
 
   describe("3rd round", () => {
     it.only("deposit ERC20", async () => {
@@ -346,7 +346,7 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(vault.lockedAmount).to.be.equal(parseEther("20.000000000000000007"));
       expect(vault.queuedWithdrawShares).to.be.equal(parseEther("0"));
     });
-    /**  roudn 3 deposit 10 dai locked 21.56  initiate withdrawal of 10 shares 10*1.156 = 11.56 **/
+   
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.balanceOfUser(
         daiAddress,
@@ -544,7 +544,7 @@ describe("work flow from curize vault to cruize contract", function () {
       // assert.equal(recepit.toString(), parseEther("21.56"));
     });
   });
-
+ 
   describe("testing setter and getters", () => {
     it.only("set valut Cap", async () => {
       await expect(cruizeModule.setCap(daiAddress, parseEther("10")))
@@ -593,7 +593,7 @@ describe("work flow from curize vault to cruize contract", function () {
         .withArgs(parseEther("10"), parseEther("20"));
     });
   });
-
+ 
   describe("Change impelemention logic contracts", () => {
     it.only("before upgarde dai vault state", async () => {
       const vault = await cruizeModule.callStatic.managementFee();

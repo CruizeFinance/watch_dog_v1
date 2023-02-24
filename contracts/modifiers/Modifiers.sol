@@ -3,7 +3,7 @@ import "../libraries/Errors.sol";
 import "../storage/CruizeStorage.sol";
 pragma solidity =0.8.6;
 
-contract Modifiers is CruizeStorage {
+abstract contract Modifiers is CruizeStorage {
     /************************************************
      * MODIFIERS
      ***********************************************/

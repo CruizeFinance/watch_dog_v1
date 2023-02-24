@@ -32,7 +32,6 @@ const createCruizeToken = async (
     name,
     symbol,
     address,
-    decimals,
     parseEther(cap)
   );
   return tx;
