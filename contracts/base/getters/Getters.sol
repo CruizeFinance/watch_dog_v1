@@ -107,7 +107,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
         address token,
         address account
     )
-        public
+        external
         view
         tokenIsAllowed(token)
         addressIsValid(account)

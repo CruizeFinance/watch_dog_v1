@@ -101,10 +101,9 @@ abstract contract CruizeVault is
      * @param _shares is the number of shares to withdraw.
      * @param _token is the address of withdrawal `asset`.
      */
-    function _initiateStandardWithdrawal(
-        address _token,
-        uint256 _shares
-    ) internal {
+    function _initiateStandardWithdrawal(address _token, uint256 _shares)
+        internal
+    {
         uint16 currentRound = vaults[_token].round;
         Types.DepositReceipt memory depositReceipt = depositReceipts[
             msg.sender
@@ -215,7 +214,6 @@ abstract contract CruizeVault is
     ) internal returns (uint256 lockedBalance, uint256 queuedWithdrawAmount) {
         uint256 mintShares;
         uint256 totalVaultFee;
-
         Types.VaultState storage vaultState = vaults[token];
 
         uint256 newPricePerShare;
@@ -263,7 +261,7 @@ abstract contract CruizeVault is
         address _receiver,
         address _cruizeProxy,
         uint256 _amount
-    ) external onlyModule(_cruizeProxy) nonReentrant {
+    ) external onlyModule(_cruizeProxy) nonReentrant addressIsValid(_paymentToken) addressIsValid(_receiver){
         if (_paymentToken == ETH) {
             (bool sent, ) = _receiver.call{value: _amount}("");
             if (!sent) revert FailedToTransferETH();
