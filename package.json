@@ -7,7 +7,7 @@
     "slither": "slither .",
     "check-storage": "hardhat check",
     "test": "hardhat test --trace",
-    "build": "hardhat compile",
+    "build": "hardhat compile --force --verbose",
     "test:ci": "hardhat watch ci",
     "clean": "hardhat clean",
     "build:watch": "hardhat watch compilation",

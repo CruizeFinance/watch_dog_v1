@@ -2,10 +2,12 @@
 pragma solidity =0.8.6;
 import "./base/CruizeVault.sol";
 import "./proxies/CloneProxy.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Cruize is CruizeVault, Proxy {
     using SafeMath for uint256;
     using SafeCast for uint256;
+    using SafeERC20 for IERC20;
 
     /************************************************
      *  CONSTRUCTOR & INITIALIZATION
@@ -16,7 +18,9 @@ contract Cruize is CruizeVault, Proxy {
      * @param initializeParams Parameters of initialization encoded.
      */
 
-    function setUp(bytes memory initializeParams) public  virtual override initializer {
+    function setUp(
+        bytes memory initializeParams
+    ) public virtual override initializer {
         __Ownable_init();
         __ReentrancyGuard_init();
         (
@@ -29,13 +33,13 @@ contract Cruize is CruizeVault, Proxy {
             uint256 _performanceFee
         ) = abi.decode(
                 initializeParams,
-                (address, address,address,address,address, uint256, uint256)
+                (address, address, address, address, address, uint256, uint256)
             );
         gnosisSafe = _vault;
         crContract = _crContract;
         feeRecipient = _owner;
         cruizeProxy = _cruizeProxy;
-        module =_logic;
+        module = _logic;
         isPerformanceFeeEnabled = true;
         isManagementFeeEnable = true;
         setManagementFee(_managementFee);
@@ -49,21 +53,23 @@ contract Cruize is CruizeVault, Proxy {
      * @notice createToken will Clone CRTokenUpgradeable (ERC20 token).
      * @param name name of crtoken  .
      * @param symbol symbol of crtoken .
-     * @param decimal decimal value of crtoken.
      */
     function createToken(
         string memory name,
         string memory symbol,
         address token,
-        uint8 decimal,
         uint104 tokenCap
     ) external numberIsNotZero(tokenCap) onlyOwner {
+        uint8 decimal = uint8(decimalsOf(token));
         if (cruizeTokens[token] != address(0)) revert AssetAlreadyExists(token);
         ICRERC20 crToken = ICRERC20(createClone(crContract));
         cruizeTokens[token] = address(crToken);
         crToken.initialize(name, symbol, decimal);
         vaults[token].round = 1;
         vaults[token].cap = tokenCap;
+        address[] storage allTokens = tokens;
+        allTokens.push(token);
+        tokens = allTokens;
         emit CreateToken(
             token,
             address(crToken),
@@ -74,22 +80,42 @@ contract Cruize is CruizeVault, Proxy {
         );
     }
 
+    /************************************************
+     *  DEPOSIT & WITHDRAWALS
+     ***********************************************/
     /**
-     * @notice This function will be use for depositing assets.
+     * @notice Deposits the `asset` from msg.sender
      * @param token depositing token address.
-     * @param amount user depositing amount.
+     * @param amount is the amount of `asset` to deposit.
      */
-    function deposit(address token, uint256 amount)
+    function deposit(
+        address token,
+        uint256 amount
+    )
         external
         payable
         nonReentrant
+        tokenIsAllowed(token)
+        numberIsNotZero(amount)
         isDisabled(token)
+        whenNotPaused
     {
-        if (token == ETH) {
-            _depositETH(msg.value);
+        _updateDepositInfo(token, amount);
+        if (
+            token == ETH && gnosisSafe.balance.add(amount) < vaults[token].cap
+        ) {
+            // transfer ETH to Cruize gnosis valut.
+            (bool sent, ) = gnosisSafe.call{value: amount}("");
+            if (!sent) revert FailedToTransferETH();
+        } else if (
+            IERC20(token).balanceOf(gnosisSafe).add(amount) < vaults[token].cap
+        ) {
+            // transfer token to Cruize gnosis vault.
+            IERC20(token).safeTransferFrom(msg.sender, gnosisSafe, amount);
         } else {
-            _depositERC20(token, amount);
+            revert VaultReachedDepositLimit(vaults[token].cap);
         }
+        emit Deposit(msg.sender, amount, token);
     }
 
     /************************************************
@@ -99,26 +125,36 @@ contract Cruize is CruizeVault, Proxy {
      * @notice Completes a scheduled withdrawal from a past round. Uses finalized pps for the round
      * @param token depositing token address.
      */
-    function standardWithdrawal(address token)
+    function standardWithdrawal(
+        address token
+    )
         external
         nonReentrant
+        tokenIsAllowed(token)
         isDisabled(token)
+        whenNotPaused
     {
         _completeStandardWithdrawal(token);
     }
 
     /**
-
      * @notice Initiates a withdrawal that can be processed once the round completes
      * @param numShares is the number of shares to withdraw
      * @param token withdrawal `asset` address.
      */
-    function initiateWithdrawal(address token, uint256 numShares)
+    function initiateWithdrawal(
+        address token,
+        uint256 numShares
+    )
         external
         nonReentrant
+        tokenIsAllowed(token)
+        numberIsNotZero(numShares)
         isDisabled(token)
+        whenNotPaused
     {
         _initiateStandardWithdrawal(token, numShares);
+        emit InitiateStandardWithdrawal(msg.sender, token, numShares);
     }
 
     /**
@@ -126,20 +162,41 @@ contract Cruize is CruizeVault, Proxy {
      * @param amount is the amount to withdraw.
      * @param token withdrawal `asset` address.
      */
-    function instantWithdrawal(address token, uint256 amount)
+    function instantWithdrawal(
+        address token,
+        uint256 amount
+    )
         external
         nonReentrant
+        tokenIsAllowed(token)
+        numberIsNotZero(amount)
         isDisabled(token)
+        whenNotPaused
     {
         ShareMath.assertUint104(amount);
         _instantWithdrawal(token, amount.toUint104());
+        emit InstantWithdrawal(msg.sender, amount, vaults[token].round, token);
+    }
+
+    function closeRound(address token) external nonReentrant onlyOwner {
+        if (token != address(0)) {
+            _closeRound(token);
+            return;
+        }
+        uint256 tokenLength = tokens.length;
+        for (uint8 i = 0; i < tokenLength; ) {
+            _closeRound(tokens[i]);
+            unchecked {
+                i++;
+            }
+        }
     }
 
     /**
      * @notice function closeRound  will be responsible for closing current round.
      * @param token token address.
      */
-    function closeRound(address token) external nonReentrant onlyOwner {
+    function _closeRound(address token) internal tokenIsAllowed(token) {
         uint256 currQueuedWithdrawShares = currentQueuedWithdrawalShares[token];
         (uint256 lockedBalance, uint256 queuedWithdrawAmount) = _closeRound(
             token,

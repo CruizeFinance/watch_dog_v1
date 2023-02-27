@@ -87,6 +87,7 @@ async function deployCruizeContract(adminSigner: SignerWithAddress,deployer:Sign
     dai: dai,
     cruizeLogic: cruizeLogic,
     cruizeModuleProxy: cruizeModuleProxy,
+
     crContract,
   };
   // console.log(CruizeContract)

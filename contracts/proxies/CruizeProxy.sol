@@ -8,7 +8,7 @@ import "hardhat/console.sol";
 contract CruizeProxy is CruizeStorage, TransparentUpgradeableProxy {
     constructor(
         address _logic,
-        address admin,
+        address crAdmin,
         bytes memory _data
-    ) TransparentUpgradeableProxy(_logic, admin, _data) {}
+    ) TransparentUpgradeableProxy(_logic, crAdmin, _data) {}
 }

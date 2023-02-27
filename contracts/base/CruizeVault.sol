@@ -1,22 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.6;
-import "../libraries/Types.sol";
-import "../storage/CruizeStorage.sol";
-import "../libraries/Errors.sol";
-import "../libraries/SharesMath.sol";
+import "./getters/Getters.sol";
+import "../helper/Helper.sol";
+import "./setters/Setters.sol";
 import "../interfaces/ICRERC20.sol";
-import "@gnosis.pm/zodiac/contracts/core/Module.sol";
+import "../libraries/SharesMath.sol";
+import "../module/zodiac/contracts/core/Module.sol";
+import "../module/pausable/PausableUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "hardhat/console.sol";
+import "../module/reentrancyGuard/ReentrancyGuardUpgradeable.sol";
 
 abstract contract CruizeVault is
-    CruizeStorage,
-    Module,
-    ReentrancyGuardUpgradeable
+    Setters,
+    Getters,
+    Helper,
+    PausableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    Module
 {
     using SafeMath for uint256;
     using SafeCast for uint256;
@@ -24,231 +27,14 @@ abstract contract CruizeVault is
     using ShareMath for Types.DepositReceipt;
     using SafeERC20 for IERC20;
 
-    /************************************************
-     *  EVENTS
-     ***********************************************/
-    event CreateToken(
-        address indexed token,
-        address indexed crToken,
-        string tokenName,
-        string tokenSymbol,
-        uint8 decimal,
-        uint256 tokenCap
-    );
-    event Deposit(
-        address indexed account,
-        uint256 amount,
-        address indexed token
-    );
-    event StandardWithdrawal(
-        address indexed account,
-        uint256 amount,
-        address indexed token
-    );
-    event InstantWithdrawal(
-        address indexed account,
-        uint256 amount,
-        uint16 currentRound,
-        address indexed token
-    );
-    event InitiateStandardWithdrawal(
-        address indexed account,
-        address indexed token,
-        uint256 amount
-    );
-    event CloseRound(
-        address indexed token,
-        uint16 indexed round,
-        uint256 SharePerUnit,
-        uint256 lockedAmount
-    );
-    event ManagementFeeSet(uint256 managementFee, uint256 newManagementFee);
-    event CapSet(address indexed token, uint256 oldCap, uint256 newCap);
-    event PerformanceFeeSet(uint256 performanceFee, uint256 newPerformanceFee);
-    event CollectVaultFee(address indexed token, uint256 round);
-    event ChangeAssetStatus(address indexed token, bool status);
-
     receive() external payable {
         revert();
     }
 
-    /************************************************
-     * MODIFIERS
-     ***********************************************/
-    /**
-     * @dev Throws if called by any account other than the module.
-     */
-    modifier onlyModule(address _cruizeProxy) {
-        if (msg.sender != _cruizeProxy)
-            revert NotAuthorized(msg.sender, _cruizeProxy);
-        _;
-    }
-    /**
-     * @dev Throws if cruizeTokens mapping give's null.
-     */
-    modifier tokenIsAllowed(address token) {
-        if (cruizeTokens[token] == address(0)) revert AssetNotAllowed(token);
-        _;
-    }
-    /**
-     * @dev Throws if number is zero.
-     */
-    modifier numberIsNotZero(uint256 number) {
-        if (number == 0) revert ZeroValue(number);
-        _;
-    }
-    /**
-     * @dev Throws if address is null.
-     */
-    modifier addressIsValid(address addr) {
-        if (addr == address(0)) revert ZeroAddress(addr);
-        _;
-    }
-
-    modifier isDisabled(address token) {
-        if (isDisable[token]) revert DisabledAsset(token);
-        _;
-    }
-
-    /************************************************
-     *  SETTERS
-     ***********************************************/
-    /**
-     * @notice Sets a new cap for deposits.
-     * @param newCap is the new cap for deposits.
-     * @param token is the address for which we have to set new cap.
-     */
-    function setCap(address token, uint256 newCap)
-        external
-        onlyOwner
-        tokenIsAllowed(token)
-        numberIsNotZero(newCap)
-    {
-        ShareMath.assertUint104(newCap);
-        Types.VaultState storage vault = vaults[token];
-        emit CapSet(token, vault.cap, newCap);
-        vault.cap = uint104(newCap);
-    }
-
-    /**
-     * @notice Sets the new newFeeRecipient_.
-     * @param newFeeRecipient is the address of the new feeRecipient_.
-     */
-    function setFeeRecipient(address newFeeRecipient)
-        external
-        onlyOwner
-        addressIsValid(newFeeRecipient)
-    {
-        feeRecipient = newFeeRecipient;
-    }
-
-    /**
-     * @notice Sets the management/performance fee status enable/disable.
-     * @param _performanceFee is the performance fee status
-     * @param _managementFee is the management fee status
-     */
-    function setFeeStatus(bool _performanceFee, bool _managementFee)
-        public
-        onlyOwner
-    {
-        isPerformanceFeeEnabled = _performanceFee;
-        isManagementFeeEnable = _managementFee;
-    }
-
-    /**
-     * @notice Sets the management fee for the rounds.
-     * @param newManagementFee is the management fee (18 decimals). ex: 2 * 10 ** 18 = 2%
-     */
-    function setManagementFee(uint256 newManagementFee)
-        public
-        onlyOwner
-        numberIsNotZero(newManagementFee)
-    {
-        if (newManagementFee > 100 * FEE_MULTIPLIER) revert InvalidFee();
-        // We are dividing annualized management fee by num weeks in a year
-        uint256 tmpManagementFee = newManagementFee.mul(FEE_MULTIPLIER).div(
-            WEEKS_PER_YEAR
-        );
-        emit ManagementFeeSet(managementFee, newManagementFee);
-        managementFee = tmpManagementFee;
-        console.log("managementFee::",managementFee);
-    }
-
-    /**
-     * @notice Sets the performance fee for the vault
-     * @param newPerformanceFee is the performance fee (18 decimals). ex: 20 * 10 ** 18 = 20%
-     */
-    function setPerformanceFee(uint256 newPerformanceFee)
-        public
-        numberIsNotZero(newPerformanceFee)
-        onlyOwner
-    {
-        if (newPerformanceFee > 100 * FEE_MULTIPLIER) revert InvalidFee();
-        emit PerformanceFeeSet(performanceFee, newPerformanceFee);
-        performanceFee = newPerformanceFee;
-    }
-
-    /**
-     * @notice Enable or Disable the asset status, so cruize can stop/resume token operations
-     * @param token asset address
-     * @param status enable/disable status of asset
-     */
-    function changeAssetStatus(address token, bool status)
-        public
-        onlyOwner
-        addressIsValid(token)
-    {
-        isDisable[token] = status;
-        emit ChangeAssetStatus(token, status);
-    }
-
-    /************************************************
-     *  DEPOSIT & WITHDRAWALS
-     ***********************************************/
-
-    /**
-     * @notice  Deposits the `asset` from msg.sender.
-     * @param _amount user depositing amount.
-     */
-    function _depositETH(uint256 _amount) internal numberIsNotZero(_amount) {
-        _updateDepositInfo(ETH, _amount);
-        if (gnosisSafe.balance.add(_amount) > vaults[ETH].cap)
-            revert VaultReachedDepositLimit(vaults[ETH].cap);
-        // transfer token to gnosis valut.
-        //slither-disable-next-line arbitrary-send
-        (bool sent, ) = gnosisSafe.call{value: _amount}("");
-        if (!sent) revert FailedToTransferETH();
-    }
-
-    /**
-     * @notice Deposits the `asset` from msg.sender
-     * @param _token depositing token address.
-     * @param _amount is the amount of `asset` to deposit.
-     */
-    function _depositERC20(address _token, uint256 _amount)
-        internal
-        tokenIsAllowed(_token)
-        numberIsNotZero(_amount)
-    {
-        if (
-            IERC20(_token).balanceOf(gnosisSafe).add(_amount) >
-            vaults[_token].cap
-        ) revert VaultReachedDepositLimit(vaults[_token].cap);
-        _updateDepositInfo(_token, _amount);
-        // transfer token to gnosis vault.
-        IERC20(_token).safeTransferFrom(msg.sender, gnosisSafe, _amount);
-    }
-
-    /**
-     * @notice Deposits the `asset` from msg.sender added to `msg.sender`'s deposi receipts.
-     * @notice Used for vault -> vault deposits on the user's behalf.
-     * @param _amount is the amount of `asset` to deposit.
-     * @param _token  is the deposits `asset` address.
-     */
-    function _updateDepositInfo(address _token, uint256 _amount) private {
+    function _updateDepositInfo(address _token, uint256 _amount) internal {
         Types.VaultState storage vaultState = vaults[_token];
         uint16 currentRound = vaultState.round;
-        uint256 decimal = decimals(_token);
+        uint256 decimal = decimalsOf(_token);
 
         Types.DepositReceipt memory depositReceipt = depositReceipts[
             msg.sender
@@ -280,7 +66,6 @@ abstract contract CruizeVault is
         ShareMath.assertUint128(newTotalPending);
 
         vaultState.totalPending = uint128(newTotalPending);
-        emit Deposit(msg.sender, _amount, _token);
     }
 
     /**
@@ -289,11 +74,7 @@ abstract contract CruizeVault is
      * @param _amount is the amount to withdraw.
      * @param _token withdrawal token address.
      */
-    function _instantWithdrawal(address _token, uint104 _amount)
-        internal
-        tokenIsAllowed(_token)
-        numberIsNotZero(_amount)
-    {
+    function _instantWithdrawal(address _token, uint104 _amount) internal {
         Types.DepositReceipt storage depositReceipt = depositReceipts[
             msg.sender
         ][_token];
@@ -313,8 +94,6 @@ abstract contract CruizeVault is
             uint256(vaultState.totalPending).sub(_amount)
         );
         _transferHelper(_token, msg.sender, uint256(_amount));
-
-        emit InstantWithdrawal(msg.sender, _amount, currentRound, _token);
     }
 
     /**
@@ -324,8 +103,6 @@ abstract contract CruizeVault is
      */
     function _initiateStandardWithdrawal(address _token, uint256 _shares)
         internal
-        tokenIsAllowed(_token)
-        numberIsNotZero(_shares)
     {
         uint16 currentRound = vaults[_token].round;
         Types.DepositReceipt memory depositReceipt = depositReceipts[
@@ -334,7 +111,7 @@ abstract contract CruizeVault is
         uint256 unredeemedShares = depositReceipt.getSharesFromReceipt(
             currentRound,
             roundPricePerShare[_token][depositReceipt.round],
-            decimals(_token)
+            decimalsOf(_token)
         );
         // If we have a pending deposit in the current round.
         // We do a max redeem before initiating a withdrawal.
@@ -370,23 +147,18 @@ abstract contract CruizeVault is
         currentQueuedWithdrawalShares[_token] = uint256(
             currentQueuedWithdrawalShares[_token]
         ).add(_shares).toUint128();
-
-        emit InitiateStandardWithdrawal(msg.sender, _token, _shares);
     }
 
     /**
      * @notice Completes a scheduled withdrawal from a past round.
      * @param _token withdrawal token address.
      */
-    function _completeStandardWithdrawal(address _token)
-        internal
-        tokenIsAllowed(_token)
-    {
+    function _completeStandardWithdrawal(address _token) internal {
         Types.Withdrawal storage withdrawal = withdrawals[msg.sender][_token];
         Types.VaultState storage vaultState = vaults[_token];
         uint256 withdrawalShares = withdrawal.shares;
         uint16 withdrawalRound = withdrawal.round;
-        uint256 decimal = decimals(_token);
+        uint256 decimal = decimalsOf(_token);
         uint16 currentRound = vaults[_token].round;
 
         if (withdrawalShares == 0) revert ZeroWithdrawalShare();
@@ -418,62 +190,13 @@ abstract contract CruizeVault is
         lastQueuedWithdrawAmounts[_token] = lastQueuedWithdrawAmounts[_token]
             .sub(withdrawAmount);
         ICRERC20(cruizeTokens[_token]).burn(msg.sender, withdrawalShares);
-        _transferHelper(_token, msg.sender, withdrawAmount);
+        _transferHelper(_token, msg.sender, uint256(withdrawAmount));
         emit StandardWithdrawal(msg.sender, withdrawAmount, _token);
-    }
-
-    /**
-     * @notice Redeems shares that are owned to the account.
-     * @param _token is the address of withdrawal `asset`.
-     */
-    function _redeemShares(
-        address _token,
-        Types.DepositReceipt memory depositReceipt,
-        uint256 numShares,
-        uint256 unredeemedShares,
-        uint16 currentRound
-    ) internal {
-        // If we have a depositReceipt on the same round, BUT we have some unredeemed shares.
-        // we debit from the unredeemedShares, but leave the amount field intact.
-        // If the round has past, with no new deposits, we just zero it out for new deposits.
-        if (depositReceipt.round < currentRound) {
-            depositReceipts[msg.sender][_token].amount = 0;
-        }
-        ShareMath.assertUint128(numShares);
-        depositReceipts[msg.sender][_token].unredeemedShares = uint128(
-            unredeemedShares.sub(numShares)
-        );
-
-        IERC20(cruizeTokens[_token]).safeTransfer(msg.sender, numShares);
     }
 
     /************************************************
      *  VAULT OPERATIONS
      ***********************************************/
-    /**
-     * @notice Helper function that helps to save gas for writing values into the roundPricePerShare map.
-     *         Writing `1` into the map makes subsequent writes warm, reducing the gas from 20k to 5k.
-     *         Having 1 initialized beforehand will not be an issue as long as we round down share calculations to 0.
-     * @param numRounds is the number of rounds to initialize in the map.
-     */
-    function initRounds(address token, uint256 numRounds)
-        external
-        tokenIsAllowed(token)
-        numberIsNotZero(numRounds)
-        onlyOwner
-        nonReentrant
-    {
-        uint16 _round = vaults[token].round;
-
-        for (uint16 i = 0; i < numRounds; ) {
-            uint16 index = _round + i;
-            require(roundPricePerShare[token][index] == 0, "Initialized");
-            roundPricePerShare[token][index] = Types.PLACEHOLDER_UINT;
-            unchecked {
-                i++;
-            }
-        }
-    }
 
     /**
      * @notice Helper function that performs most administrative tasks
@@ -488,14 +211,9 @@ abstract contract CruizeVault is
         address token,
         uint256 lastQueuedWithdrawAmount,
         uint256 currentQueuedWithdrawShares
-    )
-        internal
-        tokenIsAllowed(token)
-        returns (uint256 lockedBalance, uint256 queuedWithdrawAmount)
-    {
+    ) internal returns (uint256 lockedBalance, uint256 queuedWithdrawAmount) {
         uint256 mintShares;
         uint256 totalVaultFee;
-
         Types.VaultState storage vaultState = vaults[token];
 
         uint256 newPricePerShare;
@@ -508,7 +226,7 @@ abstract contract CruizeVault is
         ) = calculateSharePrice(
             token,
             Types.CloseParams(
-                decimals(token),
+                decimalsOf(token),
                 totalBalance(token),
                 totalSupply(token),
                 lastQueuedWithdrawAmount,
@@ -521,7 +239,7 @@ abstract contract CruizeVault is
         roundPricePerShare[token][currentRound] = newPricePerShare;
         vaultState.totalPending = 0;
         vaultState.round = uint16(currentRound + 1);
-
+        roundPricePerShare[token][vaultState.round] = 1;
         ICRERC20(cruizeTokens[token]).mint(address(this), mintShares);
         if (totalVaultFee > 0) {
             _transferHelper(token, payable(feeRecipient), totalVaultFee);
@@ -530,40 +248,6 @@ abstract contract CruizeVault is
         emit CloseRound(token, currentRound, newPricePerShare, lockedBalance);
         return (lockedBalance, queuedWithdrawAmount);
     }
-
-    /**
-     * @notice Helper function to make delegatecall on gnosis safe to transfer either an
-     * ETH transfer or ERC20 transfer.
-     * @param _token  withdrawal `asset` address.
-     * @param _receiver is the receiving address.
-     * @param _amount the transfer amount.
-     */
-    function _transferHelper(
-        address _token,
-        address _receiver,
-        uint256 _amount
-    ) private {
-        bytes memory _data = abi.encodeWithSignature(
-            "transferFromSafe(address,address,address,uint256)",
-            _token,
-            _receiver,
-            cruizeProxy,
-            _amount
-        );
-
-        require(
-            IAvatar(gnosisSafe).execTransactionFromModule(
-                module,
-                0,
-                _data,
-                Enum.Operation.DelegateCall
-            ),
-            "failed to transfer funds"
-        );
-    }
-
-    // CruizeProxy -> cruizeModuleLogic -> gProxyAddress -> GnosisSafe(DELEGATE) -> transferFromSafe
-    //
 
     /**
      * @notice Main function to make delegatecall on Gnosis Safe to transfer either an
@@ -575,319 +259,15 @@ abstract contract CruizeVault is
     function transferFromSafe(
         address _paymentToken,
         address _receiver,
-        address cruizeProxy,
+        address _cruizeProxy,
         uint256 _amount
-    ) external onlyModule(cruizeProxy) nonReentrant {
+    ) external onlyModule(_cruizeProxy) nonReentrant addressIsValid(_paymentToken) addressIsValid(_receiver){
         if (_paymentToken == ETH) {
             (bool sent, ) = _receiver.call{value: _amount}("");
             if (!sent) revert FailedToTransferETH();
-            return;
+        } else {
+            IERC20(_paymentToken).safeTransfer(_receiver, _amount);
         }
-
-        IERC20(_paymentToken).safeTransfer(_receiver, _amount);
-    }
-
-    /**
-     * @notice Calculate the shares to mint, new price per share, and amount of funds to re-allocate as collateral for the new round
-     * @param _token  `asset` address.
-     *  @param params is the  parameters passed to compute the next round state.
-     * @return newLockedAmount is the amount of funds to allocate for the new round.
-     * @return queuedWithdrawAmount is the amount of funds set aside for withdrawal.
-     * @return newPricePerShare is the price per share of the new round.
-     * @return mintShares is the amount of shares to mint from deposits.
-     * @return totalVaultFee is the total amount of fee charged by vault.
-     */
-    function calculateSharePrice(
-        address _token,
-        Types.CloseParams memory params
-    )
-        private
-        view
-        returns (
-            uint256 newLockedAmount,
-            uint256 queuedWithdrawAmount,
-            uint256 newPricePerShare,
-            uint256 mintShares,
-            uint256 totalVaultFee
-        )
-    {
-        Types.VaultState memory vaultState = vaults[_token];
-        uint256 currentBalance = params.totalBalance;
-        uint256 pendingAmount = vaultState.totalPending;
-        uint256 lastLockedAmount = vaultState.lockedAmount;
-
-        // Total amount of queued withdrawal shares from previous rounds (doesn't include the current round)
-        uint256 lastQueuedWithdrawShares = vaultState.queuedWithdrawShares;
-
-        (totalVaultFee) = getVaultFees(
-            _token,
-            // we don't charge fee on lastQueuedWithdrawAmount
-            currentBalance.sub(params.lastQueuedWithdrawAmount),
-            pendingAmount,
-            lastLockedAmount
-        );
-
-        // Take into account the fee
-        // so we can calculate the newPricePerShare
-        currentBalance = currentBalance.sub(totalVaultFee);
-        {
-            newPricePerShare = ShareMath.pricePerShare(
-                params.currentShareSupply.sub(lastQueuedWithdrawShares),
-                currentBalance.sub(params.lastQueuedWithdrawAmount),
-                pendingAmount,
-                params.decimals
-            );
-            queuedWithdrawAmount = params.lastQueuedWithdrawAmount.add(
-                ShareMath.sharesToAsset(
-                    params.currentQueuedWithdrawShares,
-                    newPricePerShare,
-                    params.decimals
-                )
-            );
-            // After closing the short, if the options expire in-the-money
-            // vault pricePerShare would go down because vault's asset balance decreased.
-            // This ensures that the newly-minted shares do not take on the loss.
-            mintShares = ShareMath.assetToShares(
-                pendingAmount,
-                newPricePerShare,
-                params.decimals
-            );
-        }
-        return (
-            currentBalance.sub(queuedWithdrawAmount), // new locked balance subtracts the queued withdrawals
-            queuedWithdrawAmount,
-            newPricePerShare,
-            mintShares,
-            totalVaultFee
-        );
-    }
-
-    /************************************************
-     *  GETTERS
-     ***********************************************/
-    /**
-     * @notice Calculates the  management fee for this week's round.
-     * @param token is the `asset` for which the fee will calculate.
-     * @param currentBalance is total  value locked in valut.
-     * @param pendingAmount is the pending deposit amount.
-     * @param lastLockedAmount is the amount of funds locked from the previous round
-     * @return vaultFee is the total vault Fee.
-     */
-    function getVaultFees(
-        address token,
-        uint256 currentBalance,
-        uint256 pendingAmount,
-        uint256 lastLockedAmount
-    ) private view returns (uint256 vaultFee) {
-        uint256 lockedBalance = currentBalance > pendingAmount
-            ? currentBalance.sub(pendingAmount)
-            : 0;
-        //slither-disable-next-line uninitialized-local
-        uint256 _performanceFeeInAsset;
-        //slither-disable-next-line uninitialized-local
-        uint256 _managementFeeInAsset;
-        uint256 decimal = 10**decimals(token);
-
-        if (lockedBalance > lastLockedAmount) {
-            // performance fee will be applied on round APY
-            if (isPerformanceFeeEnabled) {
-                _performanceFeeInAsset = performanceFee > 0
-                    ? getPerformanceFee(
-                        lockedBalance.sub(lastLockedAmount),
-                        FEE_MULTIPLIER
-                    )
-                    : 0;
-            }
-
-            // management fee will be applied on locked amount
-            if (isManagementFeeEnable) {
-                _managementFeeInAsset = managementFee > 0
-                    ? getManagementFee(lockedBalance, FEE_MULTIPLIER)
-                    : 0;
-            }
-        }
-        vaultFee = _performanceFeeInAsset.add(_managementFeeInAsset);
-    }
-
-    /**
-     * @notice Getter for returning the account's share balance split between account and vault holdings
-     * @param account is the account to lookup share balance for.
-     * @param token is the `asset` address for which shares are calculating.
-     * @return heldByAccount is the shares held by account.
-     * @return heldByVault is the shares held on the vault (unredeemedShares).
-     */
-    function shareBalances(address token, address account)
-        public
-        view
-        tokenIsAllowed(token)
-        addressIsValid(account)
-        returns (
-            uint256 heldByAccount,
-            uint256 heldByVault,
-            uint256 totalShares
-        )
-    {
-        Types.DepositReceipt memory depositReceipt = depositReceipts[account][
-            token
-        ];
-
-        if (depositReceipt.round < ShareMath.PLACEHOLDER_UINT) {
-            return (balanceOf(token, account), 0, 0);
-        }
-
-        uint256 unredeemedShares = depositReceipt.getSharesFromReceipt(
-            vaults[token].round,
-            priceOfRound(token, depositReceipt.round),
-            decimals(token)
-        );
-        return (
-            balanceOf(token, account),
-            unredeemedShares,
-            balanceOf(token, account).add(unredeemedShares)
-        );
-    }
-
-    /*
-     * @notice Returns the user total locked amount in the strategy
-     * @params token asset address
-     * @params account user address
-     */
-    function balanceOfUser(address token, address account)
-        public
-        view
-        tokenIsAllowed(token)
-        addressIsValid(account)
-        returns (uint256 balance)
-    {
-        Types.DepositReceipt memory depositReceipt = depositReceipts[account][
-            token
-        ];
-        Types.VaultState memory vaultState = vaults[token];
-        uint16 currentRound = vaultState.round;
-        uint256 decimal = decimals(token);
-
-        // calculate total unredeemed shares of user's
-        uint256 unredeemedShares = depositReceipt.getSharesFromReceipt( // 0
-            currentRound,
-            priceOfRound(token, depositReceipt.round),
-            decimal
-        );
-
-        uint256 currentAmount = ShareMath.sharesToAsset(
-            unredeemedShares,
-            priceOfRound(token, currentRound - 1),
-            decimal
-        );
-        return balance.add(currentAmount);
-    }
-
-    /**
-     * @notice Returns the vault's total balance, including the amounts locked into a strategy.
-     * @return total balance of the vault, including the amounts locked in strategy.
-     */
-    function totalBalance(address token) private view returns (uint256) {
-        if (token == ETH) return gnosisSafe.balance;
-        else return IERC20(token).balanceOf(gnosisSafe);
-    }
-
-    /**
-     * @notice Returns the `asset` total supply.
-     * @return total supply of the asset.
-     */
-    function totalSupply(address token) private view returns (uint256) {
-        return IERC20(cruizeTokens[token]).totalSupply();
-    }
-
-    /**
-     * @notice Returns the `asset` balance.
-     */
-    function balanceOf(address token, address account)
-        public
-        view
-        tokenIsAllowed(token)
-        addressIsValid(account)
-        returns (uint256)
-    {
-        return IERC20(cruizeTokens[token]).balanceOf(account);
-    }
-
-    /**
-     * @notice Returns the vault round price per shares.
-     */
-    function priceOfRound(address token, uint16 round)
-        private
-        view
-        returns (uint256)
-    {
-        if (roundPricePerShare[token][round] == 0) return 1e18;
-        return roundPricePerShare[token][round];
-    }
-
-    /**
-     * @notice Returns the vault managementFee.
-     */
-    function getManagementFee(uint256 totalBalanceLocked, uint256 decimal)
-        public
-        view
-        returns (uint256)
-    {
-        return calculateFee(totalBalanceLocked, decimal, managementFee);
-    }
-
-    /**
-     * @notice Returns the vault performanceFee.
-     */
-    function getPerformanceFee(uint256 roundAPY, uint256 decimal)
-        public
-        view
-        returns (uint256)
-    {
-        return calculateFee(roundAPY, decimal, performanceFee);
-    }
-
-    /**
-     * @notice Returns the fee.
-     * @param amount is on which fee calculated.
-     * @param decimal is token decimal.
-     * @param feePercent is the parcentage of fee to charge.
-     */
-    function calculateFee(
-        uint256 amount,
-        uint256 decimal,
-        uint256 feePercent
-    ) internal view returns (uint256 feeInAsset) {
-        feeInAsset = feePercent
-            .mul(decimal)
-            .mul(amount)
-            .div(FEE_MULTIPLIER)
-            .div(100 * decimal);
-    }
-
-    /**
-     * @notice Returns the vault feeRecipient.
-     */
-    function getFeeRecipient() external view onlyOwner returns (address) {
-        return feeRecipient;
-    }
-
-    /**
-     * @notice Returns the vault total pending.
-     */
-    function totalTokenPending(address token)
-        external
-        view
-        tokenIsAllowed(token)
-        returns (uint256)
-    {
-        return vaults[token].totalPending;
-    }
-
-    /**
-     * @notice Returns the token decimals.
-     */
-
-    function decimals(address _token) internal view returns (uint256 decimal) {
-        if (_token == ETH) decimal = 18;
-        else decimal = ICRERC20(cruizeTokens[_token]).decimals();
+        emit TransferFromSafe(_receiver, _amount, _paymentToken);
     }
 }
