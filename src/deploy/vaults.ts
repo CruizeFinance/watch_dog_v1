@@ -23,7 +23,9 @@ const deployContract: DeployFunction = async function (
   const signer: SignerWithAddress = (await hre.ethers.getSigners())[0];
   const deployer = signer.address;
   const chainId = await hre.getChainId();
-  let ETHADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+  console.log("chainId: ",chainId)
+  //  Gnosis safe address
+  let cruizeSafeAddress: Address = "0x6C15abf7ca5E5a795ff246C3aa044236369b73A9";
 
   let safes: IMapping = {
     "5": "0xd5dC7C061D2a69a875754E6a50C4454B8e14DAC7", // goerli
@@ -136,67 +138,24 @@ const deployContract: DeployFunction = async function (
   
 
   console.table({
-    chainId:chainId,
-    crToken:crToken.address,
-    cruizeModule:cruize.address,
-    safe:safes[chainId],
-    weth:weth.address,
-    wbtc:wbtc.address,
-    usdc:usdc.address,
-    dai:dai.address,
-    crWBTC,
-    crWETH,
-    crUSDC,
-    crDAI
-  })
-
-  // await CruizeInstance.initRounds(weth[chainId], BigNumber.from("1"));
-  // await CruizeInstance.initRounds(wbtc.address, BigNumber.from("1"));
-  // await CruizeInstance.initRounds(usdc.address, BigNumber.from("1"));
-  // await CruizeInstance.initRounds(dai.address, BigNumber.from("1"));
-  // console.log(await CruizeInstance.callStatic.cruizeTokens(ETHADDRESS))
-  // console.log(await CruizeInstance.callStatic.cruizeTokens(DAIADDRESS))
-
-  // await CruizeInstance.deposit(ETHADDRESS, parseEther("1"), {
-  //   value: parseEther("1"),
-  // });
-
-  // await CruizeInstance
-  // .withdrawInstantly(parseEther("1"), ETHADDRESS)
-
-
-
-  try {
-    await hre.run("verify", {
-      address: cruize.address,
-      constructorArgsParams: [
-        deployer,
-        safes[chainId],
-        crToken.address,
-        parseEther("10").toString(),
-        parseEther("10").toString(),
-      ],
-    });
-  } catch (error) {
-    console.log(error)
-    console.log(
-      `Smart contract at address ${cruize.address} is already verified`
-    );
-  }
-
-  try {
-    await hre.run("verify", {
-      address: usdc.address,
-      constructorArgsParams: [
-        "DAI","DAI"
-      ],
-    });
-  } catch (error) {
-    console.log(
-      `Smart contract at address ${usdc.address} is already verified`
-    );
-  }
-
+    crToken: crToken.address,
+    gnosisSafe: cruizeSafeAddress,
+    cruizeImplementation: cruize.address,
+    cruizeProxy: cruizeModuleProxy.address,
+    eth: chainTokenAddresses[chainId]["ETH"],
+    weth: chainTokenAddresses[chainId]["WETH"],
+    wbtc: chainTokenAddresses[chainId]["WBTC"],
+    usdc: chainTokenAddresses[chainId]["USDC"],
+  });
+  await verifyContract(hre, crToken.address, []);
+  // await verifyContract(hre, gnosisSafe.address, []);
+  // // await verifyContract(hre, masterCopy.address, []);
+  await verifyContract(hre, cruize.address, []);
+  await verifyContract(hre, cruizeProxy.address, [
+    cruize.address,
+    deployer.address,
+    "0x",
+  ]);
 };
 
 export default deployContract;

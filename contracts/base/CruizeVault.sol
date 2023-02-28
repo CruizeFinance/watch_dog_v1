@@ -191,7 +191,7 @@ abstract contract CruizeVault is
             .sub(withdrawAmount);
         ICRERC20(cruizeTokens[_token]).burn(msg.sender, withdrawalShares);
         _transferHelper(_token, msg.sender, uint256(withdrawAmount));
-        emit StandardWithdrawal(msg.sender, withdrawAmount, _token);
+        emit StandardWithdrawal(_token,msg.sender, withdrawAmount);
     }
 
     /************************************************
@@ -275,6 +275,6 @@ abstract contract CruizeVault is
         } else {
             IERC20(_paymentToken).safeTransfer(_receiver, _amount);
         }
-        emit TransferFromSafe(_receiver, _amount, _paymentToken);
+        emit TransferFromSafe(_paymentToken,_receiver, _amount);
     }
 }
