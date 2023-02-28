@@ -37,7 +37,7 @@ const deployContract: DeployFunction = async function (
   const chainId = await hre.getChainId();
   console.log("chainId: ",chainId)
   //  Gnosis safe address
-  let cruizeSafeAddress: Address = "0x49B3D01573343B7AF56ae9749085fCc526935b4F";
+  let cruizeSafeAddress: Address = "0x6C15abf7ca5E5a795ff246C3aa044236369b73A9";
 
   // Step-01 Deploy CrTokens Contract
   await deploy(CrTokenMaster, {
@@ -177,6 +177,7 @@ const deployContract: DeployFunction = async function (
     gnosisSafe: cruizeSafeAddress,
     cruizeImplementation: cruize.address,
     cruizeProxy: cruizeModuleProxy.address,
+    eth: chainTokenAddresses[chainId]["ETH"],
     weth: chainTokenAddresses[chainId]["WETH"],
     wbtc: chainTokenAddresses[chainId]["WBTC"],
     usdc: chainTokenAddresses[chainId]["USDC"],

@@ -217,7 +217,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
             .div(100 * decimal);
     }
 
-    function pricePerShare(address token) external view returns (uint256) {
+    function pricePerShare(address token) tokenIsAllowed(token) external view returns (uint256) {
         return
             ShareMath.pricePerShare(
                 totalSupply(token),

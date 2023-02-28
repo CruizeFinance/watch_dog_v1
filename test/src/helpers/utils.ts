@@ -103,6 +103,8 @@ const enableGnosisModule = async (
 
   const data = abi.simpleEncode("enableModule(address)", cruizeModule);
   let hexData = "0x" + data.toString("hex");
+  console.log(hexData)
+
   const signature =
     "0x000000000000000000000000" +
     signer.address.slice(2) +

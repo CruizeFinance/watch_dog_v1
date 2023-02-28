@@ -124,10 +124,10 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("Withdraw Instantly", async () => {
       await expect(cruizeModule.deposit(daiAddress, parseEther("10")))
         .emit(cruizeModule, "Deposit")
-        .withArgs(signer.address, parseEther("10"), daiAddress);
+        .withArgs(daiAddress, signer.address, parseEther("10"));
       await expect(cruizeModule.instantWithdrawal(daiAddress, parseEther("10")))
         .emit(cruizeModule, "InstantWithdrawal")
-        .withArgs(signer.address, parseEther("10"), 1, daiAddress);
+        .withArgs(daiAddress, signer.address, parseEther("10"), 1);
 
       const receipt = await cruizeModule.callStatic.depositReceipts(
         signer.address,
@@ -220,8 +220,6 @@ describe("work flow from curize vault to cruize contract", function () {
     });
   });
 
-
-
   describe("3rd round", () => {
     it.only("deposit ERC20", async () => {
       await depositERC20(cruizeModule, dai, "10");
@@ -237,7 +235,10 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("Check Dai vault state after 3 round start...", async () => {
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       assert.equal(vault.round, 3);
-      assert.equal(vault.lockedAmount.toString(), parseEther("21.795397260261362357"));
+      assert.equal(
+        vault.lockedAmount.toString(),
+        parseEther("21.795397260261362357")
+      );
       assert.equal(vault.totalPending.toString(), parseEther("10"));
       assert.equal(vault.queuedWithdrawShares.toString(), parseEther("0"));
       const receipt = await cruizeModule.callStatic.depositReceipts(
@@ -286,7 +287,7 @@ describe("work flow from curize vault to cruize contract", function () {
         cruizeModule.initiateWithdrawal(daiAddress, parseEther("10"))
       )
         .emit(cruizeModule, "InitiateStandardWithdrawal")
-        .withArgs(signer.address, daiAddress, parseEther("10"));
+        .withArgs(daiAddress, signer.address, parseEther("10"));
 
       const withdrawal = await cruizeModule.callStatic.withdrawals(
         signer.address,
@@ -300,7 +301,9 @@ describe("work flow from curize vault to cruize contract", function () {
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       expect(vault.round).to.be.equal(3);
-      expect(vault.lockedAmount).to.be.equal(parseEther("21.795397260261362357"));
+      expect(vault.lockedAmount).to.be.equal(
+        parseEther("21.795397260261362357")
+      );
     });
 
     it.only("close 3rd ETH round", async () => {
@@ -308,7 +311,9 @@ describe("work flow from curize vault to cruize contract", function () {
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       expect(vault.round).to.be.equal(4);
       expect(vault.totalPending).to.be.equal(parseEther("0"));
-      expect(vault.lockedAmount).to.be.equal(parseEther("20.000000000000000007"));
+      expect(vault.lockedAmount).to.be.equal(
+        parseEther("20.000000000000000007")
+      );
       expect(await crDAI.callStatic.totalSupply()).to.be.equal(
         parseEther("26.955766354203181882")
       );
@@ -336,17 +341,23 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("Complete withdrawal in 4rd Round start ", async () => {
       await expect(cruizeModule.standardWithdrawal(daiAddress))
         .emit(cruizeModule, "StandardWithdrawal")
-        .withArgs(signer.address, parseEther("11.795397260261362350"), daiAddress);
+        .withArgs(
+          daiAddress,
+          signer.address,
+          parseEther("11.795397260261362350")
+        );
       expect(await crDAI.callStatic.totalSupply()).to.be.equal(
         parseEther("16.955766354203181882")
       );
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       expect(vault.round).to.be.equal(4);
-      expect(vault.lockedAmount).to.be.equal(parseEther("20.000000000000000007"));
+      expect(vault.lockedAmount).to.be.equal(
+        parseEther("20.000000000000000007")
+      );
       expect(vault.queuedWithdrawShares).to.be.equal(parseEther("0"));
     });
-   
+
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.balanceOfUser(
         daiAddress,
@@ -373,17 +384,26 @@ describe("work flow from curize vault to cruize contract", function () {
         parseEther("16.955766354203181882").toString()
       );
       await expect(
-        cruizeModule.initiateWithdrawal(daiAddress, parseEther("16.955766354203181882"))
+        cruizeModule.initiateWithdrawal(
+          daiAddress,
+          parseEther("16.955766354203181882")
+        )
       )
         .emit(cruizeModule, "InitiateStandardWithdrawal")
-        .withArgs(signer.address, daiAddress, parseEther("16.955766354203181882"));
+        .withArgs(
+          daiAddress,
+          signer.address,
+          parseEther("16.955766354203181882")
+        );
 
       const withdrawal = await cruizeModule.callStatic.withdrawals(
         signer.address,
         daiAddress
       );
       expect(withdrawal.round).to.be.equal(4);
-      expect(withdrawal.shares).to.be.equal(parseEther("16.955766354203181882"));
+      expect(withdrawal.shares).to.be.equal(
+        parseEther("16.955766354203181882")
+      );
       expect(
         await cruizeModule.currentQueuedWithdrawalShares(daiAddress)
       ).to.be.equal(parseEther("16.955766354203181882"));
@@ -401,7 +421,9 @@ describe("work flow from curize vault to cruize contract", function () {
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       expect(vault.round).to.be.equal(5);
       expect(vault.totalPending).to.be.equal(parseEther("0"));
-      expect(vault.lockedAmount).to.be.equal(parseEther("10.000000000000000004"));
+      expect(vault.lockedAmount).to.be.equal(
+        parseEther("10.000000000000000004")
+      );
       expect(await crDAI.callStatic.totalSupply()).to.be.equal(
         parseEther("24.143216670661398435")
       );
@@ -434,9 +456,9 @@ describe("work flow from curize vault to cruize contract", function () {
       await expect(cruizeModule.standardWithdrawal(daiAddress))
         .emit(cruizeModule, "StandardWithdrawal")
         .withArgs(
+          daiAddress,
           signer.address,
-          parseEther("23.590794520522724717"),
-          daiAddress
+          parseEther("23.590794520522724717")
         );
       expect(await crDAI.callStatic.totalSupply()).to.be.equal(
         parseEther("7.187450316458216553")
@@ -444,7 +466,9 @@ describe("work flow from curize vault to cruize contract", function () {
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       expect(vault.round).to.be.equal(5);
-      expect(vault.lockedAmount).to.be.equal(parseEther("10.000000000000000004"));
+      expect(vault.lockedAmount).to.be.equal(
+        parseEther("10.000000000000000004")
+      );
       expect(vault.queuedWithdrawShares).to.be.equal(parseEther("0"));
     });
     it.only("WithdrawInstantly: Throw, if amount is zero", async () => {
@@ -544,7 +568,7 @@ describe("work flow from curize vault to cruize contract", function () {
       // assert.equal(recepit.toString(), parseEther("21.56"));
     });
   });
- 
+
   describe("testing setter and getters", () => {
     it.only("set valut Cap", async () => {
       await expect(cruizeModule.setCap(daiAddress, parseEther("10")))
@@ -580,7 +604,10 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("set setManagementFee", async () => {
       await expect(cruizeModule.setManagementFee(parseEther("20")))
         .to.be.emit(cruizeModule, "ManagementFeeSet")
-        .withArgs(parseEther("0.038356164488647025"), parseEther("20.000000000000000000"));
+        .withArgs(
+          parseEther("0.038356164488647025"),
+          parseEther("20.000000000000000000")
+        );
     });
     it.only("set setPerformanceFee with 0 value", async () => {
       await expect(cruizeModule.setPerformanceFee(parseEther("0")))
@@ -593,7 +620,7 @@ describe("work flow from curize vault to cruize contract", function () {
         .withArgs(parseEther("10"), parseEther("20"));
     });
   });
- 
+
   describe("Change impelemention logic contracts", () => {
     it.only("before upgarde dai vault state", async () => {
       const vault = await cruizeModule.callStatic.managementFee();
@@ -604,25 +631,35 @@ describe("work flow from curize vault to cruize contract", function () {
       const CRUIZEMODULE = await ethers.getContractFactory("Cruize", signer);
       cruizeModule = await CRUIZEMODULE.deploy();
       await cruizeProxy.connect(deployer).upgradeTo(cruizeModule.address);
-      
-      const cruizePxy = await ethers.getContractAt("Cruize",  cruizeProxy.address)
-      console.log(await cruizePxy.callStatic.cruizeTokens(daiAddress))
+
+      const cruizePxy = await ethers.getContractAt(
+        "Cruize",
+        cruizeProxy.address
+      );
+      console.log(await cruizePxy.callStatic.cruizeTokens(daiAddress));
 
       const encoder = new ethers.utils.AbiCoder();
-  const encodedParams = encoder.encode(
-    ["address", "address", "address","address","address", "uint256", "uint256"],
-    [
-      signer.address,
-      gProxyAddress as Address,
-      crContract.address,
-      cruizeProxy.address,
-      cruizeLogic.address,
-      parseEther("2"),
-      parseEther("10"),
-    ]
-  );
-    // await cruizeModule.setUp(encodedParams)
-
+      const encodedParams = encoder.encode(
+        [
+          "address",
+          "address",
+          "address",
+          "address",
+          "address",
+          "uint256",
+          "uint256",
+        ],
+        [
+          signer.address,
+          gProxyAddress as Address,
+          crContract.address,
+          cruizeProxy.address,
+          cruizeLogic.address,
+          parseEther("2"),
+          parseEther("10"),
+        ]
+      );
+      // await cruizeModule.setUp(encodedParams)
     });
     it.only("after upgarde dai vault state", async () => {
       const vault = await cruizeModule.callStatic.managementFee();

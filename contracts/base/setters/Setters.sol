@@ -85,7 +85,7 @@ contract Setters is Modifiers, Events, OwnableUpgradeable {
     function changeAssetStatus(
         address token,
         bool status
-    ) public onlyOwner addressIsValid(token) {
+    ) public onlyOwner tokenIsAllowed(token)  {
         isDisable[token] = status;
         emit ChangeAssetStatus(token, status);
     }
