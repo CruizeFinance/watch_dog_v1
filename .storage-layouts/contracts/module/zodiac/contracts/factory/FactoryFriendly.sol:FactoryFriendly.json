@@ -1,0 +1,78 @@
+{
+  "storage": [
+    {
+      "astId": 8725,
+      "contract": "contracts/module/zodiac/contracts/factory/FactoryFriendly.sol:FactoryFriendly",
+      "label": "_initialized",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_uint8"
+    },
+    {
+      "astId": 8728,
+      "contract": "contracts/module/zodiac/contracts/factory/FactoryFriendly.sol:FactoryFriendly",
+      "label": "_initializing",
+      "offset": 1,
+      "slot": "0",
+      "type": "t_bool"
+    },
+    {
+      "astId": 9212,
+      "contract": "contracts/module/zodiac/contracts/factory/FactoryFriendly.sol:FactoryFriendly",
+      "label": "__context_gap",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_array(t_uint256)50_storage"
+    },
+    {
+      "astId": 8597,
+      "contract": "contracts/module/zodiac/contracts/factory/FactoryFriendly.sol:FactoryFriendly",
+      "label": "_owner",
+      "offset": 0,
+      "slot": "51",
+      "type": "t_address"
+    },
+    {
+      "astId": 8717,
+      "contract": "contracts/module/zodiac/contracts/factory/FactoryFriendly.sol:FactoryFriendly",
+      "label": "__ownable_gap",
+      "offset": 0,
+      "slot": "52",
+      "type": "t_array(t_uint256)49_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_array(t_uint256)49_storage": {
+      "base": "t_uint256",
+      "encoding": "inplace",
+      "label": "uint256[49]",
+      "numberOfBytes": "1568"
+    },
+    "t_array(t_uint256)50_storage": {
+      "base": "t_uint256",
+      "encoding": "inplace",
+      "label": "uint256[50]",
+      "numberOfBytes": "1600"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint8": {
+      "encoding": "inplace",
+      "label": "uint8",
+      "numberOfBytes": "1"
+    }
+  }
+}

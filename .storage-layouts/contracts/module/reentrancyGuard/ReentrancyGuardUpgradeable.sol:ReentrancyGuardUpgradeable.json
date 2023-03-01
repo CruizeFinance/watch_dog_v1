@@ -1,0 +1,59 @@
+{
+  "storage": [
+    {
+      "astId": 8725,
+      "contract": "contracts/module/reentrancyGuard/ReentrancyGuardUpgradeable.sol:ReentrancyGuardUpgradeable",
+      "label": "_initialized",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_uint8"
+    },
+    {
+      "astId": 8728,
+      "contract": "contracts/module/reentrancyGuard/ReentrancyGuardUpgradeable.sol:ReentrancyGuardUpgradeable",
+      "label": "_initializing",
+      "offset": 1,
+      "slot": "0",
+      "type": "t_bool"
+    },
+    {
+      "astId": 9346,
+      "contract": "contracts/module/reentrancyGuard/ReentrancyGuardUpgradeable.sol:ReentrancyGuardUpgradeable",
+      "label": "_status",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 9404,
+      "contract": "contracts/module/reentrancyGuard/ReentrancyGuardUpgradeable.sol:ReentrancyGuardUpgradeable",
+      "label": "__reentrancy_gap",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_array(t_uint256)49_storage"
+    }
+  ],
+  "types": {
+    "t_array(t_uint256)49_storage": {
+      "base": "t_uint256",
+      "encoding": "inplace",
+      "label": "uint256[49]",
+      "numberOfBytes": "1568"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint8": {
+      "encoding": "inplace",
+      "label": "uint8",
+      "numberOfBytes": "1"
+    }
+  }
+}

@@ -543,6 +543,22 @@ describe("work flow from curize vault to cruize contract", function () {
     });
   });
 
+  describe("Update Implementations", async () => {
+    it.only("upgrade to new implementation", async () => {
+      console.log(await cruizeModule.callStatic.owner());
+      console.log(await cruizeModule.callStatic.cruizeProxy());
+      console.log(await cruizeModule.callStatic.gnosisSafe());
+      console.log(await cruizeModule.callStatic.module());
+      const CruizeFactory = await ethers.getContractFactory("Cruize", deployer);
+      const newImplementation = await CruizeFactory.deploy();
+      await cruizeProxy.connect(deployer).upgradeTo(newImplementation.address);
+      console.log(await cruizeModule.callStatic.owner());
+      console.log(await cruizeModule.callStatic.cruizeProxy());
+      console.log(await cruizeModule.callStatic.gnosisSafe());
+      console.log(await cruizeModule.callStatic.module());
+    });
+  });
+
   describe("Round 5th", () => {
     it.only("instantWithdraw if round is not same", async () => {
       await expect(cruizeModule.instantWithdrawal(daiAddress, parseEther("10")))

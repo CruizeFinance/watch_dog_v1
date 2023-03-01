@@ -5,7 +5,6 @@
   "license": "MIT",
   "scripts": {
     "slither": "slither .",
-    "check-storage": "hardhat check",
     "test": "hardhat test --trace",
     "build": "hardhat compile --force --verbose",
     "test:ci": "hardhat watch ci",
@@ -13,8 +12,8 @@
     "build:watch": "hardhat watch compilation",
     "test:watch": "hardhat watch test_mainnet",
     "deploy:network": "hardhat deploy --network",
-    "storage-lock": "hardhat storage-lock --prettify --overwrite",
-    "storage-layout-check":"hardhat storage-check --store-file storage-store-lock.json"
+    "check-storage": "hardhat storage-layout --check",
+    "update-storage": "hardhat storage-layout --update"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
@@ -50,8 +49,7 @@
     "ethereumjs-abi": "^0.6.8",
     "hardhat-abi-exporter": "^2.10.1",
     "hardhat-deploy": "^0.11.22",
-    "hardhat-finder": "^3.0.0",
-    "hardhat-storage-vault": "^1.2.3",
+    "hardhat-storage-layout-changes": "^0.1.2",
     "hardhat-tracer": "^1.2.1",
     "hardhat-watcher": "^2.5.0",
     "yargs": "^17.6.2"
