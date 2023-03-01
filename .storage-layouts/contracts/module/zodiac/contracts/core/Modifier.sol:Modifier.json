@@ -1,0 +1,117 @@
+{
+  "storage": [
+    {
+      "astId": 8725,
+      "contract": "contracts/module/zodiac/contracts/core/Modifier.sol:Modifier",
+      "label": "_initialized",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_uint8"
+    },
+    {
+      "astId": 8728,
+      "contract": "contracts/module/zodiac/contracts/core/Modifier.sol:Modifier",
+      "label": "_initializing",
+      "offset": 1,
+      "slot": "0",
+      "type": "t_bool"
+    },
+    {
+      "astId": 9212,
+      "contract": "contracts/module/zodiac/contracts/core/Modifier.sol:Modifier",
+      "label": "__context_gap",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_array(t_uint256)50_storage"
+    },
+    {
+      "astId": 8597,
+      "contract": "contracts/module/zodiac/contracts/core/Modifier.sol:Modifier",
+      "label": "_owner",
+      "offset": 0,
+      "slot": "51",
+      "type": "t_address"
+    },
+    {
+      "astId": 8717,
+      "contract": "contracts/module/zodiac/contracts/core/Modifier.sol:Modifier",
+      "label": "__ownable_gap",
+      "offset": 0,
+      "slot": "52",
+      "type": "t_array(t_uint256)49_storage"
+    },
+    {
+      "astId": 10052,
+      "contract": "contracts/module/zodiac/contracts/core/Modifier.sol:Modifier",
+      "label": "guard",
+      "offset": 0,
+      "slot": "101",
+      "type": "t_address"
+    },
+    {
+      "astId": 9730,
+      "contract": "contracts/module/zodiac/contracts/core/Modifier.sol:Modifier",
+      "label": "avatar",
+      "offset": 0,
+      "slot": "102",
+      "type": "t_address"
+    },
+    {
+      "astId": 9733,
+      "contract": "contracts/module/zodiac/contracts/core/Modifier.sol:Modifier",
+      "label": "target",
+      "offset": 0,
+      "slot": "103",
+      "type": "t_address"
+    },
+    {
+      "astId": 9431,
+      "contract": "contracts/module/zodiac/contracts/core/Modifier.sol:Modifier",
+      "label": "modules",
+      "offset": 0,
+      "slot": "104",
+      "type": "t_mapping(t_address,t_address)"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_array(t_uint256)49_storage": {
+      "base": "t_uint256",
+      "encoding": "inplace",
+      "label": "uint256[49]",
+      "numberOfBytes": "1568"
+    },
+    "t_array(t_uint256)50_storage": {
+      "base": "t_uint256",
+      "encoding": "inplace",
+      "label": "uint256[50]",
+      "numberOfBytes": "1600"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_mapping(t_address,t_address)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => address)",
+      "numberOfBytes": "32",
+      "value": "t_address"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint8": {
+      "encoding": "inplace",
+      "label": "uint8",
+      "numberOfBytes": "1"
+    }
+  }
+}

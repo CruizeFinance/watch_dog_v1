@@ -1,0 +1,19 @@
+{
+  "storage": [
+    {
+      "astId": 2602,
+      "contract": "contracts/gnosis-safe/safe.sol:OnlyOwnersGuard",
+      "label": "safe",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_contract(ISafe)2598"
+    }
+  ],
+  "types": {
+    "t_contract(ISafe)2598": {
+      "encoding": "inplace",
+      "label": "contract ISafe",
+      "numberOfBytes": "20"
+    }
+  }
+}

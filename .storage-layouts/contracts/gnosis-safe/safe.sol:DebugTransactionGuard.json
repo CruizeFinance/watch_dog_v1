@@ -1,0 +1,31 @@
+{
+  "storage": [
+    {
+      "astId": 2397,
+      "contract": "contracts/gnosis-safe/safe.sol:DebugTransactionGuard",
+      "label": "txNonces",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_mapping(t_bytes32,t_uint256)"
+    }
+  ],
+  "types": {
+    "t_bytes32": {
+      "encoding": "inplace",
+      "label": "bytes32",
+      "numberOfBytes": "32"
+    },
+    "t_mapping(t_bytes32,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_bytes32",
+      "label": "mapping(bytes32 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    }
+  }
+}

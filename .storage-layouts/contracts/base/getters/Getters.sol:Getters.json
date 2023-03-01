@@ -1,0 +1,437 @@
+{
+  "storage": [
+    {
+      "astId": 10747,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "feeRecipient",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_address"
+    },
+    {
+      "astId": 10750,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "performanceFee",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 10752,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "isPerformanceFeeEnabled",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_bool"
+    },
+    {
+      "astId": 10755,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "managementFee",
+      "offset": 0,
+      "slot": "3",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 10757,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "isManagementFeeEnable",
+      "offset": 0,
+      "slot": "4",
+      "type": "t_bool"
+    },
+    {
+      "astId": 10760,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "module",
+      "offset": 1,
+      "slot": "4",
+      "type": "t_address"
+    },
+    {
+      "astId": 10763,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "gnosisSafe",
+      "offset": 0,
+      "slot": "5",
+      "type": "t_address"
+    },
+    {
+      "astId": 10766,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "cruizeProxy",
+      "offset": 0,
+      "slot": "6",
+      "type": "t_address"
+    },
+    {
+      "astId": 10769,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "crContract",
+      "offset": 0,
+      "slot": "7",
+      "type": "t_address"
+    },
+    {
+      "astId": 10786,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "cruizeTokens",
+      "offset": 0,
+      "slot": "8",
+      "type": "t_mapping(t_address,t_address)"
+    },
+    {
+      "astId": 10791,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "isDisable",
+      "offset": 0,
+      "slot": "9",
+      "type": "t_mapping(t_address,t_bool)"
+    },
+    {
+      "astId": 10797,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "vaults",
+      "offset": 0,
+      "slot": "10",
+      "type": "t_mapping(t_address,t_struct(VaultState)8471_storage)"
+    },
+    {
+      "astId": 10802,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "lastQueuedWithdrawAmounts",
+      "offset": 0,
+      "slot": "11",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 10807,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "currentQueuedWithdrawalShares",
+      "offset": 0,
+      "slot": "12",
+      "type": "t_mapping(t_address,t_uint128)"
+    },
+    {
+      "astId": 10815,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "withdrawals",
+      "offset": 0,
+      "slot": "13",
+      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)8485_storage))"
+    },
+    {
+      "astId": 10823,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "depositReceipts",
+      "offset": 0,
+      "slot": "14",
+      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)8480_storage))"
+    },
+    {
+      "astId": 10830,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "roundPricePerShare",
+      "offset": 0,
+      "slot": "15",
+      "type": "t_mapping(t_address,t_mapping(t_uint16,t_uint256))"
+    },
+    {
+      "astId": 10833,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "tokens",
+      "offset": 0,
+      "slot": "16",
+      "type": "t_array(t_address)dyn_storage"
+    },
+    {
+      "astId": 10838,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "__cruize_gap",
+      "offset": 0,
+      "slot": "17",
+      "type": "t_array(t_uint256)50_storage"
+    },
+    {
+      "astId": 8725,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "_initialized",
+      "offset": 0,
+      "slot": "67",
+      "type": "t_uint8"
+    },
+    {
+      "astId": 8728,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "_initializing",
+      "offset": 1,
+      "slot": "67",
+      "type": "t_bool"
+    },
+    {
+      "astId": 9212,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "__context_gap",
+      "offset": 0,
+      "slot": "68",
+      "type": "t_array(t_uint256)50_storage"
+    },
+    {
+      "astId": 8597,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "_owner",
+      "offset": 0,
+      "slot": "118",
+      "type": "t_address"
+    },
+    {
+      "astId": 8717,
+      "contract": "contracts/base/getters/Getters.sol:Getters",
+      "label": "__ownable_gap",
+      "offset": 0,
+      "slot": "119",
+      "type": "t_array(t_uint256)49_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_array(t_address)dyn_storage": {
+      "base": "t_address",
+      "encoding": "dynamic_array",
+      "label": "address[]",
+      "numberOfBytes": "32"
+    },
+    "t_array(t_uint256)49_storage": {
+      "base": "t_uint256",
+      "encoding": "inplace",
+      "label": "uint256[49]",
+      "numberOfBytes": "1568"
+    },
+    "t_array(t_uint256)50_storage": {
+      "base": "t_uint256",
+      "encoding": "inplace",
+      "label": "uint256[50]",
+      "numberOfBytes": "1600"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_mapping(t_address,t_address)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => address)",
+      "numberOfBytes": "32",
+      "value": "t_address"
+    },
+    "t_mapping(t_address,t_bool)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => bool)",
+      "numberOfBytes": "32",
+      "value": "t_bool"
+    },
+    "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)8480_storage))": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => mapping(address => struct Types.DepositReceipt))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_address,t_struct(DepositReceipt)8480_storage)"
+    },
+    "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)8485_storage))": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => mapping(address => struct Types.Withdrawal))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_address,t_struct(Withdrawal)8485_storage)"
+    },
+    "t_mapping(t_address,t_mapping(t_uint16,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => mapping(uint16 => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint16,t_uint256)"
+    },
+    "t_mapping(t_address,t_struct(DepositReceipt)8480_storage)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => struct Types.DepositReceipt)",
+      "numberOfBytes": "32",
+      "value": "t_struct(DepositReceipt)8480_storage"
+    },
+    "t_mapping(t_address,t_struct(VaultState)8471_storage)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => struct Types.VaultState)",
+      "numberOfBytes": "32",
+      "value": "t_struct(VaultState)8471_storage"
+    },
+    "t_mapping(t_address,t_struct(Withdrawal)8485_storage)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => struct Types.Withdrawal)",
+      "numberOfBytes": "32",
+      "value": "t_struct(Withdrawal)8485_storage"
+    },
+    "t_mapping(t_address,t_uint128)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint128)",
+      "numberOfBytes": "32",
+      "value": "t_uint128"
+    },
+    "t_mapping(t_address,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_uint16,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_uint16",
+      "label": "mapping(uint16 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_struct(DepositReceipt)8480_storage": {
+      "encoding": "inplace",
+      "label": "struct Types.DepositReceipt",
+      "members": [
+        {
+          "astId": 8473,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "round",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint16"
+        },
+        {
+          "astId": 8475,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "amount",
+          "offset": 2,
+          "slot": "0",
+          "type": "t_uint104"
+        },
+        {
+          "astId": 8477,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "unredeemedShares",
+          "offset": 15,
+          "slot": "0",
+          "type": "t_uint128"
+        },
+        {
+          "astId": 8479,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "totalDeposit",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint104"
+        }
+      ],
+      "numberOfBytes": "64"
+    },
+    "t_struct(VaultState)8471_storage": {
+      "encoding": "inplace",
+      "label": "struct Types.VaultState",
+      "members": [
+        {
+          "astId": 8462,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "round",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint16"
+        },
+        {
+          "astId": 8464,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "lockedAmount",
+          "offset": 2,
+          "slot": "0",
+          "type": "t_uint104"
+        },
+        {
+          "astId": 8466,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "totalPending",
+          "offset": 15,
+          "slot": "0",
+          "type": "t_uint128"
+        },
+        {
+          "astId": 8468,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "queuedWithdrawShares",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint128"
+        },
+        {
+          "astId": 8470,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "cap",
+          "offset": 16,
+          "slot": "1",
+          "type": "t_uint104"
+        }
+      ],
+      "numberOfBytes": "64"
+    },
+    "t_struct(Withdrawal)8485_storage": {
+      "encoding": "inplace",
+      "label": "struct Types.Withdrawal",
+      "members": [
+        {
+          "astId": 8482,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "round",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint16"
+        },
+        {
+          "astId": 8484,
+          "contract": "contracts/base/getters/Getters.sol:Getters",
+          "label": "shares",
+          "offset": 2,
+          "slot": "0",
+          "type": "t_uint128"
+        }
+      ],
+      "numberOfBytes": "32"
+    },
+    "t_uint104": {
+      "encoding": "inplace",
+      "label": "uint104",
+      "numberOfBytes": "13"
+    },
+    "t_uint128": {
+      "encoding": "inplace",
+      "label": "uint128",
+      "numberOfBytes": "16"
+    },
+    "t_uint16": {
+      "encoding": "inplace",
+      "label": "uint16",
+      "numberOfBytes": "2"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint8": {
+      "encoding": "inplace",
+      "label": "uint8",
+      "numberOfBytes": "1"
+    }
+  }
+}

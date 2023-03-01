@@ -4,8 +4,7 @@ import "hardhat-tracer";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-storage-layout";
-// import "hardhat-finder"
-import "hardhat-storage-vault";
+import "hardhat-storage-layout-changes";
 import { HttpNetworkUserConfig } from "hardhat/types";
 dotenv.config({ path: __dirname + "/.env" });
 
@@ -37,6 +36,12 @@ export default {
     sources: "./contracts",
     deployments: "./deployments",
     artifacts: "./artifacts",
+    storageLayouts: ".storage-layouts",
+  },
+
+  storageLayoutConfig: {
+    contracts: ["Cruize"],
+    fullPath: false
   },
 
   solidity: {
@@ -167,21 +172,5 @@ export default {
     currency: "USD",
     gasPrice: 10,
   },
-  // contracts storage-layout-lock configurations
-  storageVault: {
-    check: {
-      storeFile: "storage-store-lock.json",
-    },
-    lock: {
-      excludeContracts: [
-        "^gnosis-safe/",
-        "^interfaces/",
-        "^libraries/",
-        "CRTokenUpgradeable$"
-      ],
-      storeFile: "storage-store-lock.json",
-      prettify: true,
-      overwrite: false,
-    },
-  },
+
 };
