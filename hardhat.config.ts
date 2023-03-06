@@ -106,7 +106,10 @@ export default {
         params: {
           logs: true,
           noCompile: false,
-          testFiles: ["./test/src/cruize.test.ts"],
+          testFiles: [
+            "./test/src/cruize.spec.ts",
+            "./test/src/camelotVault.spec.ts"
+          ],
         },
       },
     ],
