@@ -6,13 +6,25 @@ interface INftPool {
     /**
      * @dev Returns general "pool" info for this contract
      */
-    function getPoolInfo() external view;
+    function getPoolInfo()
+        external
+        view
+        returns (
+            address lpToken,
+            address grailToken,
+            address xGrailToken,
+            uint256 lastRewardTime,
+            uint256 accRewardsPerShare,
+            uint256 lpSupply,
+            uint256 lpSupplyWithMultiplier,
+            uint256 allocPoint
+        );
+
     /**
-     * @dev Returns master contract address . 
+     * @dev Returns master contract address .
      */
-    function  master()  external returns (address);
-        
-    
+    function master() external view returns (address);
+
     /**
      * @dev Returns a position info
      */
@@ -36,7 +48,12 @@ interface INftPool {
     function pendingRewards(uint256 tokenId) external view returns (uint256);
 
     function createPosition(uint256 amount, uint256 lockDuration) external;
-    function transferFrom(address from, address to, uint256 tokenId) external;
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 
     /**
      * @dev Add to an existing staking position

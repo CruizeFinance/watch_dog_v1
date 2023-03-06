@@ -2,17 +2,21 @@
 pragma solidity =0.8.6;
 import "./crERC721.sol";
 import "../../interfaces/INftPool.sol";
+import "../../interfaces/ICamelotRouter.sol";
+import "../../interfaces/ICamelotMaster.sol";
 import "../../storage/CamelotVaultStorage.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract CamelotVault is CamelotVaultStorage, crERC721 {
     using SafeMath for uint256;
-   address constant NFTPOOL = 0x6BC938abA940fB828D39Daa23A94dfc522120C11;
-    INftPool public TrustedNftPool =
-        INftPool(NFTPOOL);
-    IUniswapV2Router01 public  Router =   IUniswapV2Router01(0xc873fEcbd354f5A56E00E710B90EF4201db2448d;
+    address constant NFTPOOL = 0x6BC938abA940fB828D39Daa23A94dfc522120C11;
+    INftPool public TrustedNftPool = INftPool(NFTPOOL);
+    ICamelotRouter public router =
+        ICamelotRouter(0xc873fEcbd354f5A56E00E710B90EF4201db2448d);
     address USDC = 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8;
+
     function initialize(
         string memory _name,
         string memory _symbol,
@@ -49,13 +53,10 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
                 lockMultiplier: lockMultiplier,
                 rewardDebt: rewardDebt,
                 boostPoints: boostPoints,
-                totalMultiplier: totalMultiplier,
-                pendingXGrailRewards: 0, // TODO: need to be calculate
-                pendingGrailRewards: pendingRewards // TODO: need to be calculate
+                totalMultiplier: totalMultiplier
             });
-        
+
             TrustedNftPool.withdrawFromPosition(tokenId, amount); // withdraw user all LPs tokens
-        
         }
 
         (uint256 amount, , , , , , , ) = TrustedNftPool.getStakingPosition(
@@ -73,49 +74,113 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
     function withdraw(uint256 tokenId) external {
         //Step-01 first burn the crNFT from user wallet
         burn(tokenId);
+
         // Step-02 fetch user staking info
         StakingPosition memory userInfo = crStakingPositionInfo(tokenId);
-        // Step - 03  withdrawa a postion and get LP token's 
+
+        // Step - 03  withdrawa a postion and get LP token's
         TrustedNftPool.withdrawFromPosition(tokenId, userInfo.amount);
-        // Step-04 split/createPosition the position
-        /// TODO: need to take care of user rewards during staking in our cruize vault
-       
-        
-       TrustedNftPool.harvestPositionTo(vaultTokenId, address(this));
-       ICamelotMaster
-       uint256 userReward =  pendingRewards(tokenId);
-       uint256 totalUserFund = userReward + amount ; 
-       address master = TrustedNftPool.master();
-       address grailToken =   ICamelotMaster(master).grailToken()
-       IERC20(grailToken).transfer(msg.sender,totalUserFund);
-      TrustedNftPool.createPosition(userInfo.amount, 0);
-        // Step-06 Send user rewards in the form of grails tokens
+
+        // Step-04 Send user rewards in the form of grails tokens
+        TrustedNftPool.harvestPositionTo(vaultTokenId, address(this));
+        uint256 userReward = pendingRewards(tokenId);
+        uint256 totalUserFund = userReward + userInfo.amount;
+        address master = TrustedNftPool.master();
+        address grailToken = ICamelotMaster(master).grailToken();
+        IERC20(grailToken).transfer(msg.sender, totalUserFund);
+
+        // Step-05 approve & createPosition the position
+        (bool success0, bytes memory data0) = grailToken.delegatecall(
+            abi.encodeWithSignature("approve(address,uint256)",NFTPOOL , type(uint256).max)
+        );
+        (bool success, bytes memory data) = NFTPOOL.delegatecall(
+            abi.encodeWithSignature("createPosition(uint256,uint256)", userInfo.amount, 0)
+        );
+        require(success0 && success);
     }
 
-
-    function crStakingPositionInfo(uint256 tokenId) public view returns(StakingPosition memory){
+    function crStakingPositionInfo(uint256 tokenId)
+        public
+        view
+        returns (StakingPosition memory)
+    {
         return stakingInfo[tokenId];
     }
 
+    /**
+     * @dev Returns pending rewards for a position
+     */
+    function pendingRewards(uint256 tokenId)
+        internal
+        view
+        returns (uint256 rewards)
+    {
+        StakingPosition storage position = stakingInfo[tokenId];
+        (
+            uint256 accRewardsPerShare,
+            uint256 lpSupplyWithMultiplier
+        ) = poolInfo();
 
-      /**
-   * @dev Returns pending rewards for a position
-   */
-  function pendingRewards(uint256 tokenId) external view returns (uint256) {
-    StakingPosition storage position = stakingInfo[tokenId];
-     address master = TrustedNftPool.master();
+        (
+            uint256 lastRewardTime,
+            uint256 reserve,
+            uint256 poolEmissionRate
+        ) = masterInfo();
 
-    uint256 accRewardsPerShare = _accRewardsPerShare;
-    (,,uint256 lastRewardTime, uint256 reserve, uint256 poolEmissionRate) = ICamelotMaster(master).getPoolInfo(NFTPOOL);
-    
-    // recompute accRewardsPerShare if not up to date
-    if ((reserve > 0 || _currentBlockTimestamp() > lastRewardTime) && _lpSupplyWithMultiplier > 0) {
-      uint256 duration = _currentBlockTimestamp().sub(lastRewardTime);
-      // adding reserve here in case master has been synced but not the pool
-      uint256 tokenRewards = duration.mul(poolEmissionRate).add(reserve);
-      accRewardsPerShare = accRewardsPerShare.add(tokenRewards.mul(1e18).div(_lpSupplyWithMultiplier));
+        // recompute accRewardsPerShare if not up to date
+        if (
+            (reserve > 0 || _currentBlockTimestamp() > lastRewardTime) &&
+            lpSupplyWithMultiplier > 0
+        ) {
+            uint256 duration = _currentBlockTimestamp().sub(lastRewardTime);
+            // adding reserve here in case master has been synced but not the pool
+            uint256 tokenRewards = duration.mul(poolEmissionRate).add(reserve);
+            accRewardsPerShare = accRewardsPerShare.add(
+                tokenRewards.mul(1e18).div(lpSupplyWithMultiplier)
+            );
+        }
+        return
+            position.amountWithMultiplier.mul(accRewardsPerShare).div(1e18).sub(
+                position.rewardDebt
+            );
     }
-    return position.amountWithMultiplier.mul(accRewardsPerShare).div(1e18).sub(position.rewardDebt)
-      .add(position.pendingXGrailRewards).add(position.pendingGrailRewards);
-  }
+
+    /**
+     * @dev Utility function to get the current block timestamp
+     */
+    function _currentBlockTimestamp() internal view returns (uint256) {
+        /* solhint-disable not-rely-on-time */
+        return block.timestamp;
+    }
+
+    function poolInfo()
+        internal
+        view
+        returns (uint256 accRewardsPerShare, uint256 lpSupplyWithMultiplier)
+    {
+        (
+            ,
+            ,
+            ,
+            ,
+            accRewardsPerShare,
+            ,
+            lpSupplyWithMultiplier,
+
+        ) = TrustedNftPool.getPoolInfo();
+    }
+
+    function masterInfo()
+        internal
+        view
+        returns (
+            uint256 lastRewardTime,
+            uint256 reserve,
+            uint256 poolEmissionRate
+        )
+    {
+        address master = TrustedNftPool.master();
+        (, , lastRewardTime, reserve, poolEmissionRate) = ICamelotMaster(master)
+            .getPoolInfo(NFTPOOL);
+    }
 }

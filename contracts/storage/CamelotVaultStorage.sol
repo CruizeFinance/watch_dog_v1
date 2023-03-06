@@ -17,8 +17,6 @@ abstract contract CamelotVaultStorage {
         uint256 rewardDebt; // Reward debt
         uint256 boostPoints; // Allocated xGRAIL from yieldboost contract (optional)
         uint256 totalMultiplier; // lockMultiplier + allocated xGRAIL boostPoints multiplier
-        uint256 pendingXGrailRewards; // Not harvested xGrail rewards
-        uint256 pendingGrailRewards; // Not harvested Grail rewards
     }
     
 // we might use multiple pool's 
