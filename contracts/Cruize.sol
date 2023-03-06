@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.6;
+pragma solidity =0.8.18;
 import "./base/CruizeVault.sol";
 import "./proxies/CloneProxy.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -102,13 +102,13 @@ contract Cruize is CruizeVault, Proxy {
     {
         _updateDepositInfo(token, amount);
         if (
-            token == ETH && gnosisSafe.balance.add(amount) < vaults[token].cap
+            token == ETH && gnosisSafe.balance.add(amount) <= vaults[token].cap
         ) {
             // transfer ETH to Cruize gnosis valut.
             (bool sent, ) = gnosisSafe.call{value: amount}("");
             if (!sent) revert FailedToTransferETH();
         } else if (
-            IERC20(token).balanceOf(gnosisSafe).add(amount) < vaults[token].cap
+            IERC20(token).balanceOf(gnosisSafe).add(amount) <= vaults[token].cap
         ) {
             // transfer token to Cruize gnosis vault.
             IERC20(token).safeTransferFrom(msg.sender, gnosisSafe, amount);

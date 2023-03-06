@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.6;
+pragma solidity =0.8.18;
 import "./getters/Getters.sol";
 import "../helper/Helper.sol";
 import "./setters/Setters.sol";
@@ -15,7 +15,6 @@ import "../module/reentrancyGuard/ReentrancyGuardUpgradeable.sol";
 
 abstract contract CruizeVault is
     Setters,
-    Getters,
     Helper,
     PausableUpgradeable,
     ReentrancyGuardUpgradeable,
@@ -101,9 +100,10 @@ abstract contract CruizeVault is
      * @param _shares is the number of shares to withdraw.
      * @param _token is the address of withdrawal `asset`.
      */
-    function _initiateStandardWithdrawal(address _token, uint256 _shares)
-        internal
-    {
+    function _initiateStandardWithdrawal(
+        address _token,
+        uint256 _shares
+    ) internal {
         uint16 currentRound = vaults[_token].round;
         Types.DepositReceipt memory depositReceipt = depositReceipts[
             msg.sender
@@ -262,7 +262,13 @@ abstract contract CruizeVault is
         address _receiver,
         address _cruizeProxy,
         uint256 _amount
-    ) external onlyModule(_cruizeProxy) nonReentrant addressIsValid(_paymentToken) addressIsValid(_receiver){
+    )
+        external
+        onlyModule(_cruizeProxy)
+        nonReentrant
+        addressIsValid(_paymentToken)
+        addressIsValid(_receiver)
+    {
         if (_paymentToken == ETH) {
             (bool sent, ) = _receiver.call{value: _amount}("");
             if (!sent) revert FailedToTransferETH();

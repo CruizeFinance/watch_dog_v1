@@ -611,9 +611,9 @@ describe("work flow from curize vault to cruize contract", function () {
 
   describe("testing setter and getters", () => {
     it.only("set valut Cap", async () => {
-      await expect(cruizeModule.setCap(daiAddress, parseEther("10")))
+      await expect(cruizeModule.setCap(daiAddress, parseEther("30")))
         .to.emit(cruizeModule, "CapSet")
-        .withArgs(daiAddress, parseEther("1000"), parseEther("10"));
+        .withArgs(daiAddress, parseEther("1000"), parseEther("30"));
     });
     it.only("set valut Cap is vaule is zero", async () => {
       await expect(cruizeModule.setCap(daiAddress, parseEther("0")))
