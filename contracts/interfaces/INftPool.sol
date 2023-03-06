@@ -7,7 +7,12 @@ interface INftPool {
      * @dev Returns general "pool" info for this contract
      */
     function getPoolInfo() external view;
-
+    /**
+     * @dev Returns master contract address . 
+     */
+    function  master()  external returns (address);
+        
+    
     /**
      * @dev Returns a position info
      */

@@ -20,7 +20,8 @@ abstract contract CamelotVaultStorage {
         uint256 pendingXGrailRewards; // Not harvested xGrail rewards
         uint256 pendingGrailRewards; // Not harvested Grail rewards
     }
-
+    
+// we might use multiple pool's 
     uint256 public vaultTokenId; // This tokenId will represent the whole position in camelot staking pool
     // user => nftInfo
     mapping(uint256 => StakingPosition) public stakingInfo;
@@ -30,5 +31,5 @@ abstract contract CamelotVaultStorage {
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[50] private __cruize_gap;
+    uint256[50] private __camelotVault_gap;
 }
