@@ -67,6 +67,12 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
             // staking pool then simply increase the stakign amount
             TrustedNftPool.addToPosition(vaultTokenId, amountToAdd);
         } else {
+            (
+            address lp,
+            ,
+            
+        ) = poolInfo();
+            IERC20(lp).approve(NFTPOOL,amountToAdd);
             TrustedNftPool.createPosition(amountToAdd, 0);
         }
     }
@@ -91,10 +97,18 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
 
         // Step-05 approve & createPosition the position
         (bool success0, bytes memory data0) = grailToken.delegatecall(
-            abi.encodeWithSignature("approve(address,uint256)",NFTPOOL , type(uint256).max)
+            abi.encodeWithSignature(
+                "approve(address,uint256)",
+                NFTPOOL,
+                type(uint256).max
+            )
         );
         (bool success, bytes memory data) = NFTPOOL.delegatecall(
-            abi.encodeWithSignature("createPosition(uint256,uint256)", userInfo.amount, 0)
+            abi.encodeWithSignature(
+                "createPosition(uint256,uint256)",
+                userInfo.amount,
+                0
+            )
         );
         require(success0 && success);
     }
@@ -117,6 +131,7 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
     {
         StakingPosition storage position = stakingInfo[tokenId];
         (
+            ,
             uint256 accRewardsPerShare,
             uint256 lpSupplyWithMultiplier
         ) = poolInfo();
@@ -156,10 +171,10 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
     function poolInfo()
         internal
         view
-        returns (uint256 accRewardsPerShare, uint256 lpSupplyWithMultiplier)
+        returns (address lp,uint256 accRewardsPerShare, uint256 lpSupplyWithMultiplier)
     {
         (
-            ,
+            lp,
             ,
             ,
             ,
@@ -182,5 +197,31 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
         address master = TrustedNftPool.master();
         (, , lastRewardTime, reserve, poolEmissionRate) = ICamelotMaster(master)
             .getPoolInfo(NFTPOOL);
+    }
+
+    function onNFTHarvest(
+        address operator,
+        address to,
+        uint256 tokenId,
+        uint256 grailAmount,
+        uint256 xGrailAmount
+    ) external returns (bool) {
+        return true;
+    }
+
+    function onNFTAddToPosition(
+        address operator,
+        uint256 tokenId,
+        uint256 lpAmount
+    ) external returns (bool) {
+        return true;
+    }
+
+    function onNFTWithdraw(
+        address operator,
+        uint256 tokenId,
+        uint256 lpAmount
+    ) external returns (bool) {
+        return true;
     }
 }

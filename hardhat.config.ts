@@ -61,6 +61,9 @@ export default {
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
+      forking:{
+        url:"https://endpoints.omniatech.io/v1/arbitrum/one/public"
+      },
       allowUnlimitedContractSize: true,
       accounts: {
         accountsBalance: "100000000000000000000000000000000000000000",

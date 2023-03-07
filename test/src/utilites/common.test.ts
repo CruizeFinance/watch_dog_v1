@@ -1,6 +1,7 @@
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber, Contract, Signer } from "ethers";
 import { parseEther } from "ethers/lib/utils";
-import { ethers } from "hardhat";
+import hre ,{ ethers } from "hardhat";
 import { Address } from "hardhat-deploy/types";
 
 const deployContracts = async (contractName: string, signer: Signer) => {
@@ -46,4 +47,13 @@ const errorContext = (expectedBN:BigNumber,actualBN:BigNumber) => {
   return`excepted ${expectedBN} actule ${actualBN}`
 }
 
-export {toBigNumber, errorContext,deployContracts, createCruizeToken, depositERC20,str };
+const Impersonate = async(address:string):Promise<SignerWithAddress> =>{
+  await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [address],
+    });
+    const account = await ethers.getSigner(address)
+    return account;
+}
+
+export {Impersonate,toBigNumber, errorContext,deployContracts, createCruizeToken, depositERC20,str };
