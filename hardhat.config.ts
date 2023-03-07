@@ -2,6 +2,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 import "hardhat-tracer";
 import "hardhat-deploy";
+import 'hardhat-watcher';
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-storage-layout";
 import { HttpNetworkUserConfig } from "hardhat/types";
@@ -94,6 +95,7 @@ export default {
       tasks: ["compile"],
       verbose: true,
     },
+    clearOnStart: true
   },
   mocha: {
     timeout: 8000000,
@@ -106,7 +108,10 @@ export default {
         params: {
           logs: true,
           noCompile: false,
-          testFiles: ["./test/src/cruize.test.ts"],
+          testFiles: [
+            "./test/src/cruize.spec.ts",
+            "./test/src/camelotVault.spec.ts"
+          ],
         },
       },
     ],
