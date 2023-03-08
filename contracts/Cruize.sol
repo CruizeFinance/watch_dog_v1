@@ -181,15 +181,17 @@ contract Cruize is CruizeVault, Proxy {
 
     function closeRound(
         address token,
-        uint256 totalTokenBalance
+        uint256[] memory totalTokenBalance
     ) external nonReentrant onlyOwner {
         if (token != address(0)) {
-            _closeRound(token, totalTokenBalance);
+            uint256 vaultTokenBalance = totalBalance(token, totalTokenBalance[0]);
+            _closeRound(token, totalTokenBalance[0], vaultTokenBalance);
             return;
         }
         uint256 tokenLength = tokens.length;
         for (uint8 i = 0; i < tokenLength; ) {
-            _closeRound(tokens[i], 0);
+            uint256 vaultTokenBalance = totalBalance(token, totalTokenBalance[i]);
+            _closeRound(tokens[i], totalTokenBalance[i], vaultTokenBalance);
             unchecked {
                 i++;
             }
@@ -202,8 +204,13 @@ contract Cruize is CruizeVault, Proxy {
      */
     function _closeRound(
         address token,
-        uint256 totalTokenBalance
-    ) internal tokenIsAllowed(token) {
+        uint256 totalTokenBalance,
+        uint256 vaultTokenBalance
+    )
+        internal
+        tokenIsAllowed(token)
+        checkVaultBalance(token, totalTokenBalance, vaultTokenBalance)
+    {
         uint256 currQueuedWithdrawShares = currentQueuedWithdrawalShares[token];
         (uint256 lockedBalance, uint256 queuedWithdrawAmount) = _closeRound(
             token,
@@ -230,14 +237,11 @@ contract Cruize is CruizeVault, Proxy {
     ) external returns (uint256[] memory) {
         uint256 length = assets.length;
         uint256[] memory assetsTvl = new uint256[](length);
-        for (uint256 i = 0; i < length; ) {
+        for (uint256 i = 0; i < length; i++) {
             address token = assets[i];
             assetsTvl[i] =
                 vaults[token].lockedAmount +
                 vaults[token].totalPending;
-            unchecked {
-                i++;
-            }
         }
 
         return assetsTvl;

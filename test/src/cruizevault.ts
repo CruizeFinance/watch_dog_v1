@@ -98,8 +98,9 @@ describe("work flow from curize vault to cruize contract", function () {
 
   describe("#Deposit in Round 1 ", () => {
     it.only("deposit ETH", async () => {
-
-      await cruizeModule.deposit(ETHADDRESS, parseEther("1"),{value:parseEther("1")});
+      await cruizeModule.deposit(ETHADDRESS, parseEther("1"), {
+        value: parseEther("1"),
+      });
     });
     it.only("Deposit DAI(ERC20) token", async () => {
       await depositERC20(cruizeModule, dai, "10");
@@ -146,7 +147,7 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(receipt.amount).to.be.equal(parseEther("10"));
     });
     it.only("Close 1st ETH round", async () => {
-      await cruizeModule.closeRound(daiAddress, parseEther("10"));
+      await cruizeModule.closeRound(daiAddress, [parseEther("10")]);
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       const roundPrice = await cruizeModule.callStatic.roundPricePerShare(
         dai.address,
@@ -198,7 +199,7 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it.only("close 2nd ETH round", async () => {
-      await cruizeModule.closeRound(daiAddress, parseEther("22"));
+      await cruizeModule.closeRound(daiAddress, [parseEther("22")]);
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       assert.equal(vault.round, 3);
       assert.equal(
@@ -335,10 +336,9 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it.only("close 3rd ETH round", async () => {
-      await cruizeModule.closeRound(
-        daiAddress,
-        parseEther("31.795397260261362357")
-      );
+      await cruizeModule.closeRound(daiAddress, [
+        parseEther("31.795397260261362357"),
+      ]);
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       expect(vault.round).to.be.equal(4);
       expect(vault.totalPending).to.be.equal(parseEther("0"));
@@ -448,10 +448,9 @@ describe("work flow from curize vault to cruize contract", function () {
 
     it.only("close 4th ETH round", async () => {
       await depositERC20(cruizeModule, dai, "10");
-      await cruizeModule.closeRound(
-        daiAddress,
-        parseEther("34.000000000000000007")
-      );
+      await cruizeModule.closeRound(daiAddress, [
+        parseEther("34.000000000000000007"),
+      ]);
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       expect(vault.round).to.be.equal(5);
       expect(vault.totalPending).to.be.equal(parseEther("0"));
@@ -579,7 +578,7 @@ describe("work flow from curize vault to cruize contract", function () {
       // assert.equal(recepit.toString(), parseEther("21.56"));
     });
     it.only("close 5th round ", async () => {
-      await cruizeModule.closeRound(daiAddress, "0");
+      await cruizeModule.closeRound(daiAddress, ["0"]);
       const roundPrice = await cruizeModule.callStatic.roundPricePerShare(
         daiAddress,
         BigNumber.from(5)

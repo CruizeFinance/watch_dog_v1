@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import "../libraries/Errors.sol";
 import "../storage/CruizeStorage.sol";
+import "../base/getters/Getters.sol";
 pragma solidity =0.8.6;
 
 abstract contract Modifiers is CruizeStorage {
@@ -39,6 +40,28 @@ abstract contract Modifiers is CruizeStorage {
 
     modifier isDisabled(address token) {
         if (isDisable[token]) revert DisabledAsset(token);
+        _;
+    }
+    modifier checkVaultBalance(
+        address token,
+        uint256 totalTokenBalance,
+        uint256 vaultTokenBalance
+    ) {
+        uint256 totalDeposit = vaults[token].lockedAmount +
+            vaults[token].totalPending;
+        if (totalTokenBalance == 0) {
+            if (vaultTokenBalance < totalDeposit)
+                revert VaultBalanceIsLessThenTheTotalDepsoit(
+                    totalDeposit,
+                    vaultTokenBalance
+                );
+        }
+        if (totalTokenBalance > 0 && totalTokenBalance < totalDeposit) {
+            revert VaultBalanceIsLessThenTheTotalDepsoit(
+                totalDeposit,
+                totalTokenBalance
+            );
+        }
         _;
     }
 }
