@@ -184,7 +184,7 @@ contract Cruize is CruizeVault, Proxy {
             return;
         }
         uint256 tokenLength = tokens.length;
-        for (uint8 i = 0; i < tokenLength; ) {
+        for (uint8 i; i < tokenLength; ) {
             _closeRound(tokens[i]);
             unchecked {
                 i++;
@@ -213,7 +213,6 @@ contract Cruize is CruizeVault, Proxy {
         vaultState.queuedWithdrawShares = uint128(newQueuedWithdrawShares);
         //slither-disable-next-line reentrancy-no-eth
         currentQueuedWithdrawalShares[token] = 0;
-
         ShareMath.assertUint104(lockedBalance);
         vaultState.lockedAmount = uint104(lockedBalance);
     }

@@ -7,10 +7,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract CRTokenUpgradeable is ERC20Upgradeable, OwnableUpgradeable {
     uint8 internal _decimal;
 
-    /**
-     * @notice mint will mint the cr token's
-     * @param account_  address to mint token.
-     * @param amount_ is the amount of `token` to mint.
+    /*
+     * @notice    mint        will  ""mint"" CRtoken for the staker's.
+     * @param      to_         address of the staker's.
+     * @param     amount_      amount of token that staker's stake's.
      */
     function mint(address account_, uint256 amount_) external onlyOwner {
         _mint(account_, amount_);

@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import { deployContracts } from "../utilites/common.test";
-import { parseEther } from "ethers/lib/utils";
+import { isAddress, parseEther } from "ethers/lib/utils";
 import { Address } from "hardhat-deploy/types";
 import abi from "ethereumjs-abi";
 import { BigNumber, Contract } from "ethers";
@@ -97,16 +97,18 @@ async function deployCruizeContract(adminSigner: SignerWithAddress,deployer:Sign
 const enableGnosisModule = async (
   cruizeSafe: Contract,
   cruizeModule: Address,
-  signer: Address
+  signer: SignerWithAddress
 ) => {
+ console.log("enableGnosisModule......")
+
   const data = abi.simpleEncode("enableModule(address)", cruizeModule);
   let hexData = "0x" + data.toString("hex");
   const signature =
     "0x000000000000000000000000" +
-    signer.slice(2) +
+    signer.address.slice(2) +
     "0000000000000000000000000000000000000000000000000000000000000000" +
     "01";
-  const tx = await cruizeSafe.execTransaction(
+  const tx = await cruizeSafe.connect(signer).execTransaction(
     cruizeSafe.address,
     0,
     hexData,
