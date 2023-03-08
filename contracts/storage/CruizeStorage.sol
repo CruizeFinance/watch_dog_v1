@@ -31,7 +31,7 @@ contract CruizeStorage {
     // Number of weeks per year = 52.142857 weeks * FEE_MULTIPLIER = 52142857
     // Dividing by weeks per year requires doing num.mul(FEE_MULTIPLIER).div(WEEKS_PER_YEAR)
     uint256 internal constant WEEKS_PER_YEAR = 52.142857 ether;
-    // 0.4219178093751
+
 
     //----------------------------//
     //        Mappings            //

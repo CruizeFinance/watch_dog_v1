@@ -210,7 +210,8 @@ abstract contract CruizeVault is
     function _closeRound(
         address token,
         uint256 lastQueuedWithdrawAmount,
-        uint256 currentQueuedWithdrawShares
+        uint256 currentQueuedWithdrawShares,
+        uint256 totalTokenBalance
     ) internal returns (uint256 lockedBalance, uint256 queuedWithdrawAmount) {
         uint256 mintShares;
         uint256 totalVaultFee;
@@ -227,7 +228,7 @@ abstract contract CruizeVault is
             token,
             Types.CloseParams(
                 decimalsOf(token),
-                totalBalance(token),
+                totalBalance(token,totalTokenBalance),
                 totalSupply(token),
                 lastQueuedWithdrawAmount,
                 currentQueuedWithdrawShares

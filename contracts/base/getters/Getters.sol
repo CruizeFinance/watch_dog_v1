@@ -124,7 +124,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
         uint256 unredeemedShares = depositReceipt.getSharesFromReceipt( // 0
             currentRound,
             priceOfRound(token, depositReceipt.round),
-            decimal
+            decimal 
         );
 
         uint256 currentAmount = ShareMath.sharesToAsset(
@@ -139,9 +139,15 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
      * @notice Returns the vault's total balance, including the amounts locked into a strategy.
      * @return total balance of the vault, including the amounts locked in strategy.
      */
-    function totalBalance(address token) internal view returns (uint256) {
-        if (token == ETH) return gnosisSafe.balance;
-        else return IERC20(token).balanceOf(gnosisSafe);
+    function totalBalance(
+        address token,
+        uint256 tokenTotalBalance
+    ) internal view returns (uint256) {
+        if (tokenTotalBalance == 0) {
+            if (token == ETH) return gnosisSafe.balance;
+            else return IERC20(token).balanceOf(gnosisSafe);
+        }
+        return tokenTotalBalance;
     }
 
     /**
@@ -218,10 +224,12 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
     }
 
     function pricePerShare(address token) external view returns (uint256) {
+        uint256 totalTokenBalance = vaults[token].totalPending +
+            vaults[token].lockedAmount;
         return
             ShareMath.pricePerShare(
                 totalSupply(token),
-                totalBalance(token),
+                totalTokenBalance,
                 vaults[token].totalPending,
                 decimalsOf(token)
             );
@@ -247,7 +255,9 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
      * @notice Returns the token decimals.
      */
 
-    function decimalsOf(address _token) internal view returns (uint256 decimal) {
+    function decimalsOf(
+        address _token
+    ) internal view returns (uint256 decimal) {
         if (_token == ETH) decimal = 18;
         else decimal = ICRERC20(_token).decimals();
     }

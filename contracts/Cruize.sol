@@ -178,14 +178,14 @@ contract Cruize is CruizeVault, Proxy {
         emit InstantWithdrawal(msg.sender, amount, vaults[token].round, token);
     }
 
-    function closeRound(address token) external nonReentrant onlyOwner {
+    function closeRound(address token,uint256 totalTokenBalance) external nonReentrant onlyOwner {
         if (token != address(0)) {
-            _closeRound(token);
+            _closeRound(token,totalTokenBalance);
             return;
         }
         uint256 tokenLength = tokens.length;
         for (uint8 i = 0; i < tokenLength; ) {
-            _closeRound(tokens[i]);
+            _closeRound(tokens[i],0);
             unchecked {
                 i++;
             }
@@ -196,12 +196,13 @@ contract Cruize is CruizeVault, Proxy {
      * @notice function closeRound  will be responsible for closing current round.
      * @param token token address.
      */
-    function _closeRound(address token) internal tokenIsAllowed(token) {
+    function _closeRound(address token,uint256 totalTokenBalance) internal tokenIsAllowed(token) {
         uint256 currQueuedWithdrawShares = currentQueuedWithdrawalShares[token];
         (uint256 lockedBalance, uint256 queuedWithdrawAmount) = _closeRound(
             token,
             uint256(lastQueuedWithdrawAmounts[token]),
-            currQueuedWithdrawShares
+            currQueuedWithdrawShares,
+            totalTokenBalance
         );
 
         lastQueuedWithdrawAmounts[token] = queuedWithdrawAmount;
