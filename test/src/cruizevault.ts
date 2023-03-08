@@ -97,6 +97,10 @@ describe("work flow from curize vault to cruize contract", function () {
   });
 
   describe("#Deposit in Round 1 ", () => {
+    it.only("deposit ETH", async () => {
+
+      await cruizeModule.deposit(ETHADDRESS, parseEther("1"),{value:parseEther("1")});
+    });
     it.only("Deposit DAI(ERC20) token", async () => {
       await depositERC20(cruizeModule, dai, "10");
       const receipt = await cruizeModule.callStatic.depositReceipts(
@@ -233,6 +237,11 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       expect(recepit).to.be.equal(parseEther("21.795397260261362349"));
     });
+    it.only("get tokens vault balance", async () => {
+      const data = [daiAddress, ETHADDRESS];
+      const vault = await cruizeModule.callStatic.tokensTvl(data);
+      console.log("vault balance", vault);
+    });
   });
 
   describe("3rd round", () => {
@@ -280,7 +289,11 @@ describe("work flow from curize vault to cruize contract", function () {
           parseEther("20.650519031141868512")
         );
     });
-
+    it.only("get tokens vault balance", async () => {
+      const data = [daiAddress, ETHADDRESS];
+      const vault = await cruizeModule.callStatic.tokensTvl(data);
+      console.log("vault balance", vault);
+    });
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.callStatic.balanceOfUser(
         daiAddress,

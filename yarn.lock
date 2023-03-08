@@ -597,6 +597,10 @@
 
 "@nomicfoundation/hardhat-toolbox@^2.0.0":
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-toolbox/-/hardhat-toolbox-2.0.1.tgz#3d8c620a54df2c0086c9109fb0f987bf29329deb"
   integrity sha512-/pr8m9xlqiNlq6fXv4hEPNwdNwUhysoB2qbDCKqERfPpq34EydUQTC3Vis4aIea8RLwSrU8sDXFdv4TQxYstKw==
@@ -736,7 +740,11 @@
     "@nomicfoundation/solidity-analyzer-win32-arm64-msvc" "0.1.1"
     "@nomicfoundation/solidity-analyzer-win32-ia32-msvc" "0.1.1"
     "@nomicfoundation/solidity-analyzer-win32-x64-msvc" "0.1.1"
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
 
 "@nomiclabs/hardhat-ethers@^2.0.0":
   version "2.2.2"
@@ -745,6 +753,10 @@
 
 "@nomiclabs/hardhat-etherscan@^3.0.0":
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "3.1.6"
   resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-etherscan/-/hardhat-etherscan-3.1.6.tgz#7e50aeb06501a0060655664599d9e35cfd475929"
   integrity sha512-5WFIZeLLgWPiCJqm/4ie7UNXn7FXfzYmqnKwOKU2MLETGolzY1cueSYUTww/P8f+Zc9xfJLmzqSYcGLW/3j/IQ==
@@ -752,7 +764,11 @@
   version "3.1.7"
   resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-etherscan/-/hardhat-etherscan-3.1.7.tgz#72e3d5bd5d0ceb695e097a7f6f5ff6fcbf062b9a"
   integrity sha512-tZ3TvSgpvsQ6B6OGmo1/Au6u8BrAkvs1mIC/eURA3xgIfznUZBhmpne8hv7BXUzw9xNL3fXdpOYgOQlVMTcoHQ==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   dependencies:
     "@ethersproject/abi" "^5.1.2"
     "@ethersproject/address" "^5.0.2"
@@ -772,6 +788,10 @@
 
 "@openzeppelin/contracts-upgradeable@^4.2.0":
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "4.8.1"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.8.1.tgz#363f7dd08f25f8f77e16d374350c3d6b43340a7a"
   integrity sha512-1wTv+20lNiC0R07jyIAbHU7TNHKRwGiTGRfiNnA8jOWjKT98g5OgLpYWOi40Vgpk8SPLA9EvfJAbAeIyVn+7Bw==
@@ -789,7 +809,11 @@
   version "4.8.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.8.2.tgz#d815ade0027b50beb9bcca67143c6bcc3e3923d6"
   integrity sha512-kEUOgPQszC0fSYWpbh2kT94ltOJwj1qfT2DWo+zVttmGmf97JZ99LspePNaeeaLhCImaHVeBbjaQFZQn7+Zc5g==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
 
 "@openzeppelin/upgrades@^2.8.0":
   version "2.8.0"
@@ -1074,6 +1098,10 @@
 
 "@types/node@*", "@types/node@>=12.0.0":
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "18.14.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-18.14.0.tgz#94c47b9217bbac49d4a67a967fdcdeed89ebb7d0"
   integrity sha512-5EWrvLmglK+imbCJY0+INViFWUHg1AHel1sq4ZVSfdcNqGy9Edv3UB9IIzzg+xPaUcAgZYcfVs2fBcwDeZzU0A==
@@ -1081,7 +1109,11 @@
   version "18.14.6"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-18.14.6.tgz#ae1973dd2b1eeb1825695bb11ebfb746d27e3e93"
   integrity sha512-93+VvleD3mXwlLI/xASjw0FzKcwzl3OdTCzm1LaRfqgS21gfFtK3zDXM5Op9TeeMsJVOaJ2VRDpT9q4Y3d0AvA==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
 
 "@types/node@^10.0.3", "@types/node@^10.12.18", "@types/node@^10.3.2":
   version "10.17.60"
@@ -1591,10 +1623,18 @@ bn.js@^5.0.0, bn.js@^5.1.1, bn.js@^5.1.2, bn.js@^5.2.0, bn.js@^5.2.1:
   integrity sha512-eXRvHzWyYPBuB4NBy0cmYQjGitUrtqwbvlzP3G6VFnNRbsZQIxQ10PbKKHt8gZ/HW/D/747aDl+QkDqg3KQLMQ==
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 body-parser@1.20.1, body-parser@^1.16.0:
 =======
 body-parser@1.20.1:
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+<<<<<<< Updated upstream
+body-parser@1.20.1, body-parser@^1.16.0:
+=======
+body-parser@1.20.1:
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "1.20.1"
   resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-1.20.1.tgz#b1812a8912c195cd371a3ee5e66faa2338a5c668"
   integrity sha512-jWi7abTbYwajOytWCQc37VulmWiRae5RyTpaCyDcS5/lMdtwSz5lOpDE67srw/HYe35f1z3fDQw+3txg7gNtWw==
@@ -1613,6 +1653,10 @@ body-parser@1.20.1:
     unpipe "1.0.0"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
 =======
 body-parser@^1.16.0:
   version "1.20.2"
@@ -1632,7 +1676,11 @@ body-parser@^1.16.0:
     type-is "~1.6.18"
     unpipe "1.0.0"
 
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
 brace-expansion@^1.1.7:
   version "1.1.11"
   resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-1.1.11.tgz#3c7fcbf529d87226f3d2f52b966ff5271eb441dd"
@@ -2137,10 +2185,18 @@ content-disposition@0.5.4:
     safe-buffer "5.2.1"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 content-type@~1.0.4:
 =======
 content-type@~1.0.4, content-type@~1.0.5:
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+<<<<<<< Updated upstream
+content-type@~1.0.4:
+=======
+content-type@~1.0.4, content-type@~1.0.5:
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/content-type/-/content-type-1.0.5.tgz#8b773162656d1d1086784c8f23a54ce6d73d7918"
   integrity sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==
@@ -3618,6 +3674,10 @@ hardhat-change-network@^0.0.7:
 
 hardhat-deploy@^0.11.22:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "0.11.23"
   resolved "https://registry.yarnpkg.com/hardhat-deploy/-/hardhat-deploy-0.11.23.tgz#7c5d11ba32acfd7c5730490bf6af8815b435c996"
   integrity sha512-9F+sDRX79D/oV1cUEE0k2h5LiccrnzXEtrMofL5PTVDCJfUnRvhQqCRi4NhcYmxf2+MBkOIJv5KyzP0lz6ojTw==
@@ -3625,7 +3685,11 @@ hardhat-deploy@^0.11.22:
   version "0.11.25"
   resolved "https://registry.yarnpkg.com/hardhat-deploy/-/hardhat-deploy-0.11.25.tgz#bd6f2310ad9232a5d73f6e5dfff4112220a392e8"
   integrity sha512-ppSgrVE9A13YgTmf2PQGoyIs9o/jgJOMORrUP/rblU5K8mQ2YHWlPvkzZmP4h+SBW+tNmlnvSrf5K5DmMmExhw==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   dependencies:
     "@types/qs" "^6.9.7"
     axios "^0.21.1"
@@ -3697,6 +3761,10 @@ hardhat-watcher@^2.5.0:
 
 hardhat@^2.12.5:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "2.12.7"
   resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.12.7.tgz#d8de2dc32e9a2956d53cf26ef4cd5857e57a3138"
   integrity sha512-voWoN6zn5d8BOEaczSyK/1PyfdeOeI3SbGCFb36yCHTJUt6OIqLb+ZDX30VhA1UsYKzLqG7UnWl3fKJUuANc6A==
@@ -3704,7 +3772,11 @@ hardhat@^2.12.5:
   version "2.13.0"
   resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.13.0.tgz#d52a0ec9b733a651687e5b1c1b0ee9a11a30f3d0"
   integrity sha512-ZlzBOLML1QGlm6JWyVAG8lVTEAoOaVm1in/RU2zoGAnYEoD1Rp4T+ZMvrLNhHaaeS9hfjJ1gJUBfiDr4cx+htQ==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   dependencies:
     "@ethersproject/abi" "^5.1.2"
     "@metamask/eth-sig-util" "^4.0.0"
@@ -4009,6 +4081,10 @@ ipaddr.js@1.9.1:
 
 is-array-buffer@^3.0.1:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/is-array-buffer/-/is-array-buffer-3.0.1.tgz#deb1db4fcae48308d54ef2442706c0393997052a"
   integrity sha512-ASfLknmY8Xa2XtB4wmbz13Wu202baeA18cJBCeCy0wXUHZF0IPyVEXqKEcd+t2fNSLLL1vC6k7lxZEojNbISXQ==
@@ -4022,7 +4098,11 @@ is-array-buffer@^3.0.1:
   dependencies:
     call-bind "^1.0.2"
     get-intrinsic "^1.2.0"
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
     is-typed-array "^1.1.10"
 
 is-bigint@^1.0.1:
@@ -4684,6 +4764,10 @@ mkdirp-promise@^5.0.1:
 
 mkdirp@*:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-2.1.3.tgz#b083ff37be046fd3d6552468c1f0ff44c1545d1f"
   integrity sha512-sjAkg21peAG9HS+Dkx7hlG9Ztx7HLeKnvB3NQRcu/mltCVmvkF0pisbiTSfDVYTT86XEfZrTUosLdZLStquZUw==
@@ -4691,7 +4775,11 @@ mkdirp@*:
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-2.1.5.tgz#78d7eaf15e069ba7b6b47d76dd94cfadf7a4062f"
   integrity sha512-jbjfql+shJtAPrFoKxHOXip4xS+kul9W3OzfzzrqueWK2QMGon2bFH2opl6W9EagBThjEz+iysyi/swOoVfB/w==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
 
 mkdirp@0.5.5:
   version "0.5.5"
@@ -5333,10 +5421,18 @@ punycode@^2.1.0, punycode@^2.1.1:
   integrity sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 qs@6.11.0, qs@^6.4.0, qs@^6.7.0, qs@^6.9.4:
 =======
 qs@6.11.0:
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+<<<<<<< Updated upstream
+qs@6.11.0, qs@^6.4.0, qs@^6.7.0, qs@^6.9.4:
+=======
+qs@6.11.0:
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "6.11.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.11.0.tgz#fd0d963446f7a65e1367e01abd85429453f0c37a"
   integrity sha512-MvjoMCJwEarSbUYk5O+nmoSzSutSsTwF85zcHPQ9OrlFoZOYIjaqBAJIqIXjptyD5vThxGq52Xu/MaJzRkIk4Q==
@@ -5344,6 +5440,10 @@ qs@6.11.0:
     side-channel "^1.0.4"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
 =======
 qs@^6.4.0, qs@^6.7.0, qs@^6.9.4:
   version "6.11.1"
@@ -5352,7 +5452,11 @@ qs@^6.4.0, qs@^6.7.0, qs@^6.9.4:
   dependencies:
     side-channel "^1.0.4"
 
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
 qs@~6.5.2:
   version "6.5.3"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.3.tgz#3aeeffc91967ef6e35c0e488ef46fb296ab76aad"
@@ -5393,10 +5497,18 @@ range-parser@~1.2.1:
   integrity sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 raw-body@2.5.1, raw-body@^2.4.1:
 =======
 raw-body@2.5.1:
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+<<<<<<< Updated upstream
+raw-body@2.5.1, raw-body@^2.4.1:
+=======
+raw-body@2.5.1:
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/raw-body/-/raw-body-2.5.1.tgz#fe1b1628b181b700215e5fd42389f98b71392857"
   integrity sha512-qqJBtEyVgS0ZmPGdCFPWJ3FreoqvG4MVQln/kCgF7Olq95IbOp0/BWyMwbdtn4VTvkM8Y7khCQ2Xgk/tcrCXig==
@@ -5407,6 +5519,10 @@ raw-body@2.5.1:
     unpipe "1.0.0"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
 readable-stream@^2.2.2, readable-stream@^2.3.0, readable-stream@^2.3.5:
   version "2.3.7"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.7.tgz#1eca1cf711aef814c04f62252a36a62f6cb23b57"
@@ -5426,7 +5542,11 @@ readable-stream@^2.2.2, readable-stream@^2.3.0, readable-stream@^2.3.5:
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.8.tgz#91125e8042bba1b9887f49345f6277027ce8be9b"
   integrity sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   dependencies:
     core-util-is "~1.0.0"
     inherits "~2.0.3"
@@ -5438,6 +5558,10 @@ readable-stream@^2.2.2, readable-stream@^2.3.0, readable-stream@^2.3.5:
 
 readable-stream@^3.6.0:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-3.6.0.tgz#337bbda3adc0706bd3e024426a286d4b4b2c9198"
   integrity sha512-BViHy7LKeTz4oNnkcLJ+lVSL6vpiFeX6/d3oSH8zCW7UxP2onchk+vTGB143xuFjHS3deTgkKoXXymXqymiIdA==
@@ -5445,7 +5569,11 @@ readable-stream@^3.6.0:
   version "3.6.1"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-3.6.1.tgz#f9f9b5f536920253b3d26e7660e7da4ccff9bb62"
   integrity sha512-+rQmrWMYGA90yenhTYsLWAsLsqVC8osOw6PKE1HDYiO0gdPeKe/xDHNzIAIn4C91YQ6oenEhfYqqc1883qHbjQ==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   dependencies:
     inherits "^2.0.3"
     string_decoder "^1.1.1"
@@ -5925,6 +6053,10 @@ solc@0.7.3:
 
 solc@^0.8.17:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "0.8.18"
   resolved "https://registry.yarnpkg.com/solc/-/solc-0.8.18.tgz#a05ce8918540eda5f10aa91f0f52f239b9645dad"
   integrity sha512-wVAa2Y3BYd64Aby5LsgS3g6YC2NvZ3bJ+A8TAIAukfVuQb3AjyGrLZpyxQk5YLn14G35uZtSnIgHEpab9klOLQ==
@@ -5932,7 +6064,11 @@ solc@^0.8.17:
   version "0.8.19"
   resolved "https://registry.yarnpkg.com/solc/-/solc-0.8.19.tgz#cac6541106ae3cff101c740042c7742aa56a2ed3"
   integrity sha512-yqurS3wzC4LdEvmMobODXqprV4MYJcVtinuxgrp61ac8K2zz40vXA0eSAskSHPgv8dQo7Nux39i3QBsHx4pqyA==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   dependencies:
     command-exists "^1.2.8"
     commander "^8.1.0"
@@ -7186,6 +7322,10 @@ yargs@16.2.0:
 
 yargs@^17.6.0, yargs@^17.6.2:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> 0673409 (write function to get tokens tvl)
   version "17.7.0"
   resolved "https://registry.yarnpkg.com/yargs/-/yargs-17.7.0.tgz#b21e9af1e0a619a2a9c67b1133219b2975a07985"
   integrity sha512-dwqOPg5trmrre9+v8SUo2q/hAwyKoVfu8OC1xPHKJGNdxAvPl4sKxL4vBnh3bQz/ZvvGAFeA5H3ou2kcOY8sQQ==
@@ -7193,7 +7333,11 @@ yargs@^17.6.0, yargs@^17.6.2:
   version "17.7.1"
   resolved "https://registry.yarnpkg.com/yargs/-/yargs-17.7.1.tgz#34a77645201d1a8fc5213ace787c220eabbd0967"
   integrity sha512-cwiTb08Xuv5fqF4AovYacTFNxk62th7LKJ6BL9IGUpTJrWoU7/7WdQGTP2SjKf1dUNBGzDd28p/Yfs/GI6JrLw==
+<<<<<<< HEAD
 >>>>>>> 7dabe5c (add tokentotalBalance parameter in close round add some changes in priceOfRound function)
+=======
+>>>>>>> Stashed changes
+>>>>>>> 0673409 (write function to get tokens tvl)
   dependencies:
     cliui "^8.0.1"
     escalade "^3.1.1"

@@ -3,6 +3,7 @@ pragma solidity =0.8.6;
 import "./base/CruizeVault.sol";
 import "./proxies/CloneProxy.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "hardhat/console.sol";
 
 contract Cruize is CruizeVault, Proxy {
     using SafeMath for uint256;
@@ -178,14 +179,17 @@ contract Cruize is CruizeVault, Proxy {
         emit InstantWithdrawal(msg.sender, amount, vaults[token].round, token);
     }
 
-    function closeRound(address token,uint256 totalTokenBalance) external nonReentrant onlyOwner {
+    function closeRound(
+        address token,
+        uint256 totalTokenBalance
+    ) external nonReentrant onlyOwner {
         if (token != address(0)) {
-            _closeRound(token,totalTokenBalance);
+            _closeRound(token, totalTokenBalance);
             return;
         }
         uint256 tokenLength = tokens.length;
         for (uint8 i = 0; i < tokenLength; ) {
-            _closeRound(tokens[i],0);
+            _closeRound(tokens[i], 0);
             unchecked {
                 i++;
             }
@@ -196,7 +200,10 @@ contract Cruize is CruizeVault, Proxy {
      * @notice function closeRound  will be responsible for closing current round.
      * @param token token address.
      */
-    function _closeRound(address token,uint256 totalTokenBalance) internal tokenIsAllowed(token) {
+    function _closeRound(
+        address token,
+        uint256 totalTokenBalance
+    ) internal tokenIsAllowed(token) {
         uint256 currQueuedWithdrawShares = currentQueuedWithdrawalShares[token];
         (uint256 lockedBalance, uint256 queuedWithdrawAmount) = _closeRound(
             token,
@@ -216,5 +223,23 @@ contract Cruize is CruizeVault, Proxy {
         currentQueuedWithdrawalShares[token] = 0;
         ShareMath.assertUint104(lockedBalance);
         vaultState.lockedAmount = uint104(lockedBalance);
+    }
+
+    function tokensTvl(
+        address[] memory assets
+    ) external returns (uint256[] memory) {
+        uint256 length = assets.length;
+        uint256[] memory assetsTvl = new uint256[](length);
+        for (uint256 i = 0; i < length; ) {
+            address token = assets[i];
+            assetsTvl[i] =
+                vaults[token].lockedAmount +
+                vaults[token].totalPending;
+            unchecked {
+                i++;
+            }
+        }
+
+        return assetsTvl;
     }
 }
