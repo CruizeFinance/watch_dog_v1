@@ -152,15 +152,6 @@ contract crERC721 is
         return super.supportsInterface(interfaceId);
     }
 
-    function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    ) external returns (bytes4){
-        return IERC721ReceiverUpgradeable.onERC721Received.selector;
-    }
-
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.

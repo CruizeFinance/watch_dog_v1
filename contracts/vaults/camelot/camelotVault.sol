@@ -17,6 +17,8 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
         ICamelotRouter(0xc873fEcbd354f5A56E00E710B90EF4201db2448d);
     address USDC = 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8;
 
+    event CreatePosition(uint256 indexed tokenId, uint256 amount, uint256 lockDuration);
+    event Deposit(address indexed account,uint256 tokenId,uint256 mintedTokenId, uint256 lpTokens);
     function initialize(
         string memory _name,
         string memory _symbol,
@@ -62,19 +64,18 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
         (uint256 amount, , , , , , , ) = TrustedNftPool.getStakingPosition(
             vaultTokenId
         ); // fetch the contract staking info from camelot pool
+        (address lp, , ) = poolInfo();
+        IERC20(lp).approve(NFTPOOL, amountToAdd);
         if (amount > 0) {
-            // if cruize camelotVault has already depsited amount in camelote
+            // if cruize camelotVault has already depsited amount in camelot
             // staking pool then simply increase the stakign amount
             TrustedNftPool.addToPosition(vaultTokenId, amountToAdd);
         } else {
-            (
-            address lp,
-            ,
-            
-        ) = poolInfo();
-            IERC20(lp).approve(NFTPOOL,amountToAdd);
+            IERC20(lp).approve(NFTPOOL, amountToAdd);
             TrustedNftPool.createPosition(amountToAdd, 0);
         }
+
+        emit Deposit(msg.sender,tokenId,mintedTokenId,amountToAdd);
     }
 
     function withdraw(uint256 tokenId) external {
@@ -171,7 +172,11 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
     function poolInfo()
         internal
         view
-        returns (address lp,uint256 accRewardsPerShare, uint256 lpSupplyWithMultiplier)
+        returns (
+            address lp,
+            uint256 accRewardsPerShare,
+            uint256 lpSupplyWithMultiplier
+        )
     {
         (
             lp,
@@ -223,5 +228,15 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
         uint256 lpAmount
     ) external returns (bool) {
         return true;
+    }
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4){
+        if(vaultTokenId == 0) vaultTokenId = tokenId;
+        return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 }

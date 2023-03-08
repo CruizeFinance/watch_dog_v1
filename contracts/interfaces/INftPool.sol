@@ -25,6 +25,8 @@ interface INftPool {
      */
     function master() external view returns (address);
 
+    function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256 tokenId);
+
     /**
      * @dev Returns a position info
      */
