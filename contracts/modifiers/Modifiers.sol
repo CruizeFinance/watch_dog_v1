@@ -42,26 +42,5 @@ abstract contract Modifiers is CruizeStorage {
         if (isDisable[token]) revert DisabledAsset(token);
         _;
     }
-    modifier checkVaultBalance(
-        address token,
-        uint256 totalTokenBalance,
-        uint256 vaultTokenBalance
-    ) {
-        uint256 totalDeposit = vaults[token].lockedAmount +
-            vaults[token].totalPending;
-        if (totalTokenBalance == 0) {
-            if (vaultTokenBalance < totalDeposit)
-                revert VaultBalanceIsLessThenTheTotalDepsoit(
-                    totalDeposit,
-                    vaultTokenBalance
-                );
-        }
-        if (totalTokenBalance > 0 && totalTokenBalance < totalDeposit) {
-            revert VaultBalanceIsLessThenTheTotalDepsoit(
-                totalDeposit,
-                totalTokenBalance
-            );
-        }
-        _;
-    }
+ 
 }

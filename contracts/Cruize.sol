@@ -3,7 +3,6 @@ pragma solidity =0.8.6;
 import "./base/CruizeVault.sol";
 import "./proxies/CloneProxy.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "hardhat/console.sol";
 
 contract Cruize is CruizeVault, Proxy {
     using SafeMath for uint256;
@@ -179,38 +178,51 @@ contract Cruize is CruizeVault, Proxy {
         emit InstantWithdrawal(msg.sender, amount, vaults[token].round, token);
     }
 
-    function closeRound(
-        address token,
-        uint256[] memory totalTokenBalance
+    /**
+     * @notice function closeRound  will be responsible for closing vault rounds.
+     * @param totalTokensBalance  - array of token balances.
+     */
+    function closeTokensRound(
+        address[] memory tokensList,
+        uint256[] memory totalTokensBalance
     ) external nonReentrant onlyOwner {
-        if (token != address(0)) {
-            uint256 vaultTokenBalance = totalBalance(token, totalTokenBalance[0]);
-            _closeRound(token, totalTokenBalance[0], vaultTokenBalance);
-            return;
-        }
-        uint256 tokenLength = tokens.length;
-        for (uint8 i = 0; i < tokenLength; ) {
-            uint256 vaultTokenBalance = totalBalance(token, totalTokenBalance[i]);
-            _closeRound(tokens[i], totalTokenBalance[i], vaultTokenBalance);
-            unchecked {
-                i++;
+        uint256 tokenLength = tokensList.length;
+
+        if (tokenLength != totalTokensBalance.length)
+            revert InvalidLength(tokenLength, totalTokensBalance.length);
+
+        for (uint8 i = 0; i < tokenLength; i++) {
+            address token = tokensList[i];
+            uint256 tokenBalance = totalTokensBalance[i];
+            if (!isDisable[token]) {
+                uint256 vaultTokenBalance = totalBalance(token, tokenBalance);
+                _closeRound(token, tokenBalance, vaultTokenBalance);
             }
         }
     }
 
     /**
-     * @notice function closeRound  will be responsible for closing current round.
-     * @param token token address.
+     * @notice function closeTokenRound  will be responsible for closing vault rounds.
+     * @param token - asset's address to close round.
+     * @param totalTokensBalance - token total balance.
      */
+
+    function closeTokenRound(
+        address token,
+        uint256 totalTokensBalance
+    ) external tokenIsAllowed(token) onlyOwner nonReentrant {
+        if (!isDisable[token]) {
+            uint256 vaultTokenBalance = totalBalance(token, totalTokensBalance);
+            _closeRound(token, totalTokensBalance, vaultTokenBalance);
+        }
+    }
+
     function _closeRound(
         address token,
         uint256 totalTokenBalance,
         uint256 vaultTokenBalance
-    )
-        internal
-        tokenIsAllowed(token)
-        checkVaultBalance(token, totalTokenBalance, vaultTokenBalance)
-    {
+    ) private tokenIsAllowed(token) {
+        checkVaultBalance(token, totalTokenBalance, vaultTokenBalance);
         uint256 currQueuedWithdrawShares = currentQueuedWithdrawalShares[token];
         (uint256 lockedBalance, uint256 queuedWithdrawAmount) = _closeRound(
             token,
@@ -234,7 +246,7 @@ contract Cruize is CruizeVault, Proxy {
 
     function tokensTvl(
         address[] memory assets
-    ) external returns (uint256[] memory) {
+    ) external view returns (uint256[] memory) {
         uint256 length = assets.length;
         uint256[] memory assetsTvl = new uint256[](length);
         for (uint256 i = 0; i < length; i++) {
