@@ -2,7 +2,7 @@
 pragma solidity =0.8.6;
 import "../libraries/Types.sol";
 
-abstract contract CruizeStorage {
+contract CruizeStorage {
     /************************************************
      *  IMMUTABLES & CONSTANTS
      ***********************************************/
