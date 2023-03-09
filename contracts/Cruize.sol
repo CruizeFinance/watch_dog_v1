@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.6;
+pragma solidity =0.8.18;
 import "./base/CruizeVault.sol";
 import "./proxies/CloneProxy.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -59,7 +59,13 @@ contract Cruize is CruizeVault, Proxy {
         string memory symbol,
         address token,
         uint104 tokenCap
-    ) external numberIsNotZero(tokenCap) onlyOwner {
+    )
+        external
+        numberIsNotZero(tokenCap)
+        addressIsValid(token)
+        nonReentrant
+        onlyOwner
+    {
         uint8 decimal = uint8(decimalsOf(token));
         if (cruizeTokens[token] != address(0)) revert AssetAlreadyExists(token);
         ICRERC20 crToken = ICRERC20(createClone(crContract));
@@ -102,20 +108,20 @@ contract Cruize is CruizeVault, Proxy {
     {
         _updateDepositInfo(token, amount);
         if (
-            token == ETH && gnosisSafe.balance.add(amount) < vaults[token].cap
+            token == ETH && gnosisSafe.balance.add(amount) <= vaults[token].cap
         ) {
             // transfer ETH to Cruize gnosis valut.
             (bool sent, ) = gnosisSafe.call{value: amount}("");
             if (!sent) revert FailedToTransferETH();
         } else if (
-            IERC20(token).balanceOf(gnosisSafe).add(amount) < vaults[token].cap
+            IERC20(token).balanceOf(gnosisSafe).add(amount) <= vaults[token].cap
         ) {
             // transfer token to Cruize gnosis vault.
             IERC20(token).safeTransferFrom(msg.sender, gnosisSafe, amount);
         } else {
             revert VaultReachedDepositLimit(vaults[token].cap);
         }
-        emit Deposit(msg.sender, amount, token);
+        emit Deposit( msg.sender, amount,token);
     }
 
     /************************************************
@@ -154,7 +160,7 @@ contract Cruize is CruizeVault, Proxy {
         whenNotPaused
     {
         _initiateStandardWithdrawal(token, numShares);
-        emit InitiateStandardWithdrawal(msg.sender, token, numShares);
+        emit InitiateStandardWithdrawal( msg.sender,token, numShares);
     }
 
     /**
@@ -175,7 +181,7 @@ contract Cruize is CruizeVault, Proxy {
     {
         ShareMath.assertUint104(amount);
         _instantWithdrawal(token, amount.toUint104());
-        emit InstantWithdrawal(msg.sender, amount, vaults[token].round, token);
+        emit InstantWithdrawal(msg.sender, amount, vaults[token].round,token );
     }
 
     function closeRound(address token,uint256 totalTokenBalance) external nonReentrant onlyOwner {
@@ -204,7 +210,6 @@ contract Cruize is CruizeVault, Proxy {
             currQueuedWithdrawShares,
             totalTokenBalance
         );
-
         lastQueuedWithdrawAmounts[token] = queuedWithdrawAmount;
         Types.VaultState storage vaultState = vaults[token];
         uint256 newQueuedWithdrawShares = uint256(
@@ -217,5 +222,21 @@ contract Cruize is CruizeVault, Proxy {
 
         ShareMath.assertUint104(lockedBalance);
         vaultState.lockedAmount = uint104(lockedBalance);
+    }
+
+
+    function tokensTvl(
+        address[] memory assets
+    ) external view returns (uint256[] memory) {
+        uint256 length = assets.length;
+        uint256[] memory assetsTvl = new uint256[](length);
+        for (uint256 i = 0; i < length; i++) {
+            address token = assets[i];
+            assetsTvl[i] =
+                vaults[token].lockedAmount +
+                vaults[token].totalPending;
+        }
+
+        return assetsTvl;
     }
 }

@@ -4,6 +4,7 @@ import "hardhat-tracer";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-storage-layout";
+import "hardhat-storage-layout-changes";
 import { HttpNetworkUserConfig } from "hardhat/types";
 dotenv.config({ path: __dirname + "/.env" });
 
@@ -35,12 +36,18 @@ export default {
     sources: "./contracts",
     deployments: "./deployments",
     artifacts: "./artifacts",
+    storageLayouts: ".storage-layouts",
+  },
+
+  storageLayoutConfig: {
+    contracts: ["Cruize"],
+    fullPath: false
   },
 
   solidity: {
     compilers: [
       {
-        version: "0.8.6",
+        version: "0.8.18",
         settings: {
           optimizer: {
             runs: 200,

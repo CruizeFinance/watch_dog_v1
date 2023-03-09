@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.6;
-import "../../modifiers/Modifiers.sol";
-import "../../module/ownable/OwnableUpgradeable.sol";
+pragma solidity =0.8.18;
 import "../../libraries/SharesMath.sol";
 import "../../libraries/Events.sol";
+import "../getters/Getters.sol";
 
-contract Setters is Modifiers, Events, OwnableUpgradeable {
+contract Setters is Events, Getters {
     using SafeMath for uint256;
 
     /************************************************
@@ -20,6 +19,9 @@ contract Setters is Modifiers, Events, OwnableUpgradeable {
         address token,
         uint256 newCap
     ) external onlyOwner tokenIsAllowed(token) numberIsNotZero(newCap) {
+        uint256 currentTokenBalance = totalBalance(token,0);
+        if (newCap < currentTokenBalance)
+            revert InvalidCap(currentTokenBalance, newCap);
         ShareMath.assertUint104(newCap);
         Types.VaultState storage vault = vaults[token];
         emit CapSet(token, vault.cap, newCap);
@@ -85,8 +87,20 @@ contract Setters is Modifiers, Events, OwnableUpgradeable {
     function changeAssetStatus(
         address token,
         bool status
-    ) public onlyOwner addressIsValid(token) {
+    ) public onlyOwner tokenIsAllowed(token) {
         isDisable[token] = status;
         emit ChangeAssetStatus(token, status);
+    }
+
+    /**
+     * @param token - asset to delist from the contract.
+     */
+    function deListTokens(
+        address token
+    ) external onlyOwner tokenIsAllowed(token) {
+        if (totalBalance(token,0) > 0)
+            revert TokenBalanceShouldBeZero(totalBalance(token,0));
+        cruizeTokens[token] = address(0);
+        emit deListToken(token);
     }
 }

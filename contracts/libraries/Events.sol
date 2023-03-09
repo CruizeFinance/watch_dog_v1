@@ -49,4 +49,5 @@ contract Events {
     event PerformanceFeeSet(uint256 performanceFee, uint256 newPerformanceFee);
     event CollectVaultFee(address indexed token, uint256 round);
     event ChangeAssetStatus(address indexed token, bool status);
+   event deListToken(address indexed token);
 }

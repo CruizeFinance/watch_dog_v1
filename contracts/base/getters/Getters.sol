@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.6;
+pragma solidity =0.8.18;
 import "../../modifiers/Modifiers.sol";
 import "../../module/ownable/OwnableUpgradeable.sol";
 import "../../libraries/SharesMath.sol";
 import "../../interfaces/ICRERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 abstract contract Getters is Modifiers, OwnableUpgradeable {
     using SafeMath for uint256;
     using ShareMath for Types.DepositReceipt;
@@ -180,7 +179,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
     function priceOfRound(
         address token,
         uint16 round
-    ) private view returns (uint256) {
+    ) private view  returns (uint256) {
         if (roundPricePerShare[token][round] == 0) return 1e18;
         return roundPricePerShare[token][round];
     }
@@ -223,7 +222,7 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
             .div(100 * decimal);
     }
 
-    function pricePerShare(address token) external view returns (uint256) {
+    function pricePerShare(address token) external  tokenIsAllowed(token) view returns (uint256) {
         uint256 totalTokenBalance = vaults[token].totalPending +
             vaults[token].lockedAmount;
         return
