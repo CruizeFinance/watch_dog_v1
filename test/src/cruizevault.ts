@@ -147,7 +147,7 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(receipt.amount).to.be.equal(parseEther("10"));
     });
     it.only("Close 1st ETH round", async () => {
-      await cruizeModule.closeTokenRound(daiAddress, parseEther("10"));
+      await cruizeModule.closeTokensRound([daiAddress], [parseEther("10")]);
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       const roundPrice = await cruizeModule.callStatic.roundPricePerShare(
