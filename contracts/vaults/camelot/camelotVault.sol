@@ -9,6 +9,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import "hardhat/console.sol";
+
 contract CamelotVault is CamelotVaultStorage, crERC721 {
     using SafeMath for uint256;
     address constant NFTPOOL = 0x6BC938abA940fB828D39Daa23A94dfc522120C11;
@@ -17,8 +19,18 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
         ICamelotRouter(0xc873fEcbd354f5A56E00E710B90EF4201db2448d);
     address USDC = 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8;
 
-    event CreatePosition(uint256 indexed tokenId, uint256 amount, uint256 lockDuration);
-    event Deposit(address indexed account,uint256 tokenId,uint256 mintedTokenId, uint256 lpTokens);
+    event CreatePosition(
+        uint256 indexed tokenId,
+        uint256 amount,
+        uint256 lockDuration
+    );
+    event Deposit(
+        address indexed account,
+        uint256 tokenId,
+        uint256 mintedTokenId,
+        uint256 lpTokens
+    );
+
     function initialize(
         string memory _name,
         string memory _symbol,
@@ -29,33 +41,38 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
 
     function deposit(uint256 tokenId) external {
         uint256 amountToAdd;
+        (address lp,uint256 accRewardsPerShare , ) = poolInfo();
         TrustedNftPool.transferFrom(msg.sender, address(this), tokenId); // fetch the user nft to the contract.
-        TrustedNftPool.harvestPositionTo(tokenId, msg.sender); // send pending rewards to the user.
+        TrustedNftPool.harvestPosition(tokenId); // send pending rewards to the user.
         // Mint NFT to the use for his position in our cruize camelot vault.
         uint256 mintedTokenId = mint(msg.sender);
         {
             (
                 uint256 amount,
-                uint256 amountWithMultiplier,
-                uint256 startLockTime,
+                ,
+                ,
                 uint256 lockDuration,
-                uint256 lockMultiplier,
-                uint256 rewardDebt,
-                uint256 boostPoints,
-                uint256 totalMultiplier
+                ,
+                ,
+                ,
+                
             ) = TrustedNftPool.getStakingPosition(tokenId);
             amountToAdd = amount;
-            uint256 pendingRewards = TrustedNftPool.pendingRewards(tokenId);
+
+             // calculate bonuses
+            uint256 lockMultiplier = TrustedNftPool.getMultiplierByLockDuration(0);
+            uint256 amountWithMultiplier = amountToAdd.mul(lockMultiplier.add(1e4)).div(1e4);
+
             // save user staking info for later use in withdrawal
             stakingInfo[mintedTokenId] = StakingPosition({
                 amount: amount,
                 amountWithMultiplier: amountWithMultiplier,
-                startLockTime: startLockTime,
+                startLockTime: _currentBlockTimestamp(),
                 lockDuration: lockDuration,
                 lockMultiplier: lockMultiplier,
-                rewardDebt: rewardDebt,
-                boostPoints: boostPoints,
-                totalMultiplier: totalMultiplier
+                rewardDebt: amountWithMultiplier.mul(accRewardsPerShare).div(1e18),
+                boostPoints: 0,
+                totalMultiplier: lockMultiplier
             });
 
             TrustedNftPool.withdrawFromPosition(tokenId, amount); // withdraw user all LPs tokens
@@ -64,7 +81,7 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
         (uint256 amount, , , , , , , ) = TrustedNftPool.getStakingPosition(
             vaultTokenId
         ); // fetch the contract staking info from camelot pool
-        (address lp, , ) = poolInfo();
+        
         IERC20(lp).approve(NFTPOOL, amountToAdd);
         if (amount > 0) {
             // if cruize camelotVault has already depsited amount in camelot
@@ -75,43 +92,48 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
             TrustedNftPool.createPosition(amountToAdd, 0);
         }
 
-        emit Deposit(msg.sender,tokenId,mintedTokenId,amountToAdd);
+        emit Deposit(msg.sender, tokenId, mintedTokenId, amountToAdd);
     }
 
     function withdraw(uint256 tokenId) external {
         //Step-01 first burn the crNFT from user wallet
         burn(tokenId);
 
+        // Step - 02  withdraw a postion and get LP token's
+        TrustedNftPool.withdrawFromPosition(vaultTokenId, userInfo.amount);
+
         // Step-02 fetch user staking info
         StakingPosition memory userInfo = crStakingPositionInfo(tokenId);
-
-        // Step - 03  withdrawa a postion and get LP token's
-        TrustedNftPool.withdrawFromPosition(tokenId, userInfo.amount);
-
-        // Step-04 Send user rewards in the form of grails tokens
-        TrustedNftPool.harvestPositionTo(vaultTokenId, address(this));
         uint256 userReward = pendingRewards(tokenId);
-        uint256 totalUserFund = userReward + userInfo.amount;
+
+
+        // Step-03 Send user rewards in the form of grails tokens
+        TrustedNftPool.harvestPosition(vaultTokenId);
+        console.log("userReward:", userReward);
         address master = TrustedNftPool.master();
         address grailToken = ICamelotMaster(master).grailToken();
-        IERC20(grailToken).transfer(msg.sender, totalUserFund);
+        console.log(
+            "grailsToken:",
+            IERC20(grailToken).balanceOf(address(this))
+        );
+        IERC20(grailToken).transfer(msg.sender, userReward);
 
         // Step-05 approve & createPosition the position
-        (bool success0, bytes memory data0) = grailToken.delegatecall(
-            abi.encodeWithSignature(
-                "approve(address,uint256)",
-                NFTPOOL,
-                type(uint256).max
-            )
-        );
-        (bool success, bytes memory data) = NFTPOOL.delegatecall(
-            abi.encodeWithSignature(
-                "createPosition(uint256,uint256)",
-                userInfo.amount,
-                0
-            )
-        );
-        require(success0 && success);
+        // (bool success0, bytes memory data0) = grailToken.delegatecall(
+        //     abi.encodeWithSignature(
+        //         "approve(address,uint256)",
+        //         NFTPOOL,
+        //         type(uint256).max
+        //     )
+        // );
+        // (bool success, bytes memory data) = NFTPOOL.delegatecall(
+        //     abi.encodeWithSignature(
+        //         "createPosition(uint256,uint256)",
+        //         userInfo.amount,
+        //         0
+        //     )
+        // );
+        // require(success0 && success);
     }
 
     function crStakingPositionInfo(uint256 tokenId)
@@ -130,7 +152,7 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
         view
         returns (uint256 rewards)
     {
-        StakingPosition storage position = stakingInfo[tokenId];
+        StakingPosition memory position = stakingInfo[tokenId];
         (
             ,
             uint256 accRewardsPerShare,
@@ -155,6 +177,9 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
                 tokenRewards.mul(1e18).div(lpSupplyWithMultiplier)
             );
         }
+        console.log("amountWithMultiplier:",position.amountWithMultiplier);
+        console.log("accRewardsPerShare:",accRewardsPerShare);
+        console.log("rewardDebt:",position.rewardDebt);
         return
             position.amountWithMultiplier.mul(accRewardsPerShare).div(1e18).sub(
                 position.rewardDebt
@@ -235,8 +260,8 @@ contract CamelotVault is CamelotVaultStorage, crERC721 {
         address from,
         uint256 tokenId,
         bytes calldata data
-    ) external returns (bytes4){
-        if(vaultTokenId == 0) vaultTokenId = tokenId;
+    ) external returns (bytes4) {
+        if (vaultTokenId == 0) vaultTokenId = tokenId;
         return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 }

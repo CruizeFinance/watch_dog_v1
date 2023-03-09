@@ -102,6 +102,11 @@ interface INftPool {
      */
     function mergePositions(uint256[] calldata tokenIds, uint256 lockDuration)
         external;
+    
+    /**
+    * @dev Returns expected multiplier for a "lockDuration" duration lock (result is *1e4)
+    */
+    function getMultiplierByLockDuration(uint256 lockDuration) external view returns (uint256);
 
     /**
      * @dev Gives permission to `to` to transfer `tokenId` token to another account.

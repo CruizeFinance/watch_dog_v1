@@ -4,6 +4,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { parseEther } from "ethers/lib/utils";
 import { Impersonate } from "./utilites/common.test";
+constants.AddressZero
 
 const NFTPOOL = "0x6BC938abA940fB828D39Daa23A94dfc522120C11";
 const ROUTER = "0xc873fEcbd354f5A56E00E710B90EF4201db2448d";
@@ -96,7 +97,7 @@ describe("work flow from curize vault to cruize contract", function () {
     });
   });
 
-  describe("Cruize Camelot Vault", () => {
+  describe("Cruize Camelot Vault Deposits", () => {
     it.only("1st Deposit::Deposit spNFT in crCamelotVault", async () => {
       const tokenId = await nftPool.callStatic.tokenOfOwnerByIndex(
         EXTERNAL_ACCOUNT,
@@ -119,6 +120,12 @@ describe("work flow from curize vault to cruize contract", function () {
         .connect(externalUser)
         .approve(crCamelotVault.address, tokenId);
       await crCamelotVault.connect(externalUser).deposit(tokenId);
+    });
+  });
+
+  describe("Cruize Camelot Vault Withdrawals", () => {
+    it.only("1st Withdraw::Withdraw spNFT from cruize camelot vault", async () => {
+      await crCamelotVault.connect(externalUser).withdraw("1");
     });
   });
 });
