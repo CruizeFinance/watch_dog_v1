@@ -59,7 +59,13 @@ contract Cruize is CruizeVault, Proxy {
         string memory symbol,
         address token,
         uint104 tokenCap
-    ) external numberIsNotZero(tokenCap) onlyOwner {
+    )
+        external
+        numberIsNotZero(tokenCap)
+        addressIsValid(token)
+        nonReentrant
+        onlyOwner
+    {
         uint8 decimal = uint8(decimalsOf(token));
         if (cruizeTokens[token] != address(0)) revert AssetAlreadyExists(token);
         ICRERC20 crToken = ICRERC20(createClone(crContract));
@@ -115,7 +121,7 @@ contract Cruize is CruizeVault, Proxy {
         } else {
             revert VaultReachedDepositLimit(vaults[token].cap);
         }
-        emit Deposit(msg.sender, amount, token);
+        emit Deposit( msg.sender, amount,token);
     }
 
     /************************************************
@@ -154,7 +160,7 @@ contract Cruize is CruizeVault, Proxy {
         whenNotPaused
     {
         _initiateStandardWithdrawal(token, numShares);
-        emit InitiateStandardWithdrawal(msg.sender, token, numShares);
+        emit InitiateStandardWithdrawal( msg.sender,token, numShares);
     }
 
     /**
@@ -175,7 +181,7 @@ contract Cruize is CruizeVault, Proxy {
     {
         ShareMath.assertUint104(amount);
         _instantWithdrawal(token, amount.toUint104());
-        emit InstantWithdrawal(msg.sender, amount, vaults[token].round, token);
+        emit InstantWithdrawal(msg.sender, amount, vaults[token].round,token );
     }
 
     /**
@@ -230,7 +236,6 @@ contract Cruize is CruizeVault, Proxy {
             currQueuedWithdrawShares,
             totalTokenBalance
         );
-
         lastQueuedWithdrawAmounts[token] = queuedWithdrawAmount;
         Types.VaultState storage vaultState = vaults[token];
         uint256 newQueuedWithdrawShares = uint256(

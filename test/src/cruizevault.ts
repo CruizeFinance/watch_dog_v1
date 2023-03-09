@@ -243,7 +243,7 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("get tokens vault balance", async () => {
       const data = [daiAddress, ETHADDRESS];
       const vault = await cruizeModule.callStatic.tokensTvl(data);
-      expect(vault[0]).to.be.equal(parseEther("21.795397260261362357"))
+      expect(vault[0]).to.be.equal(parseEther("21.795397260261362357"));
     });
   });
 
@@ -293,7 +293,6 @@ describe("work flow from curize vault to cruize contract", function () {
         );
     });
 
-
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.callStatic.balanceOfUser(
         daiAddress,
@@ -340,8 +339,9 @@ describe("work flow from curize vault to cruize contract", function () {
       await cruizeModule.closeTokenRound(ETHADDRESS, parseEther("0"));
     });
     it.only("close 3rd ETH round", async () => {
-      await cruizeModule.closeTokenRound(daiAddress, 
-        parseEther("31.795397260261362357"),
+      await cruizeModule.closeTokenRound(
+        daiAddress,
+        parseEther("31.795397260261362357")
       );
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
@@ -431,6 +431,7 @@ describe("work flow from curize vault to cruize contract", function () {
           daiAddress,
           parseEther("16.955766354203181882")
         );
+      console.log(daiAddress, signer.address);
 
       const withdrawal = await cruizeModule.callStatic.withdrawals(
         signer.address,
@@ -454,8 +455,9 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("close 4th ETH round", async () => {
       await depositERC20(cruizeModule, dai, "10");
 
-      await cruizeModule.closeTokenRound(daiAddress, 
-        parseEther("34.000000000000000007"),
+      await cruizeModule.closeTokenRound(
+        daiAddress,
+        parseEther("34.000000000000000007")
       );
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
@@ -534,6 +536,22 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       expect(recepit).to.be.equal(parseEther("9.999999999999999998"));
       // assert.equal(recepit.toString(), parseEther("21.56"));
+    });
+  });
+
+  describe("Update Implementations", async () => {
+    it.only("upgrade to new implementation", async () => {
+      console.log(await cruizeModule.callStatic.owner());
+      console.log(await cruizeModule.callStatic.cruizeProxy());
+      console.log(await cruizeModule.callStatic.gnosisSafe());
+      console.log(await cruizeModule.callStatic.module());
+      const CruizeFactory = await ethers.getContractFactory("Cruize", deployer);
+      const newImplementation = await CruizeFactory.deploy();
+      await cruizeProxy.connect(deployer).upgradeTo(newImplementation.address);
+      console.log(await cruizeModule.callStatic.owner());
+      console.log(await cruizeModule.callStatic.cruizeProxy());
+      console.log(await cruizeModule.callStatic.gnosisSafe());
+      console.log(await cruizeModule.callStatic.module());
     });
   });
 

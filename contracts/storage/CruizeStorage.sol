@@ -32,7 +32,6 @@ abstract contract CruizeStorage {
     // Dividing by weeks per year requires doing num.mul(FEE_MULTIPLIER).div(WEEKS_PER_YEAR)
     uint256 internal constant WEEKS_PER_YEAR = 52.142857 ether;
 
-
     //----------------------------//
     //        Mappings            //
     //----------------------------//
@@ -61,6 +60,5 @@ abstract contract CruizeStorage {
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-
     uint256[50] private __cruize_gap;
 }

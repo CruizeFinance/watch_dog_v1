@@ -1,0 +1,114 @@
+{
+  "storage": [
+    {
+      "astId": 1208,
+      "contract": "contracts/gnosis-safe/safe.sol:GnosisSafe",
+      "label": "singleton",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_address"
+    },
+    {
+      "astId": 345,
+      "contract": "contracts/gnosis-safe/safe.sol:GnosisSafe",
+      "label": "modules",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_mapping(t_address,t_address)"
+    },
+    {
+      "astId": 702,
+      "contract": "contracts/gnosis-safe/safe.sol:GnosisSafe",
+      "label": "owners",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_mapping(t_address,t_address)"
+    },
+    {
+      "astId": 704,
+      "contract": "contracts/gnosis-safe/safe.sol:GnosisSafe",
+      "label": "ownerCount",
+      "offset": 0,
+      "slot": "3",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 706,
+      "contract": "contracts/gnosis-safe/safe.sol:GnosisSafe",
+      "label": "threshold",
+      "offset": 0,
+      "slot": "4",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 1490,
+      "contract": "contracts/gnosis-safe/safe.sol:GnosisSafe",
+      "label": "nonce",
+      "offset": 0,
+      "slot": "5",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 1492,
+      "contract": "contracts/gnosis-safe/safe.sol:GnosisSafe",
+      "label": "_deprecatedDomainSeparator",
+      "offset": 0,
+      "slot": "6",
+      "type": "t_bytes32"
+    },
+    {
+      "astId": 1496,
+      "contract": "contracts/gnosis-safe/safe.sol:GnosisSafe",
+      "label": "signedMessages",
+      "offset": 0,
+      "slot": "7",
+      "type": "t_mapping(t_bytes32,t_uint256)"
+    },
+    {
+      "astId": 1502,
+      "contract": "contracts/gnosis-safe/safe.sol:GnosisSafe",
+      "label": "approvedHashes",
+      "offset": 0,
+      "slot": "8",
+      "type": "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_bytes32": {
+      "encoding": "inplace",
+      "label": "bytes32",
+      "numberOfBytes": "32"
+    },
+    "t_mapping(t_address,t_address)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => address)",
+      "numberOfBytes": "32",
+      "value": "t_address"
+    },
+    "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => mapping(bytes32 => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_bytes32,t_uint256)"
+    },
+    "t_mapping(t_bytes32,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_bytes32",
+      "label": "mapping(bytes32 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    }
+  }
+}

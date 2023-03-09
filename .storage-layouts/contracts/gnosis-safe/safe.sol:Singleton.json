@@ -1,0 +1,19 @@
+{
+  "storage": [
+    {
+      "astId": 1208,
+      "contract": "contracts/gnosis-safe/safe.sol:Singleton",
+      "label": "singleton",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_address"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    }
+  }
+}

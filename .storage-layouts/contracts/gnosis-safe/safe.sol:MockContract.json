@@ -1,0 +1,224 @@
+{
+  "storage": [
+    {
+      "astId": 4980,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "calldataMocks",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_mapping(t_bytes32,t_bytes_storage)"
+    },
+    {
+      "astId": 4984,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "calldataMockTypes",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_mapping(t_bytes_memory_ptr,t_enum(MockType)4956)"
+    },
+    {
+      "astId": 4988,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "calldataExpectations",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_mapping(t_bytes_memory_ptr,t_bytes_storage)"
+    },
+    {
+      "astId": 4992,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "calldataRevertMessage",
+      "offset": 0,
+      "slot": "3",
+      "type": "t_mapping(t_bytes_memory_ptr,t_string_storage)"
+    },
+    {
+      "astId": 4996,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "calldataInvocations",
+      "offset": 0,
+      "slot": "4",
+      "type": "t_mapping(t_bytes32,t_uint256)"
+    },
+    {
+      "astId": 5000,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "methodIdMocks",
+      "offset": 0,
+      "slot": "5",
+      "type": "t_mapping(t_bytes4,t_bytes4)"
+    },
+    {
+      "astId": 5004,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "methodIdMockTypes",
+      "offset": 0,
+      "slot": "6",
+      "type": "t_mapping(t_bytes4,t_enum(MockType)4956)"
+    },
+    {
+      "astId": 5008,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "methodIdExpectations",
+      "offset": 0,
+      "slot": "7",
+      "type": "t_mapping(t_bytes4,t_bytes_storage)"
+    },
+    {
+      "astId": 5012,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "methodIdRevertMessages",
+      "offset": 0,
+      "slot": "8",
+      "type": "t_mapping(t_bytes4,t_string_storage)"
+    },
+    {
+      "astId": 5016,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "methodIdInvocations",
+      "offset": 0,
+      "slot": "9",
+      "type": "t_mapping(t_bytes32,t_uint256)"
+    },
+    {
+      "astId": 5018,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "fallbackMockType",
+      "offset": 0,
+      "slot": "10",
+      "type": "t_enum(MockType)4956"
+    },
+    {
+      "astId": 5021,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "fallbackExpectation",
+      "offset": 0,
+      "slot": "11",
+      "type": "t_bytes_storage"
+    },
+    {
+      "astId": 5023,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "fallbackRevertMessage",
+      "offset": 0,
+      "slot": "12",
+      "type": "t_string_storage"
+    },
+    {
+      "astId": 5025,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "invocations",
+      "offset": 0,
+      "slot": "13",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 5027,
+      "contract": "contracts/gnosis-safe/safe.sol:MockContract",
+      "label": "resetCount",
+      "offset": 0,
+      "slot": "14",
+      "type": "t_uint256"
+    }
+  ],
+  "types": {
+    "t_bytes32": {
+      "encoding": "inplace",
+      "label": "bytes32",
+      "numberOfBytes": "32"
+    },
+    "t_bytes4": {
+      "encoding": "inplace",
+      "label": "bytes4",
+      "numberOfBytes": "4"
+    },
+    "t_bytes_memory_ptr": {
+      "encoding": "bytes",
+      "label": "bytes",
+      "numberOfBytes": "32"
+    },
+    "t_bytes_storage": {
+      "encoding": "bytes",
+      "label": "bytes",
+      "numberOfBytes": "32"
+    },
+    "t_enum(MockType)4956": {
+      "encoding": "inplace",
+      "label": "enum MockContract.MockType",
+      "numberOfBytes": "1"
+    },
+    "t_mapping(t_bytes32,t_bytes_storage)": {
+      "encoding": "mapping",
+      "key": "t_bytes32",
+      "label": "mapping(bytes32 => bytes)",
+      "numberOfBytes": "32",
+      "value": "t_bytes_storage"
+    },
+    "t_mapping(t_bytes32,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_bytes32",
+      "label": "mapping(bytes32 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_bytes4,t_bytes4)": {
+      "encoding": "mapping",
+      "key": "t_bytes4",
+      "label": "mapping(bytes4 => bytes4)",
+      "numberOfBytes": "32",
+      "value": "t_bytes4"
+    },
+    "t_mapping(t_bytes4,t_bytes_storage)": {
+      "encoding": "mapping",
+      "key": "t_bytes4",
+      "label": "mapping(bytes4 => bytes)",
+      "numberOfBytes": "32",
+      "value": "t_bytes_storage"
+    },
+    "t_mapping(t_bytes4,t_enum(MockType)4956)": {
+      "encoding": "mapping",
+      "key": "t_bytes4",
+      "label": "mapping(bytes4 => enum MockContract.MockType)",
+      "numberOfBytes": "32",
+      "value": "t_enum(MockType)4956"
+    },
+    "t_mapping(t_bytes4,t_string_storage)": {
+      "encoding": "mapping",
+      "key": "t_bytes4",
+      "label": "mapping(bytes4 => string)",
+      "numberOfBytes": "32",
+      "value": "t_string_storage"
+    },
+    "t_mapping(t_bytes_memory_ptr,t_bytes_storage)": {
+      "encoding": "mapping",
+      "key": "t_bytes_memory_ptr",
+      "label": "mapping(bytes => bytes)",
+      "numberOfBytes": "32",
+      "value": "t_bytes_storage"
+    },
+    "t_mapping(t_bytes_memory_ptr,t_enum(MockType)4956)": {
+      "encoding": "mapping",
+      "key": "t_bytes_memory_ptr",
+      "label": "mapping(bytes => enum MockContract.MockType)",
+      "numberOfBytes": "32",
+      "value": "t_enum(MockType)4956"
+    },
+    "t_mapping(t_bytes_memory_ptr,t_string_storage)": {
+      "encoding": "mapping",
+      "key": "t_bytes_memory_ptr",
+      "label": "mapping(bytes => string)",
+      "numberOfBytes": "32",
+      "value": "t_string_storage"
+    },
+    "t_string_storage": {
+      "encoding": "bytes",
+      "label": "string",
+      "numberOfBytes": "32"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    }
+  }
+}
