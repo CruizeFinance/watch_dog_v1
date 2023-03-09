@@ -9,4 +9,5 @@ artifacts
 .idea
 yarn-error.log
 package-lock.json
+deployments
 .DS_Store

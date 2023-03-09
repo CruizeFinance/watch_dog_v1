@@ -22,7 +22,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
-abstract contract Proxy {
+contract Proxy {
   function createClone(address target) internal returns (address result) {
     bytes20 targetBytes = bytes20(target);
     assembly {

@@ -143,28 +143,4 @@ contract Helper is Getters {
             totalVaultFee
         );
     }
-
-       function checkVaultBalance(
-        address token,
-        uint256 totalTokenBalance,
-        uint256 vaultTokenBalance
-    ) internal view {
-        uint256 totalDeposit = vaults[token].lockedAmount +
-            vaults[token].totalPending;
-        if (totalTokenBalance == 0) {
-            if (vaultTokenBalance < totalDeposit)
-                revert VaultBalanceIsLessThenTheTotalDeposit(
-                    totalDeposit,
-                    vaultTokenBalance
-                );
-        }
-        if (totalTokenBalance > 0 && totalTokenBalance < totalDeposit) {
-            revert VaultBalanceIsLessThenTheTotalDeposit(
-                totalDeposit,
-                totalTokenBalance
-            );
-        }
-        
-    }
 }
-
