@@ -134,10 +134,10 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("Withdraw Instantly", async () => {
       await expect(cruizeModule.deposit(daiAddress, parseEther("10")))
         .emit(cruizeModule, "Deposit")
-        .withArgs(daiAddress, signer.address, parseEther("10"));
+        .withArgs(signer.address, parseEther("10"), daiAddress);
       await expect(cruizeModule.instantWithdrawal(daiAddress, parseEther("10")))
         .emit(cruizeModule, "InstantWithdrawal")
-        .withArgs(daiAddress, signer.address, parseEther("10"), 1);
+        .withArgs(signer.address, parseEther("10"), 1, daiAddress);
 
       const receipt = await cruizeModule.callStatic.depositReceipts(
         signer.address,
@@ -243,7 +243,7 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("get tokens vault balance", async () => {
       const data = [daiAddress, ETHADDRESS];
       const vault = await cruizeModule.callStatic.tokensTvl(data);
-      expect(vault[0]).to.be.equal(parseEther("21.795397260261362357"))
+      expect(vault[0]).to.be.equal(parseEther("21.795397260261362357"));
     });
   });
 
@@ -293,7 +293,6 @@ describe("work flow from curize vault to cruize contract", function () {
         );
     });
 
-
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.callStatic.balanceOfUser(
         daiAddress,
@@ -315,7 +314,7 @@ describe("work flow from curize vault to cruize contract", function () {
         cruizeModule.initiateWithdrawal(daiAddress, parseEther("10"))
       )
         .emit(cruizeModule, "InitiateStandardWithdrawal")
-        .withArgs(daiAddress, signer.address, parseEther("10"));
+        .withArgs(signer.address, daiAddress, parseEther("10"));
 
       const withdrawal = await cruizeModule.callStatic.withdrawals(
         signer.address,
@@ -340,8 +339,9 @@ describe("work flow from curize vault to cruize contract", function () {
       await cruizeModule.closeTokenRound(ETHADDRESS, parseEther("0"));
     });
     it.only("close 3rd ETH round", async () => {
-      await cruizeModule.closeTokenRound(daiAddress, 
-        parseEther("31.795397260261362357"),
+      await cruizeModule.closeTokenRound(
+        daiAddress,
+        parseEther("31.795397260261362357")
       );
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
@@ -378,15 +378,9 @@ describe("work flow from curize vault to cruize contract", function () {
       await expect(cruizeModule.standardWithdrawal(daiAddress))
         .emit(cruizeModule, "StandardWithdrawal")
         .withArgs(
-<<<<<<< HEAD
           signer.address,
           parseEther("11.795397260261362350"),
           daiAddress
-=======
-          daiAddress,
-          signer.address,
-          parseEther("11.795397260261362350")
->>>>>>> f0f6b6e (refactor code)
         );
       expect(await crDAI.callStatic.totalSupply()).to.be.equal(
         parseEther("16.955766354203181882")
@@ -437,6 +431,7 @@ describe("work flow from curize vault to cruize contract", function () {
           daiAddress,
           parseEther("16.955766354203181882")
         );
+      console.log(daiAddress, signer.address);
 
       const withdrawal = await cruizeModule.callStatic.withdrawals(
         signer.address,
@@ -460,8 +455,9 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("close 4th ETH round", async () => {
       await depositERC20(cruizeModule, dai, "10");
 
-      await cruizeModule.closeTokenRound(daiAddress, 
-        parseEther("34.000000000000000007"),
+      await cruizeModule.closeTokenRound(
+        daiAddress,
+        parseEther("34.000000000000000007")
       );
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
@@ -502,9 +498,9 @@ describe("work flow from curize vault to cruize contract", function () {
       await expect(cruizeModule.standardWithdrawal(daiAddress))
         .emit(cruizeModule, "StandardWithdrawal")
         .withArgs(
-          daiAddress,
           signer.address,
-          parseEther("23.590794520522724717")
+          parseEther("23.590794520522724717"),
+          daiAddress
         );
       expect(await crDAI.callStatic.totalSupply()).to.be.equal(
         parseEther("7.187450316458216553")

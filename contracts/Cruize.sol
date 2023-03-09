@@ -121,7 +121,7 @@ contract Cruize is CruizeVault, Proxy {
         } else {
             revert VaultReachedDepositLimit(vaults[token].cap);
         }
-        emit Deposit(token, msg.sender, amount);
+        emit Deposit( msg.sender, amount,token);
     }
 
     /************************************************
@@ -160,7 +160,7 @@ contract Cruize is CruizeVault, Proxy {
         whenNotPaused
     {
         _initiateStandardWithdrawal(token, numShares);
-        emit InitiateStandardWithdrawal(token, msg.sender, numShares);
+        emit InitiateStandardWithdrawal( msg.sender,token, numShares);
     }
 
     /**
@@ -181,7 +181,7 @@ contract Cruize is CruizeVault, Proxy {
     {
         ShareMath.assertUint104(amount);
         _instantWithdrawal(token, amount.toUint104());
-        emit InstantWithdrawal(token, msg.sender, amount, vaults[token].round);
+        emit InstantWithdrawal(msg.sender, amount, vaults[token].round,token );
     }
 
     /**
