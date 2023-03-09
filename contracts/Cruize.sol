@@ -244,6 +244,7 @@ contract Cruize is CruizeVault, Proxy {
         vaultState.lockedAmount = uint104(lockedBalance);
     }
 
+
     function tokensTvl(
         address[] memory assets
     ) external view returns (uint256[] memory) {
