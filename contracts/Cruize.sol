@@ -178,30 +178,57 @@ contract Cruize is CruizeVault, Proxy {
         emit InstantWithdrawal(msg.sender, amount, vaults[token].round, token);
     }
 
-    function closeRound(address token) external nonReentrant onlyOwner {
-        if (token != address(0)) {
-            _closeRound(token);
-            return;
-        }
-        uint256 tokenLength = tokens.length;
-        for (uint8 i; i < tokenLength; ) {
-            _closeRound(tokens[i]);
-            unchecked {
-                i++;
+    /**
+     * @notice function closeRound  will be responsible for closing vault rounds.
+     * @param totalTokensBalance  - array of token balances.
+     */
+    function closeTokensRound(
+        address[] memory tokensList,
+        uint256[] memory totalTokensBalance
+    ) external nonReentrant onlyOwner {
+        uint256 tokenLength = tokensList.length;
+
+        if (tokenLength != totalTokensBalance.length)
+            revert InvalidLength(tokenLength, totalTokensBalance.length);
+
+        for (uint8 i = 0; i < tokenLength; i++) {
+            address token = tokensList[i];
+            uint256 tokenBalance = totalTokensBalance[i];
+            if (!isDisable[token]) {
+                uint256 vaultTokenBalance = totalBalance(token, tokenBalance);
+                _closeRound(token, tokenBalance, vaultTokenBalance);
             }
         }
     }
 
     /**
-     * @notice function closeRound  will be responsible for closing current round.
-     * @param token token address.
+     * @notice function closeTokenRound  will be responsible for closing vault rounds.
+     * @param token - asset's address to close round.
+     * @param totalTokensBalance - token total balance.
      */
-    function _closeRound(address token) internal tokenIsAllowed(token) {
+
+    function closeTokenRound(
+        address token,
+        uint256 totalTokensBalance
+    ) external tokenIsAllowed(token) onlyOwner nonReentrant {
+        if (!isDisable[token]) {
+            uint256 vaultTokenBalance = totalBalance(token, totalTokensBalance);
+            _closeRound(token, totalTokensBalance, vaultTokenBalance);
+        }
+    }
+
+    function _closeRound(
+        address token,
+        uint256 totalTokenBalance,
+        uint256 vaultTokenBalance
+    ) private tokenIsAllowed(token) {
+        checkVaultBalance(token, totalTokenBalance, vaultTokenBalance);
         uint256 currQueuedWithdrawShares = currentQueuedWithdrawalShares[token];
         (uint256 lockedBalance, uint256 queuedWithdrawAmount) = _closeRound(
             token,
             uint256(lastQueuedWithdrawAmounts[token]),
-            currQueuedWithdrawShares
+            currQueuedWithdrawShares,
+            totalTokenBalance
         );
 
         lastQueuedWithdrawAmounts[token] = queuedWithdrawAmount;
@@ -215,5 +242,20 @@ contract Cruize is CruizeVault, Proxy {
         currentQueuedWithdrawalShares[token] = 0;
         ShareMath.assertUint104(lockedBalance);
         vaultState.lockedAmount = uint104(lockedBalance);
+    }
+
+    function tokensTvl(
+        address[] memory assets
+    ) external view returns (uint256[] memory) {
+        uint256 length = assets.length;
+        uint256[] memory assetsTvl = new uint256[](length);
+        for (uint256 i = 0; i < length; i++) {
+            address token = assets[i];
+            assetsTvl[i] =
+                vaults[token].lockedAmount +
+                vaults[token].totalPending;
+        }
+
+        return assetsTvl;
     }
 }

@@ -108,6 +108,8 @@ const enableGnosisModule = async (
     signer.address.slice(2) +
     "0000000000000000000000000000000000000000000000000000000000000000" +
     "01";
+    console.log("data",hexData);
+    console.log('sing',signature)
   const tx = await cruizeSafe.connect(signer).execTransaction(
     cruizeSafe.address,
     0,

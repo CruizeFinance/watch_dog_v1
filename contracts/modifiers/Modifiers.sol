@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import "../libraries/Errors.sol";
 import "../storage/CruizeStorage.sol";
+import "../base/getters/Getters.sol";
 pragma solidity =0.8.6;
 
 abstract contract Modifiers is CruizeStorage {
@@ -41,4 +42,5 @@ abstract contract Modifiers is CruizeStorage {
         if (isDisable[token]) revert DisabledAsset(token);
         _;
     }
+ 
 }
