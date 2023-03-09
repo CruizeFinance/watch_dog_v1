@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.8.1) (proxy/utils/Initializable.sol)
 
-pragma solidity =0.8.6;
+pragma solidity =0.8.18;
 import "../../utils/AddressUpgradeable.sol";
 
 /**

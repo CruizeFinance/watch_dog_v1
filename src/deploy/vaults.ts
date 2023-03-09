@@ -1,202 +1,196 @@
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { DeployFunction, Deployment } from "hardhat-deploy/types";
+import { Address, DeployFunction, Deployment } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { contractNames } from "../ts/deploy";
 import { parseEther } from "ethers/lib/utils";
-import { BigNumber, Contract } from "ethers";
+import { BigNumber, constants, Contract, utils } from "ethers";
+import abi from "ethereumjs-abi";
+import { chainTokenAddresses } from "../utilites/constant";
 
-interface IMapping {
-  [key: string]: string;
-}
-
+import {
+  createCRTokens,
+  createCruizeToken,
+  verifyContract,
+} from "../utilites/utilites";
+import { enableGnosisModule } from "../../test/src/helpers/utils";
 const deployContract: DeployFunction = async function (
   hre: HardhatRuntimeEnvironment
 ) {
   const { deployments } = hre;
   const { deploy, get } = deployments;
-  const { CruizeVault, CrMaster } = contractNames;
-
+  const { CruizeVault, CruizeProxy, CrTokenMaster, MasterProxy, GnosisSafe } =
+    contractNames;
   let crToken: Deployment;
   let cruize: Deployment;
+  let gnosisSafe: Deployment;
+  let masterCopy: Deployment;
+  let gProxyAddress: Address;
+  let cruizeSafe: Contract;
 
-  const signer: SignerWithAddress = (await hre.ethers.getSigners())[0];
-  const deployer = signer.address;
+  let [deployer, signer] = await hre.ethers.getSigners();
+
+  console.table({
+    deployer:deployer.address,
+    signer:signer.address
+  });
   const chainId = await hre.getChainId();
-  let ETHADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+  console.log("chainId: ",chainId)
+  //  Gnosis safe address
+  let cruizeSafeAddress: Address = "0x6C15abf7ca5E5a795ff246C3aa044236369b73A9";
 
-  let safes: IMapping = {
-    "5": "0xd5dC7C061D2a69a875754E6a50C4454B8e14DAC7", // goerli
-    "421613": "0xfb7c160144b4fA6DaaeD472D59EEABBEa4b07648", //arbitrum_goerli
-    "8081": "", // shardeum
-    "43113": "0x4e0427e2cb2bC1288ed649346901dF0489057E26", // avalache_fuji
-  };
-
-  // deploy master copy of crTokens
-  await deploy(CrMaster, {
-    from: deployer,
+  // Step-01 Deploy CrTokens Contract
+  await deploy(CrTokenMaster, {
+    from: deployer.address,
     args: [],
     log: true,
-    deterministicDeployment: true,
+    deterministicDeployment: false,
   });
-  crToken = await get(CrMaster);
+  crToken = await get(CrTokenMaster);
 
-  // deploy Cruiz Vault
+  // deploy gnosis ...
+  // if (chainId != "5") {
+  //  deploying gnosis safe
+  // await deploy(GnosisSafe, {
+  //   from: deployer.address,
+  //   args: [],
+  //   log: true,
+  //   deterministicDeployment: false,
+  // });
+
+  // gnosisSafe = await get(GnosisSafe);
+
+  // let singleton: Contract = await ethers.getContractAt(
+  //   GnosisSafe,
+  //   gnosisSafe.address,
+  //   deployer
+  // );
+  // let encodedData = singleton.interface.encodeFunctionData("setup", [
+  //   [deployer.address],
+  //   1,
+  //   "0x0000000000000000000000000000000000000000",
+  //   "0x",
+  //   "0x0000000000000000000000000000000000000000",
+  //   "0x0000000000000000000000000000000000000000",
+  //   0,
+  //   "0x0000000000000000000000000000000000000000",
+  // ]);
+
+  //  deploying master copy
+  // await deploy(MasterProxy, {
+  //   from: deployer.address,
+  //   args: [],
+  //   log: true,
+  //   deterministicDeployment: false,
+  // });
+  // masterCopy = await get(MasterProxy);
+
+  // let masterProxy: Contract = await ethers.getContractAt(
+  //   MasterProxy,
+  //   masterCopy.address,
+  //   deployer
+  // );
+
+  // let result = await masterProxy.createProxy(singleton.address, encodedData);
+  // let tx = await result.wait();
+  // gProxyAddress = tx.events[1].args["proxy"];
+  // //  get cruize safe
+  cruizeSafe = await ethers.getContractAt(
+    GnosisSafe,
+    cruizeSafeAddress as Address,
+    signer
+  );
+  // cruizeSafeAddress = cruizeSafe.address;
+  // let paramsData: unknown[] = [singleton.address];
+
+  // Step-02 Deploy Cruize Implementation Contract
   await deploy(CruizeVault, {
-    from: deployer,
-    args: [
-      deployer,
-      safes[chainId],
-      crToken.address,
-      parseEther("10"),
-      parseEther("10"),
-    ],
+    from: deployer.address,
+    args: [],
     log: true,
     deterministicDeployment: false,
   });
   cruize = await get(CruizeVault);
 
-  let CruizeInstance: Contract = await ethers.getContractAt(
-    CruizeVault,
-    cruize.address,
+  // Step-03 Deploy Cruize Proxy Contract
+  await deploy(CruizeProxy, {
+    from: deployer.address,
+    args: [cruize.address, deployer.address, "0x"],
+    log: true,
+    deterministicDeployment: false
+  });
+  const cruizeProxy = await get(CruizeProxy);
+
+  const cruizeModuleProxy = await ethers.getContractAt(
+    "CruizeProxy",
+    cruizeProxy.address,
+    deployer
+  );
+
+  // Step-04 Call setUp function to initialize the contract.
+  const encoder = new ethers.utils.AbiCoder();
+  const encodedParams = encoder.encode(
+    [
+      "address",
+      "address",
+      "address",
+      "address",
+      "address",
+      "uint256",
+      "uint256",
+    ],
+    [
+      signer.address, // owner
+      cruizeSafeAddress as Address, // gnosis safe
+      crToken.address, // crTokens
+      cruizeModuleProxy.address, // cruizeProxy
+      cruize.address, // cruize implementation
+      parseEther("2"), // management fee
+      parseEther("10"), // performance fee
+    ]
+  );
+  const cruizeModule: Contract = await ethers.getContractAt(
+    "Cruize",
+    cruizeModuleProxy.address,
     signer
   );
 
-  const weth = await deploy("wethMintable", {
-    from: deployer,
-    args: [],
-    log: true,
-    deterministicDeployment: false,
-  });
+  // await cruizeModuleProxy.connect(deployer).upgradeTo(cruize.address);
 
-  let crWETH = await CruizeInstance.callStatic.cruizeTokens(weth.address);
+  try {
+    await cruizeModule.connect(signer).setUp(encodedParams);
+  } catch (error) {
+    console.log(`contract already initialized`);
+  }
 
-  const usdc = await deploy("usdcMintable", {
-    from: deployer,
-    args: [],
-    log: true,
-    deterministicDeployment: false,
-  });
+  // await verifyContract(hre, cruizeModuleProxy.address, [
+  //   cruize.address,
+  //   signer.address,
+  //   "0x"]);
 
-  let crUSDC = await CruizeInstance.callStatic.cruizeTokens(usdc.address);
+  await createCRTokens(cruizeModule, chainId);
 
-  const wbtc = await deploy("wbtcMintable", {
-    from: deployer,
-    args: [],
-    log: true,
-    deterministicDeployment: false,
-  });
-
-  let crWBTC = await CruizeInstance.callStatic.cruizeTokens(wbtc.address);
-
-  const dai = await deploy("daiMintable", {
-    from: deployer,
-    args: [],
-    log: true,
-    deterministicDeployment: false,
-  });
-  let crDAI = await CruizeInstance.callStatic.cruizeTokens(dai.address);
-  
-  if(crWETH == ethers.constants.AddressZero)
-  await CruizeInstance.createToken(
-    "Cruize WETH",
-    "crWETH",
-    weth.address,
-    18,
-    parseEther("10000")
-  );
-
-  if(crUSDC == ethers.constants.AddressZero)
-  await CruizeInstance.createToken(
-    "Cruize USDC",
-    "crUSDC",
-    usdc.address,
-    6,
-    parseEther("10000")
-  );
-
-  if(crWBTC == ethers.constants.AddressZero)
-  await CruizeInstance.createToken(
-    "Cruize WBTC",
-    "crWBTC",
-    wbtc.address,
-    18,
-    parseEther("10000")
-    );
-    
-  if(crDAI == ethers.constants.AddressZero)
-  await CruizeInstance.createToken(
-    "Cruize DAI",
-    "crDAI",
-    dai.address,
-    18,
-    parseEther("10000")
-  );
-
-  
+  // await enableGnosisModule(cruizeSafe, cruizeModule.address, deployer);
 
   console.table({
-    chainId:chainId,
-    crToken:crToken.address,
-    cruizeModule:cruize.address,
-    safe:safes[chainId],
-    weth:weth.address,
-    wbtc:wbtc.address,
-    usdc:usdc.address,
-    dai:dai.address,
-    crWBTC,
-    crWETH,
-    crUSDC,
-    crDAI
-  })
-
-  // await CruizeInstance.initRounds(weth[chainId], BigNumber.from("1"));
-  // await CruizeInstance.initRounds(wbtc.address, BigNumber.from("1"));
-  // await CruizeInstance.initRounds(usdc.address, BigNumber.from("1"));
-  // await CruizeInstance.initRounds(dai.address, BigNumber.from("1"));
-  // console.log(await CruizeInstance.callStatic.cruizeTokens(ETHADDRESS))
-  // console.log(await CruizeInstance.callStatic.cruizeTokens(DAIADDRESS))
-
-  // await CruizeInstance.deposit(ETHADDRESS, parseEther("1"), {
-  //   value: parseEther("1"),
-  // });
-
-  // await CruizeInstance
-  // .withdrawInstantly(parseEther("1"), ETHADDRESS)
-
-
-
-  try {
-    await hre.run("verify", {
-      address: cruize.address,
-      constructorArgsParams: [
-        deployer,
-        safes[chainId],
-        crToken.address,
-        parseEther("10").toString(),
-        parseEther("10").toString(),
-      ],
-    });
-  } catch (error) {
-    console.log(error)
-    console.log(
-      `Smart contract at address ${cruize.address} is already verified`
-    );
-  }
-
-  try {
-    await hre.run("verify", {
-      address: usdc.address,
-      constructorArgsParams: [
-        "DAI","DAI"
-      ],
-    });
-  } catch (error) {
-    console.log(
-      `Smart contract at address ${usdc.address} is already verified`
-    );
-  }
-
+    crToken: crToken.address,
+    gnosisSafe: cruizeSafeAddress,
+    cruizeImplementation: cruize.address,
+    cruizeProxy: cruizeModuleProxy.address,
+    eth: chainTokenAddresses[chainId]["ETH"],
+    weth: chainTokenAddresses[chainId]["WETH"],
+    wbtc: chainTokenAddresses[chainId]["WBTC"],
+    usdc: chainTokenAddresses[chainId]["USDC"],
+  });
+  await verifyContract(hre, crToken.address, []);
+  // await verifyContract(hre, gnosisSafe.address, []);
+  // // await verifyContract(hre, masterCopy.address, []);
+  await verifyContract(hre, cruize.address, []);
+  await verifyContract(hre, cruizeProxy.address, [
+    cruize.address,
+    deployer.address,
+    "0x",
+  ]);
 };
 
 export default deployContract;

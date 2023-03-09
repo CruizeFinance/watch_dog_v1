@@ -1,0 +1,26 @@
+{
+  "storage": [
+    {
+      "astId": 345,
+      "contract": "contracts/gnosis-safe/safe.sol:ModuleManager",
+      "label": "modules",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_mapping(t_address,t_address)"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_mapping(t_address,t_address)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => address)",
+      "numberOfBytes": "32",
+      "value": "t_address"
+    }
+  }
+}

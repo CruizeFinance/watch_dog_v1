@@ -35,3 +35,7 @@ error InvalidFee();
 error FailedToTransferETH();
 error VaultReachedDepositLimit(uint256 limit);
 error InvalidVaultAddress(address invalidVaultAddress);
+error VaultBalanceIsLessThenTheTotalDeposit(uint256 TotalDeposit,uint256 vaultTotalBalance);
+error InvalidLength(uint256 tokenAddressArray,uint256 tokenBalanceArray);
+error InvalidCap(uint256 VaultBalance,uint256 newCap);
+error TokenBalanceShouldBeZero(uint256 tokenBalance);

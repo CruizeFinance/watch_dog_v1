@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.6;
+pragma solidity =0.8.18;
 import "../libraries/Types.sol";
 import "../libraries/SharesMath.sol";
 import "../base/getters/Getters.sol";
