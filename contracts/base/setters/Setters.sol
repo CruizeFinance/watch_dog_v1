@@ -38,6 +38,11 @@ contract Setters is Events, Getters {
         feeRecipient = newFeeRecipient;
     }
 
+    function setRoundsPerYear(uint256 _roundsPerYear) external onlyOwner {
+        require(_roundsPerYear > 0);
+        ROUNDS_PER_YEAR = _roundsPerYear;
+    }
+
     /**
      * @notice Sets the management/performance fee status enable/disable.
      * @param _performanceFee is the performance fee status
