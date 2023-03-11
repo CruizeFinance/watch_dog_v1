@@ -1,7 +1,7 @@
 {
   "storage": [
     {
-      "astId": 10747,
+      "astId": 11034,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "feeRecipient",
       "offset": 0,
@@ -9,7 +9,7 @@
       "type": "t_address"
     },
     {
-      "astId": 10750,
+      "astId": 11037,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "performanceFee",
       "offset": 0,
@@ -17,7 +17,7 @@
       "type": "t_uint256"
     },
     {
-      "astId": 10752,
+      "astId": 11039,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "isPerformanceFeeEnabled",
       "offset": 0,
@@ -25,7 +25,7 @@
       "type": "t_bool"
     },
     {
-      "astId": 10755,
+      "astId": 11042,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "managementFee",
       "offset": 0,
@@ -33,7 +33,7 @@
       "type": "t_uint256"
     },
     {
-      "astId": 10757,
+      "astId": 11044,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "isManagementFeeEnable",
       "offset": 0,
@@ -41,7 +41,7 @@
       "type": "t_bool"
     },
     {
-      "astId": 10760,
+      "astId": 11047,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "module",
       "offset": 1,
@@ -49,7 +49,7 @@
       "type": "t_address"
     },
     {
-      "astId": 10763,
+      "astId": 11050,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "gnosisSafe",
       "offset": 0,
@@ -57,7 +57,7 @@
       "type": "t_address"
     },
     {
-      "astId": 10766,
+      "astId": 11053,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "cruizeProxy",
       "offset": 0,
@@ -65,7 +65,7 @@
       "type": "t_address"
     },
     {
-      "astId": 10769,
+      "astId": 11056,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "crContract",
       "offset": 0,
@@ -73,7 +73,7 @@
       "type": "t_address"
     },
     {
-      "astId": 10786,
+      "astId": 11074,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "cruizeTokens",
       "offset": 0,
@@ -81,7 +81,7 @@
       "type": "t_mapping(t_address,t_address)"
     },
     {
-      "astId": 10791,
+      "astId": 11079,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "isDisable",
       "offset": 0,
@@ -89,15 +89,15 @@
       "type": "t_mapping(t_address,t_bool)"
     },
     {
-      "astId": 10797,
+      "astId": 11085,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "vaults",
       "offset": 0,
       "slot": "10",
-      "type": "t_mapping(t_address,t_struct(VaultState)8471_storage)"
+      "type": "t_mapping(t_address,t_struct(VaultState)8758_storage)"
     },
     {
-      "astId": 10802,
+      "astId": 11090,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "lastQueuedWithdrawAmounts",
       "offset": 0,
@@ -105,7 +105,7 @@
       "type": "t_mapping(t_address,t_uint256)"
     },
     {
-      "astId": 10807,
+      "astId": 11095,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "currentQueuedWithdrawalShares",
       "offset": 0,
@@ -113,23 +113,23 @@
       "type": "t_mapping(t_address,t_uint128)"
     },
     {
-      "astId": 10815,
+      "astId": 11103,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "withdrawals",
       "offset": 0,
       "slot": "13",
-      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)8485_storage))"
+      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)8772_storage))"
     },
     {
-      "astId": 10823,
+      "astId": 11111,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "depositReceipts",
       "offset": 0,
       "slot": "14",
-      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)8480_storage))"
+      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)8767_storage))"
     },
     {
-      "astId": 10830,
+      "astId": 11118,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "roundPricePerShare",
       "offset": 0,
@@ -137,7 +137,7 @@
       "type": "t_mapping(t_address,t_mapping(t_uint16,t_uint256))"
     },
     {
-      "astId": 10833,
+      "astId": 11121,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "tokens",
       "offset": 0,
@@ -145,15 +145,23 @@
       "type": "t_array(t_address)dyn_storage"
     },
     {
-      "astId": 10838,
+      "astId": 11124,
+      "contract": "contracts/helper/Helper.sol:Helper",
+      "label": "ROUND_PER_YEAR",
+      "offset": 0,
+      "slot": "17",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 11129,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "__cruize_gap",
       "offset": 0,
-      "slot": "17",
-      "type": "t_array(t_uint256)50_storage"
+      "slot": "18",
+      "type": "t_array(t_uint256)49_storage"
     },
     {
-      "astId": 8725,
+      "astId": 9013,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "_initialized",
       "offset": 0,
@@ -161,7 +169,7 @@
       "type": "t_uint8"
     },
     {
-      "astId": 8728,
+      "astId": 9016,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "_initializing",
       "offset": 1,
@@ -169,7 +177,7 @@
       "type": "t_bool"
     },
     {
-      "astId": 9212,
+      "astId": 9500,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "__context_gap",
       "offset": 0,
@@ -177,7 +185,7 @@
       "type": "t_array(t_uint256)50_storage"
     },
     {
-      "astId": 8597,
+      "astId": 8885,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "_owner",
       "offset": 0,
@@ -185,7 +193,7 @@
       "type": "t_address"
     },
     {
-      "astId": 8717,
+      "astId": 9005,
       "contract": "contracts/helper/Helper.sol:Helper",
       "label": "__ownable_gap",
       "offset": 0,
@@ -236,19 +244,19 @@
       "numberOfBytes": "32",
       "value": "t_bool"
     },
-    "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)8480_storage))": {
+    "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)8767_storage))": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => mapping(address => struct Types.DepositReceipt))",
       "numberOfBytes": "32",
-      "value": "t_mapping(t_address,t_struct(DepositReceipt)8480_storage)"
+      "value": "t_mapping(t_address,t_struct(DepositReceipt)8767_storage)"
     },
-    "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)8485_storage))": {
+    "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)8772_storage))": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => mapping(address => struct Types.Withdrawal))",
       "numberOfBytes": "32",
-      "value": "t_mapping(t_address,t_struct(Withdrawal)8485_storage)"
+      "value": "t_mapping(t_address,t_struct(Withdrawal)8772_storage)"
     },
     "t_mapping(t_address,t_mapping(t_uint16,t_uint256))": {
       "encoding": "mapping",
@@ -257,26 +265,26 @@
       "numberOfBytes": "32",
       "value": "t_mapping(t_uint16,t_uint256)"
     },
-    "t_mapping(t_address,t_struct(DepositReceipt)8480_storage)": {
+    "t_mapping(t_address,t_struct(DepositReceipt)8767_storage)": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => struct Types.DepositReceipt)",
       "numberOfBytes": "32",
-      "value": "t_struct(DepositReceipt)8480_storage"
+      "value": "t_struct(DepositReceipt)8767_storage"
     },
-    "t_mapping(t_address,t_struct(VaultState)8471_storage)": {
+    "t_mapping(t_address,t_struct(VaultState)8758_storage)": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => struct Types.VaultState)",
       "numberOfBytes": "32",
-      "value": "t_struct(VaultState)8471_storage"
+      "value": "t_struct(VaultState)8758_storage"
     },
-    "t_mapping(t_address,t_struct(Withdrawal)8485_storage)": {
+    "t_mapping(t_address,t_struct(Withdrawal)8772_storage)": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => struct Types.Withdrawal)",
       "numberOfBytes": "32",
-      "value": "t_struct(Withdrawal)8485_storage"
+      "value": "t_struct(Withdrawal)8772_storage"
     },
     "t_mapping(t_address,t_uint128)": {
       "encoding": "mapping",
@@ -299,12 +307,12 @@
       "numberOfBytes": "32",
       "value": "t_uint256"
     },
-    "t_struct(DepositReceipt)8480_storage": {
+    "t_struct(DepositReceipt)8767_storage": {
       "encoding": "inplace",
       "label": "struct Types.DepositReceipt",
       "members": [
         {
-          "astId": 8473,
+          "astId": 8760,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "round",
           "offset": 0,
@@ -312,7 +320,7 @@
           "type": "t_uint16"
         },
         {
-          "astId": 8475,
+          "astId": 8762,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "amount",
           "offset": 2,
@@ -320,7 +328,7 @@
           "type": "t_uint104"
         },
         {
-          "astId": 8477,
+          "astId": 8764,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "unredeemedShares",
           "offset": 15,
@@ -328,7 +336,7 @@
           "type": "t_uint128"
         },
         {
-          "astId": 8479,
+          "astId": 8766,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "totalDeposit",
           "offset": 0,
@@ -338,12 +346,12 @@
       ],
       "numberOfBytes": "64"
     },
-    "t_struct(VaultState)8471_storage": {
+    "t_struct(VaultState)8758_storage": {
       "encoding": "inplace",
       "label": "struct Types.VaultState",
       "members": [
         {
-          "astId": 8462,
+          "astId": 8749,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "round",
           "offset": 0,
@@ -351,7 +359,7 @@
           "type": "t_uint16"
         },
         {
-          "astId": 8464,
+          "astId": 8751,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "lockedAmount",
           "offset": 2,
@@ -359,7 +367,7 @@
           "type": "t_uint104"
         },
         {
-          "astId": 8466,
+          "astId": 8753,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "totalPending",
           "offset": 15,
@@ -367,7 +375,7 @@
           "type": "t_uint128"
         },
         {
-          "astId": 8468,
+          "astId": 8755,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "queuedWithdrawShares",
           "offset": 0,
@@ -375,7 +383,7 @@
           "type": "t_uint128"
         },
         {
-          "astId": 8470,
+          "astId": 8757,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "cap",
           "offset": 16,
@@ -385,12 +393,12 @@
       ],
       "numberOfBytes": "64"
     },
-    "t_struct(Withdrawal)8485_storage": {
+    "t_struct(Withdrawal)8772_storage": {
       "encoding": "inplace",
       "label": "struct Types.Withdrawal",
       "members": [
         {
-          "astId": 8482,
+          "astId": 8769,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "round",
           "offset": 0,
@@ -398,7 +406,7 @@
           "type": "t_uint16"
         },
         {
-          "astId": 8484,
+          "astId": 8771,
           "contract": "contracts/helper/Helper.sol:Helper",
           "label": "shares",
           "offset": 2,

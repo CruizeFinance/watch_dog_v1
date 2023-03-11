@@ -40,14 +40,13 @@ const deployContract: DeployFunction = async function (
   let cruizeSafeAddress: Address = "0x6C15abf7ca5E5a795ff246C3aa044236369b73A9";
 
   // Step-01 Deploy CrTokens Contract
-  await deploy(CrTokenMaster, {
-    from: deployer.address,
-    args: [],
-    log: true,
-    deterministicDeployment: false,
-  });
-  crToken = await get(CrTokenMaster);
-
+  // await deploy(CrTokenMaster, {
+  //   from: deployer.address,
+  //   args: [],
+  //   log: true,
+  //   deterministicDeployment: false,
+  // });
+  // crToken = await get(CrTokenMaster);
   // deploy gnosis ...
   // if (chainId != "5") {
   //  deploying gnosis safe
@@ -95,11 +94,11 @@ const deployContract: DeployFunction = async function (
   // let tx = await result.wait();
   // gProxyAddress = tx.events[1].args["proxy"];
   // //  get cruize safe
-  cruizeSafe = await ethers.getContractAt(
-    GnosisSafe,
-    cruizeSafeAddress as Address,
-    signer
-  );
+  // cruizeSafe = await ethers.getContractAt(
+  //   GnosisSafe,
+  //   cruizeSafeAddress as Address,
+  //   signer
+  // );
   // cruizeSafeAddress = cruizeSafe.address;
   // let paramsData: unknown[] = [singleton.address];
 
@@ -111,9 +110,10 @@ const deployContract: DeployFunction = async function (
     deterministicDeployment: false,
   });
   cruize = await get(CruizeVault);
+  console.log('cruize',cruize.address)
 
   // Step-03 Deploy Cruize Proxy Contract
-  await deploy(CruizeProxy, {
+ /* await deploy(CruizeProxy, {
     from: deployer.address,
     args: [cruize.address, deployer.address, "0x"],
     log: true,
@@ -185,12 +185,14 @@ const deployContract: DeployFunction = async function (
   await verifyContract(hre, crToken.address, []);
   // await verifyContract(hre, gnosisSafe.address, []);
   // // await verifyContract(hre, masterCopy.address, []);
-  await verifyContract(hre, cruize.address, []);
-  await verifyContract(hre, cruizeProxy.address, [
+    await verifyContract(hre, cruizeProxy.address, [
     cruize.address,
     deployer.address,
     "0x",
   ]);
+  */
+  await verifyContract(hre, cruize.address, []);
+
 };
 
 export default deployContract;

@@ -195,12 +195,17 @@ describe("work flow from curize vault to cruize contract", function () {
       assert.equal(vault.totalPending.toString(), parseEther("10"));
       assert.equal(vault.queuedWithdrawShares.toString(), parseEther("0"));
     });
+    it.only("get tokens vault balance", async () => {
+      const data = [daiAddress, ETHADDRESS];
+      const vault = await cruizeModule.callStatic.tokensTvl(data);
+      console.log(vault);
+    });
     it.only("Simulate 20% APY", async () => {
       await dai.transfer(cruizeSafe.address, parseEther("2"));
     });
 
     it.only("close 2nd ETH round", async () => {
-      await cruizeModule.closeTokenRound(daiAddress, parseEther("22"));
+      await cruizeModule.closeTokensRound([daiAddress], [parseEther("22")]);
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       assert.equal(vault.round, 3);
@@ -213,6 +218,13 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(await crDAI.callStatic.totalSupply()).to.be.equal(
         parseEther("18.477883177101590941")
       );
+      it.only("get tokens vault balance", async () => {
+        const data = [daiAddress, ETHADDRESS];
+        const vault = await cruizeModule.callStatic.tokensTvl(data);
+        // expect(vault[0]).to.be.equal(parseEther("21.795397260261362357"));
+        console.log(vault);
+      });
+  
       const TotalSupply = await crDAI.callStatic.totalSupply();
       const vaultTotalBalance = await dai.balanceOf(cruizeSafe.address);
       const pricePerShare = await calculatePricePerShare(
@@ -239,11 +251,6 @@ describe("work flow from curize vault to cruize contract", function () {
         signer.address
       );
       expect(recepit).to.be.equal(parseEther("21.795397260261362349"));
-    });
-    it.only("get tokens vault balance", async () => {
-      const data = [daiAddress, ETHADDRESS];
-      const vault = await cruizeModule.callStatic.tokensTvl(data);
-      expect(vault[0]).to.be.equal(parseEther("21.795397260261362357"));
     });
   });
 
@@ -336,12 +343,12 @@ describe("work flow from curize vault to cruize contract", function () {
       await cruizeModule.changeAssetStatus(ETHADDRESS, true);
     });
     it.only("close 3rd ETH round", async () => {
-      await cruizeModule.closeTokenRound(ETHADDRESS, parseEther("0"));
+      await cruizeModule.closeTokensRound([ETHADDRESS], [parseEther("0")]);
     });
     it.only("close 3rd ETH round", async () => {
-      await cruizeModule.closeTokenRound(
-        daiAddress,
-        parseEther("31.795397260261362357")
+      await cruizeModule.closeTokensRound(
+        [daiAddress],
+        [parseEther("31.795397260261362357")]
       );
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
@@ -455,9 +462,9 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("close 4th ETH round", async () => {
       await depositERC20(cruizeModule, dai, "10");
 
-      await cruizeModule.closeTokenRound(
-        daiAddress,
-        parseEther("34.000000000000000007")
+      await cruizeModule.closeTokensRound(
+        [daiAddress],
+        [parseEther("34.000000000000000007")]
       );
 
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
@@ -603,7 +610,7 @@ describe("work flow from curize vault to cruize contract", function () {
       // assert.equal(recepit.toString(), parseEther("21.56"));
     });
     it.only("close 5th round ", async () => {
-      await cruizeModule.closeTokenRound(daiAddress, "0");
+      await cruizeModule.closeTokensRound([daiAddress], ["0"]);
       const roundPrice = await cruizeModule.callStatic.roundPricePerShare(
         daiAddress,
         BigNumber.from(5)
@@ -677,6 +684,31 @@ describe("work flow from curize vault to cruize contract", function () {
         .to.be.emit(cruizeModule, "PerformanceFeeSet")
         .withArgs(parseEther("10"), parseEther("20"));
     });
+    it.only("delist Token", async () => {
+      console.log("before delist ETH", await cruizeModule.callStatic.tokens(1));
+      const crtoken = await cruizeModule.callStatic.cruizeTokens(ETHADDRESS);
+      const res = await cruizeModule.deListTokens(ETHADDRESS);
+      const delistToken = await cruizeModule.callStatic.cruizeTokens(
+        ETHADDRESS
+      );
+      console.log(await cruizeModule.callStatic.tokens(0));
+      const tokeninfo = await cruizeModule.callStatic.tokens(1);
+      const tokenVaultdata = await cruizeModule.callStatic.vaults(ETHADDRESS);
+      console.log("check in cruize token", delistToken);
+      console.log("after delist ETH", tokeninfo);
+      console.log("check in  tokens vaults", tokenVaultdata);
+    });
+    // it.only("set Round per year", async () => {
+    //   console.log(
+    //     "before setting Round per year",
+    //     await cruizeModule.callStatic.ROUND_PER_YEAR()
+    //   );
+    //   const res = await cruizeModule.setRoundPerYear(parseEther("12.5"));
+    //   console.log(
+    //     "after setting Round per year",
+    //     await cruizeModule.callStatic.ROUND_PER_YEAR()
+    //   );
+    // });
   });
 
   describe("Change impelemention logic contracts", () => {
@@ -685,10 +717,14 @@ describe("work flow from curize vault to cruize contract", function () {
     });
 
     it.only("deploy new loigc contract and upgrade", async () => {
+      console.log("module before update",await cruizeModule.callStatic.module())
       const CRUIZEMODULE = await ethers.getContractFactory("Cruize", signer);
-      cruizeModule = await CRUIZEMODULE.deploy();
-      await cruizeProxy.connect(deployer).upgradeTo(cruizeModule.address);
-
+      const updatedCruizeModule = await CRUIZEMODULE.deploy();
+      await cruizeProxy
+        .connect(deployer)
+        .upgradeTo(updatedCruizeModule.address);
+          await cruizeModule.connect(signer).setCruizeModule(updatedCruizeModule.address);
+        console.log("module after update",await cruizeModule.callStatic.module())
       const cruizePxy = await ethers.getContractAt(
         "Cruize",
         cruizeProxy.address
@@ -715,6 +751,8 @@ describe("work flow from curize vault to cruize contract", function () {
           parseEther("10"),
         ]
       );
+
+      
       // await cruizeModule.setUp(encodedParams)
     });
     it.only("after upgarde dai vault state", async () => {

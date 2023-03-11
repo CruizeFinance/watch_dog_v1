@@ -46,5 +46,6 @@ abstract contract Modifiers is CruizeStorage {
         if (isDisable[token]) revert DisabledAsset(token);
         _;
     }
- 
+    
+
 }
