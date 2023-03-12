@@ -235,13 +235,6 @@ abstract contract Getters is Modifiers, OwnableUpgradeable {
     }
 
     /**
-     * @notice Returns the vault feeRecipient.
-     */
-    function getFeeRecipient() external view onlyOwner returns (address) {
-        return feeRecipient;
-    }
-
-    /**
      * @notice Returns the vault total pending.
      */
     function totalTokenPending(

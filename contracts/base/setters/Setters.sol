@@ -3,7 +3,6 @@ pragma solidity =0.8.18;
 import "../../libraries/SharesMath.sol";
 import "../../libraries/Events.sol";
 import "../getters/Getters.sol";
-
 contract Setters is Events, Getters {
     using SafeMath for uint256;
 
@@ -19,7 +18,7 @@ contract Setters is Events, Getters {
         address token,
         uint256 newCap
     ) external onlyOwner tokenIsAllowed(token) numberIsNotZero(newCap) {
-        uint256 currentTokenBalance = totalBalance(token,0);
+        uint256 currentTokenBalance = totalBalance(token, 0);
         if (newCap < currentTokenBalance)
             revert InvalidCap(currentTokenBalance, newCap);
         ShareMath.assertUint104(newCap);
@@ -61,7 +60,7 @@ contract Setters is Events, Getters {
         if (newManagementFee > 100 * FEE_MULTIPLIER) revert InvalidFee();
         // We are dividing annualized management fee by num weeks in a year
         uint256 tmpManagementFee = newManagementFee.mul(FEE_MULTIPLIER).div(
-            WEEKS_PER_YEAR
+            ROUND_PER_YEAR
         );
         emit ManagementFeeSet(managementFee, newManagementFee);
         managementFee = tmpManagementFee;
@@ -98,9 +97,38 @@ contract Setters is Events, Getters {
     function deListTokens(
         address token
     ) external onlyOwner tokenIsAllowed(token) {
-        if (totalBalance(token,0) > 0)
-            revert TokenBalanceShouldBeZero(totalBalance(token,0));
+        if (totalBalance(token, 0) > 0)
+            revert TokenBalanceShouldBeZero(totalBalance(token, 0));
+
+        uint256 tokenLength = tokens.length;
+        address[] memory tokensList = new address[](tokenLength);
+        for (uint256 i = 0; i < tokenLength; ) {
+            if (tokens[i] != token) {
+                tokensList[i] = tokens[i];
+            }
+            unchecked {
+                i++;
+            }
+        }
         cruizeTokens[token] = address(0);
-        emit deListToken(token);
+        delete vaults[token];
+        tokens = tokensList;
+        emit DeListToken(token);
     }
+
+    function setRoundPerYear(
+        uint256 NewRoundPerYear
+    ) external numberIsNotZero(NewRoundPerYear) onlyOwner {
+        emit SetRoundPerYear(ROUND_PER_YEAR, NewRoundPerYear);
+        ROUND_PER_YEAR = NewRoundPerYear;
+    }
+
+    function setCruizeModule(
+        address newCruizeModule
+    ) external addressIsValid(newCruizeModule) onlyOwner {
+        emit SetCruizeModule(module, newCruizeModule);
+        module = newCruizeModule;
+    }
+
+
 }

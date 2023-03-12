@@ -30,6 +30,7 @@ abstract contract CruizeStorage {
     uint256 internal constant FEE_MULTIPLIER = 10 ** 18;
     // Number of weeks per year = 52.142857 weeks * FEE_MULTIPLIER = 52142857
     // Dividing by weeks per year requires doing num.mul(FEE_MULTIPLIER).div(WEEKS_PER_YEAR)
+    /// @notice deprecated
     uint256 internal constant WEEKS_PER_YEAR = 52.142857 ether;
 
     //----------------------------//
@@ -55,10 +56,13 @@ abstract contract CruizeStorage {
     /// to a user with their DepositReceipt.depositAmount
     mapping(address => mapping(uint16 => uint256)) public roundPricePerShare;
     address[] public tokens;
+
+    uint256 internal ROUND_PER_YEAR = 52.142857 ether;
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[50] private __cruize_gap;
+    uint256[49] private __cruize_gap;
 }

@@ -265,9 +265,9 @@ abstract contract CruizeVault is
     )
         external
         onlyModule(_cruizeProxy)
-        nonReentrant
         addressIsValid(_paymentToken)
         addressIsValid(_receiver)
+        nonReentrant
     {
         if (_paymentToken == ETH) {
             (bool sent, ) = _receiver.call{value: _amount}("");

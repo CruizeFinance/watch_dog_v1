@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
 contract Events {
     /************************************************
      *  EVENTS
@@ -49,5 +50,8 @@ contract Events {
     event PerformanceFeeSet(uint256 performanceFee, uint256 newPerformanceFee);
     event CollectVaultFee(address indexed token, uint256 vaultFee);
     event ChangeAssetStatus(address indexed token, bool status);
-   event deListToken(address indexed token);
+    event DeListToken(address indexed token);
+    event SetRoundPerYear(uint256 oldRoundPerYer, uint256 newRoundPerYear);
+    event SetCruizeModule(address oldModule,address newModule);
+   
 }
