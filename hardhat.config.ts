@@ -1,12 +1,15 @@
 import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 import "hardhat-tracer";
+import 'hardhat-watcher';
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-storage-layout";
 import "hardhat-storage-layout-changes";
 import { HttpNetworkUserConfig } from "hardhat/types";
 dotenv.config({ path: __dirname + "/.env" });
+import 'hardhat-test-utils';
+
 
 const DEFAULT_MNEMONIC: string = process.env.MNEMONIC || "";
 
@@ -97,11 +100,14 @@ export default {
         accountsBalance: "100000000000000000000000000000000000000000",
         mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
       },
+      forking:{
+        enabled: true,
+        url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
+      },
     },
     goerli: {
       ...sharedNetworkConfig,
       url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
-      //  chainId: 5,
     },
     arbitrum_goerli: {
       ...sharedNetworkConfig,

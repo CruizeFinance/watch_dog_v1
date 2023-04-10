@@ -49,7 +49,9 @@
     "ethereumjs-abi": "^0.6.8",
     "hardhat-abi-exporter": "^2.10.1",
     "hardhat-deploy": "^0.11.22",
+    "hardhat-ens-mock": "^0.0.4",
     "hardhat-storage-layout-changes": "^0.1.2",
+    "hardhat-test-utils": "^0.1.1",
     "hardhat-tracer": "^1.2.1",
     "hardhat-watcher": "^2.5.0",
     "yargs": "^17.6.2"
