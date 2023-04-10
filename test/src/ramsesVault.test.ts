@@ -117,6 +117,7 @@ describe("Ramses Vault", () => {
      )
      await minter.update_period();
     });
+    
     it.only("add liquidity", async () => {
       await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6));
     });
@@ -125,10 +126,6 @@ describe("Ramses Vault", () => {
         const oneHourInSeconds = time.duration.hours(1);
         await time.increase(oneHourInSeconds);
         await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6))
-
-        // // await ramsesVaultProxy.closeRound();
-        // await ramsesVaultProxy.withdraw()
-
     });
 
     it.only("[signer][after 2 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
@@ -147,7 +144,6 @@ describe("Ramses Vault", () => {
 
     it.only("[anonymous][after 2 hour]:withdraw liquidity", async () => {
       await ramsesVaultProxy.connect(anonymous).withdraw();
-      await ramsesVaultProxy.closeRound();
 
     });
 
@@ -157,68 +153,6 @@ describe("Ramses Vault", () => {
         await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6))
     });
   });
-
-  describe("Ramses Vault With Locking", () => {
-    it("initialize ramses vault", async () => {
-     await ramsesVaultProxy.initialize(
-        weth.address,
-        usdc.address,
-        false,
-        signer.address
-     );
-    });
-    
-    it("add liquidity", async () => {
-      await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6));
-    });
-
-    it("[signer][after 1 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
-        const oneHourInSeconds = time.duration.hours(5);
-        await time.increase(oneHourInSeconds);
-        await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6))
-    });
-
-    it("[signer][after 2 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
-        const oneHourInSeconds = time.duration.hours(5);
-        await time.increase(oneHourInSeconds);
-        await ramsesVaultProxy.deposit(parseEther("2"),parseUnits("4000",6))
-    });
-
-    it("[anonymous][after 2 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
-        await ramsesVaultProxy.connect(anonymous).deposit(parseEther("1"),parseUnits("2000",6))
-    });
-
-    it("[signer][after 2 hour]:withdraw liquidity", async () => {
-      await ramsesVaultProxy.withdraw()
-      await ramsesVaultProxy.connect(anonymous).withdraw()
-    });
-
-    it("[signer][after 2 hour]:withdraw liquidity", async () => {
-      await ramsesVaultProxy.claimFees()
-    });
-
-    it("[anonymous][after 2 hour]:withdraw liquidity", async () => {
-      await ramsesVaultProxy.connect(anonymous).withdraw();
-      await ramsesVaultProxy.closeRound();
-
-    });
-
-    it("[after 6 days]:Throw if add liquidity after round expiration", async () => {
-        const sixDaysInSeconds = time.duration.days(5);
-        await time.increase(sixDaysInSeconds);
-        await ramsesVaultProxy.claimFees()
-
-        // await expect(ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6))).to.be.revertedWithCustomError(ramsesVaultProxy,"ROUND_EXPIRED")
-    });
-
-    it("Close round & claim Fee", async () => {
-    await minter.update_period();
-    // await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6));
-    // await ramsesVaultProxy.withdraw()
-    await ramsesVaultProxy.closeRound();
-    });
-  });
-
 });
 
 

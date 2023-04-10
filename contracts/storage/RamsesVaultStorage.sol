@@ -12,16 +12,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 abstract contract RamsesVaultStorage {
 
-    enum Status {
-        ACTIVE,
-        END
-    }
-
-    struct Round {
-        uint256 round;
-        Status status;
-    }
- 
     struct Deposits {
         uint256 amount0;
         uint256 amount1;
@@ -47,7 +37,6 @@ abstract contract RamsesVaultStorage {
     uint256 public MAX_LOCK = 1 weeks;
     uint256 public rewardPerTokenStored;
 
-    Round public round;
 
     mapping(address => Deposits) public deposits;
     mapping(address => uint256) public derivedBalances;
@@ -62,4 +51,3 @@ abstract contract RamsesVaultStorage {
      */
     uint256[50] private __cruize_ramese_gap;
 }
-// penny dreadful
