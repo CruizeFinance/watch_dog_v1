@@ -36,7 +36,6 @@ describe("work flow from curize vault to cruize contract", function () {
     weth = await ethers .getContractAt("IWETH",WETH,signer);
     usdc = await ethers .getContractAt("IUSDC",USDC,signer);
     
-    
     const RAMSES_VAULT = await ethers.getContractFactory("RamsesVault",signer);
     ramsesVault = await RAMSES_VAULT.deploy();
     
@@ -115,7 +114,7 @@ describe("Ramses Vault", () => {
         false,
         signer.address
      )
-     await minter.update_period();
+    //  await minter.update_period();
     });
     
     it.only("add liquidity", async () => {

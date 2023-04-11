@@ -35,7 +35,7 @@ export default {
   paths: {
     tests: "./test",
     cache: "./cache",
-    deploy: "./src/deploy",
+    deploy: "./src/deploy/ramses/",
     sources: "./contracts",
     deployments: "./deployments",
     artifacts: "./artifacts",
