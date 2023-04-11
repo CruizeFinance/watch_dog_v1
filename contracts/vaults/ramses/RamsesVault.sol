@@ -170,7 +170,7 @@ contract RamsesVault is
             (derivedBalances[account] *
                 (RAMSES_GAUGE.rewardPerToken(address(RAM_TOKEN)) -
                     userRewardPerTokenStored[account])) /
-            PRECISION +
+            uint256(PRECISION) +
             storedRewardsPerUser[account];
     }
 }

@@ -142,9 +142,14 @@ describe("Ramses Vault", () => {
       await ramsesVaultProxy.withdraw()
     });
 
+    it.only("upgrade implemetation", async () => {
+      const RAMSES_VAULT = await ethers.getContractFactory("RamsesVault",signer);
+      let _ramsesVault = await RAMSES_VAULT.deploy();
+      await proxy.upgradeTo(_ramsesVault.address)
+    });
+
     it.only("[anonymous][after 2 hour]:withdraw liquidity", async () => {
       await ramsesVaultProxy.connect(anonymous).withdraw();
-
     });
 
     it.only("[after 6 days]:Throw if add liquidity after round expiration", async () => {

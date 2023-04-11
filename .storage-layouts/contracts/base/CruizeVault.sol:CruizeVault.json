@@ -1,7 +1,7 @@
 {
   "storage": [
     {
-      "astId": 11034,
+      "astId": 12655,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "feeRecipient",
       "offset": 0,
@@ -9,7 +9,7 @@
       "type": "t_address"
     },
     {
-      "astId": 11037,
+      "astId": 12658,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "performanceFee",
       "offset": 0,
@@ -17,7 +17,7 @@
       "type": "t_uint256"
     },
     {
-      "astId": 11039,
+      "astId": 12660,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "isPerformanceFeeEnabled",
       "offset": 0,
@@ -25,7 +25,7 @@
       "type": "t_bool"
     },
     {
-      "astId": 11042,
+      "astId": 12663,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "managementFee",
       "offset": 0,
@@ -33,7 +33,7 @@
       "type": "t_uint256"
     },
     {
-      "astId": 11044,
+      "astId": 12665,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "isManagementFeeEnable",
       "offset": 0,
@@ -41,7 +41,7 @@
       "type": "t_bool"
     },
     {
-      "astId": 11047,
+      "astId": 12668,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "module",
       "offset": 1,
@@ -49,7 +49,7 @@
       "type": "t_address"
     },
     {
-      "astId": 11050,
+      "astId": 12671,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "gnosisSafe",
       "offset": 0,
@@ -57,7 +57,7 @@
       "type": "t_address"
     },
     {
-      "astId": 11053,
+      "astId": 12674,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "cruizeProxy",
       "offset": 0,
@@ -65,7 +65,7 @@
       "type": "t_address"
     },
     {
-      "astId": 11056,
+      "astId": 12677,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "crContract",
       "offset": 0,
@@ -73,7 +73,7 @@
       "type": "t_address"
     },
     {
-      "astId": 11074,
+      "astId": 12695,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "cruizeTokens",
       "offset": 0,
@@ -81,7 +81,7 @@
       "type": "t_mapping(t_address,t_address)"
     },
     {
-      "astId": 11079,
+      "astId": 12700,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "isDisable",
       "offset": 0,
@@ -89,15 +89,15 @@
       "type": "t_mapping(t_address,t_bool)"
     },
     {
-      "astId": 11085,
+      "astId": 12706,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "vaults",
       "offset": 0,
       "slot": "10",
-      "type": "t_mapping(t_address,t_struct(VaultState)8758_storage)"
+      "type": "t_mapping(t_address,t_struct(VaultState)10355_storage)"
     },
     {
-      "astId": 11090,
+      "astId": 12711,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "lastQueuedWithdrawAmounts",
       "offset": 0,
@@ -105,7 +105,7 @@
       "type": "t_mapping(t_address,t_uint256)"
     },
     {
-      "astId": 11095,
+      "astId": 12716,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "currentQueuedWithdrawalShares",
       "offset": 0,
@@ -113,23 +113,23 @@
       "type": "t_mapping(t_address,t_uint128)"
     },
     {
-      "astId": 11103,
+      "astId": 12724,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "withdrawals",
       "offset": 0,
       "slot": "13",
-      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)8772_storage))"
+      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)10369_storage))"
     },
     {
-      "astId": 11111,
+      "astId": 12732,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "depositReceipts",
       "offset": 0,
       "slot": "14",
-      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)8767_storage))"
+      "type": "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)10364_storage))"
     },
     {
-      "astId": 11118,
+      "astId": 12739,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "roundPricePerShare",
       "offset": 0,
@@ -137,7 +137,7 @@
       "type": "t_mapping(t_address,t_mapping(t_uint16,t_uint256))"
     },
     {
-      "astId": 11121,
+      "astId": 12742,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "tokens",
       "offset": 0,
@@ -145,7 +145,7 @@
       "type": "t_array(t_address)dyn_storage"
     },
     {
-      "astId": 11124,
+      "astId": 12745,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "ROUND_PER_YEAR",
       "offset": 0,
@@ -153,7 +153,7 @@
       "type": "t_uint256"
     },
     {
-      "astId": 11129,
+      "astId": 12750,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "__cruize_gap",
       "offset": 0,
@@ -161,7 +161,7 @@
       "type": "t_array(t_uint256)49_storage"
     },
     {
-      "astId": 9013,
+      "astId": 10610,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "_initialized",
       "offset": 0,
@@ -169,7 +169,7 @@
       "type": "t_uint8"
     },
     {
-      "astId": 9016,
+      "astId": 10613,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "_initializing",
       "offset": 1,
@@ -177,7 +177,7 @@
       "type": "t_bool"
     },
     {
-      "astId": 9500,
+      "astId": 11097,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "__context_gap",
       "offset": 0,
@@ -185,7 +185,7 @@
       "type": "t_array(t_uint256)50_storage"
     },
     {
-      "astId": 8885,
+      "astId": 10482,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "_owner",
       "offset": 0,
@@ -193,7 +193,7 @@
       "type": "t_address"
     },
     {
-      "astId": 9005,
+      "astId": 10602,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "__ownable_gap",
       "offset": 0,
@@ -201,7 +201,7 @@
       "type": "t_array(t_uint256)49_storage"
     },
     {
-      "astId": 9519,
+      "astId": 11116,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "_paused",
       "offset": 0,
@@ -209,7 +209,7 @@
       "type": "t_bool"
     },
     {
-      "astId": 9634,
+      "astId": 11231,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "_status",
       "offset": 0,
@@ -217,7 +217,7 @@
       "type": "t_uint256"
     },
     {
-      "astId": 9692,
+      "astId": 11289,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "__reentrancy_gap",
       "offset": 0,
@@ -225,7 +225,7 @@
       "type": "t_array(t_uint256)49_storage"
     },
     {
-      "astId": 10340,
+      "astId": 11937,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "guard",
       "offset": 0,
@@ -233,7 +233,7 @@
       "type": "t_address"
     },
     {
-      "astId": 10018,
+      "astId": 11615,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "avatar",
       "offset": 0,
@@ -241,7 +241,7 @@
       "type": "t_address"
     },
     {
-      "astId": 10021,
+      "astId": 11618,
       "contract": "contracts/base/CruizeVault.sol:CruizeVault",
       "label": "target",
       "offset": 0,
@@ -292,19 +292,19 @@
       "numberOfBytes": "32",
       "value": "t_bool"
     },
-    "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)8767_storage))": {
+    "t_mapping(t_address,t_mapping(t_address,t_struct(DepositReceipt)10364_storage))": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => mapping(address => struct Types.DepositReceipt))",
       "numberOfBytes": "32",
-      "value": "t_mapping(t_address,t_struct(DepositReceipt)8767_storage)"
+      "value": "t_mapping(t_address,t_struct(DepositReceipt)10364_storage)"
     },
-    "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)8772_storage))": {
+    "t_mapping(t_address,t_mapping(t_address,t_struct(Withdrawal)10369_storage))": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => mapping(address => struct Types.Withdrawal))",
       "numberOfBytes": "32",
-      "value": "t_mapping(t_address,t_struct(Withdrawal)8772_storage)"
+      "value": "t_mapping(t_address,t_struct(Withdrawal)10369_storage)"
     },
     "t_mapping(t_address,t_mapping(t_uint16,t_uint256))": {
       "encoding": "mapping",
@@ -313,26 +313,26 @@
       "numberOfBytes": "32",
       "value": "t_mapping(t_uint16,t_uint256)"
     },
-    "t_mapping(t_address,t_struct(DepositReceipt)8767_storage)": {
+    "t_mapping(t_address,t_struct(DepositReceipt)10364_storage)": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => struct Types.DepositReceipt)",
       "numberOfBytes": "32",
-      "value": "t_struct(DepositReceipt)8767_storage"
+      "value": "t_struct(DepositReceipt)10364_storage"
     },
-    "t_mapping(t_address,t_struct(VaultState)8758_storage)": {
+    "t_mapping(t_address,t_struct(VaultState)10355_storage)": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => struct Types.VaultState)",
       "numberOfBytes": "32",
-      "value": "t_struct(VaultState)8758_storage"
+      "value": "t_struct(VaultState)10355_storage"
     },
-    "t_mapping(t_address,t_struct(Withdrawal)8772_storage)": {
+    "t_mapping(t_address,t_struct(Withdrawal)10369_storage)": {
       "encoding": "mapping",
       "key": "t_address",
       "label": "mapping(address => struct Types.Withdrawal)",
       "numberOfBytes": "32",
-      "value": "t_struct(Withdrawal)8772_storage"
+      "value": "t_struct(Withdrawal)10369_storage"
     },
     "t_mapping(t_address,t_uint128)": {
       "encoding": "mapping",
@@ -355,12 +355,12 @@
       "numberOfBytes": "32",
       "value": "t_uint256"
     },
-    "t_struct(DepositReceipt)8767_storage": {
+    "t_struct(DepositReceipt)10364_storage": {
       "encoding": "inplace",
       "label": "struct Types.DepositReceipt",
       "members": [
         {
-          "astId": 8760,
+          "astId": 10357,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "round",
           "offset": 0,
@@ -368,7 +368,7 @@
           "type": "t_uint16"
         },
         {
-          "astId": 8762,
+          "astId": 10359,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "amount",
           "offset": 2,
@@ -376,7 +376,7 @@
           "type": "t_uint104"
         },
         {
-          "astId": 8764,
+          "astId": 10361,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "unredeemedShares",
           "offset": 15,
@@ -384,7 +384,7 @@
           "type": "t_uint128"
         },
         {
-          "astId": 8766,
+          "astId": 10363,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "totalDeposit",
           "offset": 0,
@@ -394,12 +394,12 @@
       ],
       "numberOfBytes": "64"
     },
-    "t_struct(VaultState)8758_storage": {
+    "t_struct(VaultState)10355_storage": {
       "encoding": "inplace",
       "label": "struct Types.VaultState",
       "members": [
         {
-          "astId": 8749,
+          "astId": 10346,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "round",
           "offset": 0,
@@ -407,7 +407,7 @@
           "type": "t_uint16"
         },
         {
-          "astId": 8751,
+          "astId": 10348,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "lockedAmount",
           "offset": 2,
@@ -415,7 +415,7 @@
           "type": "t_uint104"
         },
         {
-          "astId": 8753,
+          "astId": 10350,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "totalPending",
           "offset": 15,
@@ -423,7 +423,7 @@
           "type": "t_uint128"
         },
         {
-          "astId": 8755,
+          "astId": 10352,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "queuedWithdrawShares",
           "offset": 0,
@@ -431,7 +431,7 @@
           "type": "t_uint128"
         },
         {
-          "astId": 8757,
+          "astId": 10354,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "cap",
           "offset": 16,
@@ -441,12 +441,12 @@
       ],
       "numberOfBytes": "64"
     },
-    "t_struct(Withdrawal)8772_storage": {
+    "t_struct(Withdrawal)10369_storage": {
       "encoding": "inplace",
       "label": "struct Types.Withdrawal",
       "members": [
         {
-          "astId": 8769,
+          "astId": 10366,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "round",
           "offset": 0,
@@ -454,7 +454,7 @@
           "type": "t_uint16"
         },
         {
-          "astId": 8771,
+          "astId": 10368,
           "contract": "contracts/base/CruizeVault.sol:CruizeVault",
           "label": "shares",
           "offset": 2,

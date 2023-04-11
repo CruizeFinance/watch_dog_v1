@@ -1,0 +1,283 @@
+{
+  "storage": [
+    {
+      "astId": 12772,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "POOL",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_address"
+    },
+    {
+      "astId": 12778,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "RAMSES_VOTER",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_contract(IVoter)9722"
+    },
+    {
+      "astId": 12784,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "RAM_TOKEN",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_contract(IERC20)2581"
+    },
+    {
+      "astId": 12790,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "RAMSES_GAUGE",
+      "offset": 0,
+      "slot": "3",
+      "type": "t_contract(IGauge)9390"
+    },
+    {
+      "astId": 12796,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "RAMSES_ROUTER",
+      "offset": 0,
+      "slot": "4",
+      "type": "t_contract(IRouter)9606"
+    },
+    {
+      "astId": 12802,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "RAMSES_VOTING_ESCROW",
+      "offset": 0,
+      "slot": "5",
+      "type": "t_contract(IVotingEscrow)9924"
+    },
+    {
+      "astId": 12805,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "PRECISION",
+      "offset": 0,
+      "slot": "6",
+      "type": "t_uint248"
+    },
+    {
+      "astId": 12807,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "stable",
+      "offset": 31,
+      "slot": "6",
+      "type": "t_bool"
+    },
+    {
+      "astId": 12810,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "lp",
+      "offset": 0,
+      "slot": "7",
+      "type": "t_contract(IPair)9495"
+    },
+    {
+      "astId": 12813,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "token0",
+      "offset": 0,
+      "slot": "8",
+      "type": "t_contract(IERC20)2581"
+    },
+    {
+      "astId": 12816,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "token1",
+      "offset": 0,
+      "slot": "9",
+      "type": "t_contract(IERC20)2581"
+    },
+    {
+      "astId": 12818,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "tokenId",
+      "offset": 0,
+      "slot": "10",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 12820,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "feeRecipient",
+      "offset": 0,
+      "slot": "11",
+      "type": "t_address"
+    },
+    {
+      "astId": 12822,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "derivedSupply",
+      "offset": 0,
+      "slot": "12",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 12825,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "MAX_LOCK",
+      "offset": 0,
+      "slot": "13",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 12827,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "rewardPerTokenStored",
+      "offset": 0,
+      "slot": "14",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 12832,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "deposits",
+      "offset": 0,
+      "slot": "15",
+      "type": "t_mapping(t_address,t_struct(Deposits)12769_storage)"
+    },
+    {
+      "astId": 12836,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "derivedBalances",
+      "offset": 0,
+      "slot": "16",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 12840,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "storedRewardsPerUser",
+      "offset": 0,
+      "slot": "17",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 12844,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "userRewardPerTokenStored",
+      "offset": 0,
+      "slot": "18",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 12849,
+      "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+      "label": "__cruize_ramese_gap",
+      "offset": 0,
+      "slot": "19",
+      "type": "t_array(t_uint256)50_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_array(t_uint256)50_storage": {
+      "base": "t_uint256",
+      "encoding": "inplace",
+      "label": "uint256[50]",
+      "numberOfBytes": "1600"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_contract(IERC20)2581": {
+      "encoding": "inplace",
+      "label": "contract IERC20",
+      "numberOfBytes": "20"
+    },
+    "t_contract(IGauge)9390": {
+      "encoding": "inplace",
+      "label": "contract IGauge",
+      "numberOfBytes": "20"
+    },
+    "t_contract(IPair)9495": {
+      "encoding": "inplace",
+      "label": "contract IPair",
+      "numberOfBytes": "20"
+    },
+    "t_contract(IRouter)9606": {
+      "encoding": "inplace",
+      "label": "contract IRouter",
+      "numberOfBytes": "20"
+    },
+    "t_contract(IVoter)9722": {
+      "encoding": "inplace",
+      "label": "contract IVoter",
+      "numberOfBytes": "20"
+    },
+    "t_contract(IVotingEscrow)9924": {
+      "encoding": "inplace",
+      "label": "contract IVotingEscrow",
+      "numberOfBytes": "20"
+    },
+    "t_mapping(t_address,t_struct(Deposits)12769_storage)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => struct RamsesVaultStorage.Deposits)",
+      "numberOfBytes": "32",
+      "value": "t_struct(Deposits)12769_storage"
+    },
+    "t_mapping(t_address,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_struct(Deposits)12769_storage": {
+      "encoding": "inplace",
+      "label": "struct RamsesVaultStorage.Deposits",
+      "members": [
+        {
+          "astId": 12762,
+          "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+          "label": "amount0",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 12764,
+          "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+          "label": "amount1",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 12766,
+          "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+          "label": "liquidity",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 12768,
+          "contract": "contracts/proxies/RamsesVaultProxy.sol:RamsesVaultProxy",
+          "label": "onlyLiquidity",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_bool"
+        }
+      ],
+      "numberOfBytes": "128"
+    },
+    "t_uint248": {
+      "encoding": "inplace",
+      "label": "uint248",
+      "numberOfBytes": "31"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    }
+  }
+}

@@ -43,7 +43,7 @@
     "@gnosis.pm/zodiac": "^2.1.2",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.8.0",
-    "@openzeppelin/upgrades": "^2.8.0",
+    "@openzeppelin/contracts-upgradeable": "^4.8.2",
     "@types/ethereumjs-abi": "^0.6.3",
     "dotenv": "^16.0.3",
     "ethereumjs-abi": "^0.6.8",
