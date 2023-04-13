@@ -109,6 +109,9 @@ contract RamsesVault is
         delete deposits[account];
     }
 
+    /* 
+    * @dev update locking period
+    */
     function setLockTime(uint256 _time) external onlyOwner {
         if (_time == 0) revert ZERO_AMOUNT();
         MAX_LOCK = _time;
