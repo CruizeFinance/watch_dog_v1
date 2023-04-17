@@ -43,7 +43,7 @@ abstract contract RamsesVaultStorage {
     mapping(address => uint256) public derivedBalances;
     mapping(address => uint256) public storedRewardsPerUser;
     mapping(address => uint256) public userRewardPerTokenStored;
-
+    
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

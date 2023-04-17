@@ -54,7 +54,8 @@ const deployContract: DeployFunction = async function (
     implementation: implementation.address,
   });
 
-  //   await verifyContract(hre, cruize.address, []);
+    await verifyContract(hre, implementation.address, []);
+    await verifyContract(hre, proxy.address, [implementation.address, deployer.address, "0x"]);
 };
 
 export default deployContract;

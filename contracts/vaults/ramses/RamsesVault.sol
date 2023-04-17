@@ -55,16 +55,18 @@ contract RamsesVault is
      */
     function deposit(uint256 amount0, uint256 amount1) external nonReentrant {
         if (amount0 == 0 || amount1 == 0) revert ZERO_AMOUNT();
-        uint256 liquidity = _addLiquidity(amount0, amount1);
+        (uint256 amountA , uint256 amountB ,uint256 liquidity) = _addLiquidity(amount0, amount1);
         Deposits memory deposit = deposits[msg.sender];
-        deposit.amount0 += amount0;
-        deposit.amount1 += amount1;
+        deposit.amount0 += amountA;
+        deposit.amount1 += amountB;
         deposit.liquidity += liquidity;
-        deposit.onlyLiquidity = false;
         deposits[msg.sender] = deposit;
 
+        if(amount0 > amountA )token0.transfer(msg.sender, amount0.sub(amountA));
+        if(amount1 > amountB )token1.transfer(msg.sender, amount1.sub(amountB));
+
         _deposit(liquidity);
-        emit Deposit(amount0, amount1, liquidity);
+        emit Deposit(amountA, amountB, liquidity);
     }
 
     /*
@@ -74,6 +76,11 @@ contract RamsesVault is
     function depositLP(uint256 liquidity) external nonReentrant {
         if (liquidity == 0) revert ZERO_AMOUNT();
         lp.transferFrom(msg.sender, address(this), liquidity);
+
+        Deposits memory deposit = deposits[msg.sender];
+        deposit.liquidity += liquidity;
+        deposits[msg.sender] = deposit;
+
         _deposit(liquidity);
     }
 
@@ -88,12 +95,8 @@ contract RamsesVault is
         updateRewardPerToken(account);
         uint256 amount0;
         uint256 amount1;
-        if (deposit.onlyLiquidity) {
-            lp.transfer(account, deposit.liquidity);
-        } else {
-            lp.approve(address(RAMSES_ROUTER), deposit.liquidity);
-            (amount0, amount1) = _removeLiquidity(account);
-        }
+        
+        (amount0, amount1) = _removeLiquidity(account);
 
         uint256 _reward = storedRewardsPerUser[account];
         if (_reward > 0 && RAM_TOKEN.balanceOf(address(this)) >= _reward) {
@@ -127,12 +130,12 @@ contract RamsesVault is
     function _addLiquidity(
         uint256 amount0,
         uint256 amount1
-    ) internal returns (uint256 liquidity) {
+    ) internal returns (uint256 amountA, uint256 amountB,uint256 liquidity)  {
         token0.transferFrom(msg.sender, address(this), amount0);
         token1.transferFrom(msg.sender, address(this), amount1);
         token0.approve(address(RAMSES_ROUTER), amount0);
         token1.approve(address(RAMSES_ROUTER), amount1);
-        (, , liquidity) = RAMSES_ROUTER.addLiquidity(
+        (amountA,amountB,liquidity) = RAMSES_ROUTER.addLiquidity(
             address(token0),
             address(token1),
             stable,
@@ -149,6 +152,7 @@ contract RamsesVault is
         address _account
     ) internal returns (uint256 amount0, uint256 amount1) {
         Deposits memory deposit = deposits[_account];
+        lp.approve(address(RAMSES_ROUTER), deposit.liquidity);
 
         (amount0, amount1) = RAMSES_ROUTER.removeLiquidity(
             address(token0),
