@@ -4,9 +4,11 @@ import { DeployResult, DeploymentsExtension } from 'hardhat-deploy/types'
 
 export const contractNames = {
   CruizeVault: 'Cruize',
-  CruizeProxy:'CruizeProxy',
-  CrTokenMaster: 'CRTokenUpgradeable',
   GnosisSafe:'GnosisSafe',
+  CruizeProxy:'CruizeProxy',
+  RamsesVault:'RamsesVault',
+  RamsesVaultProxy:'RamsesVaultProxy',
+  CrTokenMaster: 'CRTokenUpgradeable',
   MasterProxy:'GnosisSafeProxyFactory'
 }
 
