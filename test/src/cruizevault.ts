@@ -15,6 +15,9 @@ import {
   toBigNumber,
 } from "./utilites/common.test";
 import { parseEther } from "ethers/lib/utils";
+import { increaseTo } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
+
 describe("work flow from curize vault to cruize contract", function () {
   let signer: SignerWithAddress;
   let singleton: Contract;
@@ -62,6 +65,9 @@ describe("work flow from curize vault to cruize contract", function () {
         .emit(cruizeSafe, "EnabledModule")
         .withArgs(cruizeModule.address);
     });
+    it("set lending pool", async () => {
+      await cruizeModule.setLendingPoolParams("0xF4B1486DD74D07706052A33d31d7c0AAFD0659E1","0xBb5cA40b2F7aF3B1ff5dbce0E9cC78F8BFa817CE")
+    });
   });
 
   describe("Creating CR tokens", () => {
@@ -97,6 +103,19 @@ describe("work flow from curize vault to cruize contract", function () {
   });
 
   describe("#Deposit in Round 1 ", () => {
+
+    it("deposit ETH", async () => {
+      await cruizeModule.deposit(ETHADDRESS, parseEther("2"), {
+        value: parseEther("2"),
+      });
+
+    });
+    
+    it("withdraw ETH", async () => {
+      await increaseTo((await time.latest())+86400)
+      await cruizeModule.withdraw(ETHADDRESS, parseEther("1"),signer.address);
+    });
+
     it("deposit ETH", async () => {
       await cruizeModule.deposit(ETHADDRESS, parseEther("1"), {
         value: parseEther("1"),

@@ -19,19 +19,20 @@ const sharedNetworkConfig: HttpNetworkUserConfig = {
   timeout: 8000000,
   gasPrice: "auto",
 };
-
-if (process.env.PRIVATE_KEY && process.env.PRIVATE_KEY_2) {
+if (process.env.PRIVATE_KEY &&  process.env.PRIVATE_KEY_2) {
   sharedNetworkConfig.accounts = [process.env.PRIVATE_KEY,process.env.PRIVATE_KEY_2];
-} else {
+} 
+else {
+  console.log("mnemonic")
   sharedNetworkConfig.accounts = {
     mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
   };
 }
 
 export default {
-  namedAccounts: {
-    deployer: 1,
-  },
+  // namedAccounts: {
+  //   deployer: 0,
+  // },
   paths: {
     tests: "./test",
     cache: "./cache",

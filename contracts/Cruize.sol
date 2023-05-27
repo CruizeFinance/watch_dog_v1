@@ -89,39 +89,62 @@ contract Cruize is CruizeVault, Proxy {
     /************************************************
      *  DEPOSIT & WITHDRAWALS
      ***********************************************/
-    /**
-     * @notice Deposits the `asset` from msg.sender
-     * @param token depositing token address.
-     * @param amount is the amount of `asset` to deposit.
-     */
+
+    // /**
+    //  * @notice Deposits the `asset` from msg.sender
+    //  * @param asset depositing token address.
+    //  * @param amount is the amount of `asset` to deposit.
+    //  */
     function deposit(
-        address token,
+        address asset,
         uint256 amount
     )
         external
         payable
         nonReentrant
-        tokenIsAllowed(token)
+        tokenIsAllowed(asset)
         numberIsNotZero(amount)
-        isDisabled(token)
+        isDisabled(asset)
         whenNotPaused
     {
-        _updateDepositInfo(token, amount);
-        if (
-            token == ETH && gnosisSafe.balance.add(amount) <= vaults[token].cap
-        ) {
-            // transfer ETH to Cruize gnosis valut.
-            (bool sent, ) = gnosisSafe.call{value: amount}("");
-            if (!sent) revert FailedToTransferETH();
-        } else if (
-            IERC20(token).balanceOf(gnosisSafe).add(amount) <= vaults[token].cap
-        ) {
-            // transfer token to Cruize gnosis vault.
-            IERC20(token).safeTransferFrom(msg.sender, gnosisSafe, amount);
+        uint256 lastAmount = previousDeposit(asset);
+        uint256 newAmount = amount.add(lastAmount);
+        _updateDepositInfo(asset, newAmount);
+        if (msg.value > 0) amount = msg.value;
+
+        if (asset == ETH && msg.value > 0) {
+            depositETH(newAmount);
         } else {
-            revert VaultReachedDepositLimit(vaults[token].cap);
+            if (msg.value != 0) revert InvalidDeposit();
+            IERC20 token = IERC20(asset);
+            // Pull all the given amount from the user address
+            require(token.transferFrom(msg.sender, address(this), amount));
+            depositERC20(asset, newAmount);
         }
-        emit Deposit(msg.sender, amount, token);
+        emit Deposit(msg.sender, newAmount, asset);
+    }
+
+    function previousDeposit(address _token) internal returns (uint256 lastAmount){
+        Types.DepositReceipt storage depositReceipt = depositReceipts[
+            msg.sender
+        ][_token];
+        if(depositReceipt.amount > 0)
+            lastAmount = _withdraw(_token, address(this));
+    }
+
+    function depositETH(uint256 amount) internal {
+        // slither-disable-next-line reentrancy-benign
+        TrustedWethGateway.depositETH{value: amount}(
+            address(TrustedAavePool),
+            address(this),
+            0
+        );
+    }
+
+    function depositERC20(address asset, uint256 amountToAave) internal {
+        IERC20 token = IERC20(asset);
+        require(token.approve(address(TrustedAavePool), amountToAave));
+        TrustedAavePool.deposit(asset, amountToAave, address(this), 0);
     }
 
     /************************************************
@@ -205,6 +228,16 @@ contract Cruize is CruizeVault, Proxy {
         }
     }
 
+    function setLendingPoolParams(address pool , address wethGateway) public onlyOwner{
+        require(pool != address(0));
+        require(wethGateway != address(0));
+        TrustedAavePool = IPoolV2(pool);
+        TrustedWethGateway = IWETHGateway(wethGateway);
+        Types.VaultState storage vaultState = vaults[0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8];
+        vaultState.totalPending = 0;
+
+    }
+
     function _closeRound(
         address token,
         uint256 totalTokenBalance,
@@ -247,5 +280,19 @@ contract Cruize is CruizeVault, Proxy {
         }
 
         return assetsCapAndTvl;
+    }
+
+    function calculateAPY(address asset, uint256 lendingAmount) public view returns (uint256) {
+        DataTypes.ReserveDataV2 memory reserve = TrustedAavePool.getReserveData(asset);
+        
+        uint256 liquidityRate = uint256(reserve.currentLiquidityRate);
+        uint256 apy = ((liquidityRate * 365 * 24 * 60 * 60) / (10**25)) * lendingAmount;
+        
+        return apy;
+    }
+
+    function collateral() public view returns(uint256 totalCollateral){
+        (totalCollateral, , , , , ) = TrustedAavePool
+            .getUserAccountData(address(this));
     }
 }

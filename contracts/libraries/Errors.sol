@@ -40,3 +40,4 @@ error VaultBalanceIsLessThenTheTotalDeposit(
 error InvalidLength(uint256 tokenAddressArray, uint256 tokenBalanceArray);
 error InvalidCap(uint256 VaultBalance, uint256 newCap);
 error TokenBalanceShouldBeZero(uint256 tokenBalance);
+error  InvalidDeposit();

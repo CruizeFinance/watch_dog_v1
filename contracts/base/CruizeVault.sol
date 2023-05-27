@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../module/reentrancyGuard/ReentrancyGuardUpgradeable.sol";
+import "hardhat/console.sol";
 
 abstract contract CruizeVault is
     Setters,
@@ -35,7 +36,7 @@ abstract contract CruizeVault is
         uint16 currentRound = vaultState.round;
         uint256 decimal = decimalsOf(_token);
 
-        Types.DepositReceipt memory depositReceipt = depositReceipts[
+        Types.DepositReceipt memory depositReceipt = depositReceiptsOfRDNT[
             msg.sender
         ][_token];
         // If we have an unprocessed pending deposit from the previous rounds, we have to process it.
@@ -54,7 +55,7 @@ abstract contract CruizeVault is
         uint256 totalDeposit = uint256(depositReceipt.totalDeposit).add(
             _amount
         );
-        depositReceipts[msg.sender][_token] = Types.DepositReceipt({
+        depositReceiptsOfRDNT[msg.sender][_token] = Types.DepositReceipt({
             round: currentRound,
             amount: uint104(depositAmount),
             unredeemedShares: uint128(unredeemedShares),
@@ -63,8 +64,75 @@ abstract contract CruizeVault is
 
         uint256 newTotalPending = uint256(vaultState.totalPending).add(_amount);
         ShareMath.assertUint128(newTotalPending);
-
+        
         vaultState.totalPending = uint128(newTotalPending);
+    }
+
+    function _withdraw(address _token,address _to) internal returns(uint104 receiptAmount ) {
+        Types.DepositReceipt storage depositReceipt = depositReceipts[
+            msg.sender
+        ][_token];
+    
+        receiptAmount = depositReceipt.amount;
+        if (receiptAmount == 0)
+            revert NotEnoughWithdrawalBalance(0, receiptAmount);
+        
+        delete depositReceipts[msg.sender][_token];
+        _transferHelper(_token, _to, uint256(receiptAmount));
+    }
+
+     function withdrawETH(uint256 amount, address to) internal {
+        DataTypes.ReserveDataV2 memory asset = TrustedAavePool.getReserveData(
+            WETH
+        );
+        if (
+            IERC20(asset.aTokenAddress).allowance(
+                address(this),
+                address(TrustedWethGateway)
+            ) < amount
+        )
+            require(
+                IERC20(asset.aTokenAddress).approve(
+                    address(TrustedWethGateway),
+                    type(uint256).max
+                )
+            );
+        (uint256 totalCollateral, , , , , ) = TrustedAavePool
+            .getUserAccountData(address(this));
+        console.log("totalCollateral::", totalCollateral);
+        // TrustedWethGateway.withdrawETH(address(TrustedAavePool), amount, to);
+    }
+
+    function withdrawERC20(address asset, uint256 amount, address to) internal {
+        DataTypes.ReserveDataV2 memory reserve = TrustedAavePool.getReserveData(
+            asset
+        );
+        if (
+            IERC20(reserve.aTokenAddress).allowance(
+                address(this),
+                address(TrustedAavePool)
+            ) < amount
+        )
+            require(
+                IERC20(reserve.aTokenAddress).approve(
+                    address(TrustedAavePool),
+                    type(uint256).max
+                )
+            );
+        // slither-disable-next-line unused-return
+        TrustedAavePool.withdraw(asset, amount, to);
+    }
+
+    function withdrawFromRDNT(
+        address asset,
+        uint256 amount,
+        address to
+    ) internal {
+        if (asset == ETH) {
+            withdrawETH(amount, to);
+        } else {
+            withdrawERC20(asset, amount, to);
+        }
     }
 
     /**
@@ -74,7 +142,7 @@ abstract contract CruizeVault is
      * @param _token withdrawal token address.
      */
     function _instantWithdrawal(address _token, uint104 _amount) internal {
-        Types.DepositReceipt storage depositReceipt = depositReceipts[
+        Types.DepositReceipt storage depositReceipt = depositReceiptsOfRDNT[
             msg.sender
         ][_token];
         Types.VaultState storage vaultState = vaults[_token];
@@ -92,7 +160,7 @@ abstract contract CruizeVault is
         vaultState.totalPending = uint128(
             uint256(vaultState.totalPending).sub(_amount)
         );
-        _transferHelper(_token, msg.sender, uint256(_amount));
+        withdrawFromRDNT(_token,uint256(_amount),msg.sender);
     }
 
     /**
@@ -105,7 +173,7 @@ abstract contract CruizeVault is
         uint256 _shares
     ) internal {
         uint16 currentRound = vaults[_token].round;
-        Types.DepositReceipt memory depositReceipt = depositReceipts[
+        Types.DepositReceipt memory depositReceipt = depositReceiptsOfRDNT[
             msg.sender
         ][_token];
         uint256 unredeemedShares = depositReceipt.getSharesFromReceipt(
@@ -174,7 +242,7 @@ abstract contract CruizeVault is
             roundPricePerShare[_token][withdrawalRound],
             decimal
         );
-        Types.DepositReceipt storage depositReceipt = depositReceipts[
+        Types.DepositReceipt storage depositReceipt = depositReceiptsOfRDNT[
             msg.sender
         ][_token];
         ShareMath.assertUint104(withdrawAmount);
@@ -190,7 +258,7 @@ abstract contract CruizeVault is
         lastQueuedWithdrawAmounts[_token] = lastQueuedWithdrawAmounts[_token]
             .sub(withdrawAmount);
         ICRERC20(cruizeTokens[_token]).burn(msg.sender, withdrawalShares);
-        _transferHelper(_token, msg.sender, uint256(withdrawAmount));
+        withdrawFromRDNT(_token,uint256(withdrawAmount),msg.sender);
         emit StandardWithdrawal(msg.sender,withdrawAmount,_token);
     }
 
@@ -278,3 +346,7 @@ abstract contract CruizeVault is
         emit TransferFromSafe(_receiver, _amount,_paymentToken);
     }
 }
+
+// user -> cruizeVualt -> rdnt -> atoken -> cruizeWallet -> rdnt -> fees -> options-close -> principle + apy -> vault 
+
+// user -> cruizeVualt -> rdnt -> atoken -> cruizeVault -> fees -> cruizeWallet -> option -close -> apy -> vualt

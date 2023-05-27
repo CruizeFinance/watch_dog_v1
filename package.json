@@ -12,6 +12,7 @@
     "build:watch": "hardhat watch compilation",
     "test:watch": "hardhat watch test_mainnet",
     "deploy:network": "hardhat deploy --network",
+    "print-layout":"yarn hardhat check",
     "check-storage": "hardhat storage-layout --check",
     "update-storage": "hardhat storage-layout --update"
   },

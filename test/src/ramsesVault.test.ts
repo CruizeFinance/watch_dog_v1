@@ -4,6 +4,7 @@ import { BigNumber, Contract ,constants} from "ethers";
 import { parseEther, parseUnits } from "ethers/lib/utils";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { mine,setStorageAt,time } from "@nomicfoundation/hardhat-network-helpers";
+import { sign } from "crypto";
 
 export const Impersonate = async(address:string):Promise<SignerWithAddress> =>{
     await hre.network.provider.request({
@@ -31,8 +32,8 @@ describe("work flow from curize vault to cruize contract", function () {
   const MINTER  = "0xAAAA0b6BaefaeC478eB2d1337435623500AD4594";
 
   before(async () => {
-      [signer, deployer,anonymous] = await ethers.getSigners();
-
+    [signer, deployer,anonymous] = await ethers.getSigners();
+    console.log([signer.address,deployer.address]);
     weth = await ethers .getContractAt("IWETH",WETH,signer);
     usdc = await ethers .getContractAt("IUSDC",USDC,signer);
     
@@ -107,7 +108,7 @@ describe("work flow from curize vault to cruize contract", function () {
 });
 
 describe("Ramses Vault", () => {
-    it.only("initialize ramses vault", async () => {
+    it("initialize ramses vault", async () => {
      await ramsesVaultProxy.initialize(
         weth.address,
         usdc.address,
@@ -117,41 +118,41 @@ describe("Ramses Vault", () => {
     //  await minter.update_period();
     });
     
-    it.only("add liquidity", async () => {
+    it("add liquidity", async () => {
       await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6));
     });
 
-    it.only("[signer][after 1 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
+    it("[signer][after 1 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
         const oneHourInSeconds = time.duration.hours(1);
         await time.increase(oneHourInSeconds);
         await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6))
     });
 
-    it.only("[signer][after 2 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
+    it("[signer][after 2 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
         const oneHourInSeconds = time.duration.hours(1);
         await time.increase(oneHourInSeconds);
         await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6))
     });
 
-    it.only("[anonymous][after 2 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
+    it("[anonymous][after 2 hour]:add liquidity & claim RAM tokens & lock RAM tokens", async () => {
         await ramsesVaultProxy.connect(anonymous).deposit(parseEther("1"),parseUnits("2000",6))
     });
 
-    it.only("[signer][after 2 hour]:withdraw liquidity", async () => {
+    it("[signer][after 2 hour]:withdraw liquidity", async () => {
       await ramsesVaultProxy.withdraw()
     });
 
-    it.only("upgrade implemetation", async () => {
+    it("upgrade implemetation", async () => {
       const RAMSES_VAULT = await ethers.getContractFactory("RamsesVault",signer);
       let _ramsesVault = await RAMSES_VAULT.deploy();
       await proxy.upgradeTo(_ramsesVault.address)
     });
 
-    it.only("[anonymous][after 2 hour]:withdraw liquidity", async () => {
+    it("[anonymous][after 2 hour]:withdraw liquidity", async () => {
       await ramsesVaultProxy.connect(anonymous).withdraw();
     });
 
-    it.only("[after 6 days]:Throw if add liquidity after round expiration", async () => {
+    it("[after 6 days]:Throw if add liquidity after round expiration", async () => {
         const sixDaysInSeconds = time.duration.days(9);
         await time.increase(sixDaysInSeconds);
         await ramsesVaultProxy.deposit(parseEther("1"),parseUnits("2000",6))

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.18;
 import "../libraries/Types.sol";
+import "../interfaces/IPoolV2.sol";
+import "../interfaces/IWETHGateway.sol";
 
 abstract contract CruizeStorage {
     /************************************************
@@ -59,10 +61,20 @@ abstract contract CruizeStorage {
 
     uint256 internal ROUND_PER_YEAR = 52.142857 ether;
 
+    address public constant WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
+
+    // Aave lending pool address [added when gap was 49]
+    IPoolV2 public TrustedAavePool;
+    IWETHGateway public TrustedWethGateway;
+    mapping(address => mapping(address => Types.DepositReceipt))
+        public depositReceiptsOfRDNT;
+
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[49] private __cruize_gap;
+    // uint256[49] private __cruize_gap;
+    uint256[46] private __cruize_gap;
 }
