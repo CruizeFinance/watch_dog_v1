@@ -3,20 +3,14 @@ import "../libraries/Errors.sol";
 import "../storage/CruizeStorage.sol";
 pragma solidity =0.8.18;
 
+// interface IGnosis {
+//     function 
+// }
+
 abstract contract Modifiers is CruizeStorage {
     /************************************************
      * MODIFIERS
      ***********************************************/
-
-    /**
-     * @dev Throws if called by any account other than the module.
-     */
-
-    modifier onlyModule(address _cruizeProxy) {
-        if (msg.sender != _cruizeProxy)
-            revert NotAuthorized(msg.sender, _cruizeProxy);
-        _;
-    }
 
     /**
      * @dev Throws if cruizeTokens mapping give's null.

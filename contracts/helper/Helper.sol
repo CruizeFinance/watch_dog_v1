@@ -51,10 +51,9 @@ contract Helper is Getters {
         uint256 _amount
     ) internal {
         bytes memory _data = abi.encodeWithSignature(
-            "transferFromSafe(address,address,address,uint256)",
+            "transferFromSafe(address,address,uint256)",
             _token,
             _receiver,
-            cruizeProxy,
             _amount
         );
 
@@ -159,7 +158,7 @@ contract Helper is Getters {
                 );
         }
         if (totalTokenBalance > 0 && totalTokenBalance < totalDeposit) {
-            revert VaultBalanceIsLessThenTheTotalDeposit(
+            revert TotalBalanceIsLessThenTheTotalDeposit(
                 totalDeposit,
                 totalTokenBalance
             );

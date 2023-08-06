@@ -5,6 +5,7 @@ import "../helper/Helper.sol";
 import "./setters/Setters.sol";
 import "../interfaces/ICRERC20.sol";
 import "../libraries/SharesMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../module/zodiac/contracts/core/Module.sol";
 import "../module/pausable/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -12,7 +13,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../module/reentrancyGuard/ReentrancyGuardUpgradeable.sol";
-
+import "hardhat/console.sol";
 abstract contract CruizeVault is
     Setters,
     Helper,
@@ -240,7 +241,7 @@ abstract contract CruizeVault is
         roundPricePerShare[token][currentRound] = newPricePerShare;
         vaultState.totalPending = 0;
         vaultState.round = uint16(currentRound + 1);
-        roundPricePerShare[token][vaultState.round] = 1;
+        roundPricePerShare[token][vaultState.round] = 1e18;
         ICRERC20(cruizeTokens[token]).mint(address(this), mintShares);
         if (totalVaultFee > 0) {
             _transferHelper(token, payable(feeRecipient), totalVaultFee);
@@ -260,21 +261,25 @@ abstract contract CruizeVault is
     function transferFromSafe(
         address _paymentToken,
         address _receiver,
-        address _cruizeProxy,
         uint256 _amount
     )
         external
-        onlyModule(_cruizeProxy)
         addressIsValid(_paymentToken)
         addressIsValid(_receiver)
         nonReentrant
     {
-        if (_paymentToken == ETH) {
+        // Only delegate call would be accepted from a contract
+         if(msg.sig == this.transferFromSafe.selector && msg.data.length > 0 && Address.isContract(msg.sender)){
+             if (_paymentToken == ETH) {
             (bool sent, ) = _receiver.call{value: _amount}("");
             if (!sent) revert FailedToTransferETH();
         } else {
             IERC20(_paymentToken).safeTransfer(_receiver, _amount);
         }
         emit TransferFromSafe(_receiver, _amount,_paymentToken);
+         }
+         else {
+            revert NotAuthorized(msg.sender,address(this));
+         }
     }
 }

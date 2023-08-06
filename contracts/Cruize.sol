@@ -3,7 +3,7 @@ pragma solidity =0.8.18;
 import "./base/CruizeVault.sol";
 import "./proxies/CloneProxy.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
+import "hardhat/console.sol";
 contract Cruize is CruizeVault, Proxy {
     using SafeMath for uint256;
     using SafeCast for uint256;
@@ -75,7 +75,6 @@ contract Cruize is CruizeVault, Proxy {
         vaults[token].cap = tokenCap;
         address[] storage allTokens = tokens;
         allTokens.push(token);
-        tokens = allTokens;
         emit CreateToken(
             token,
             address(crToken),
@@ -107,14 +106,19 @@ contract Cruize is CruizeVault, Proxy {
         whenNotPaused
     {
         _updateDepositInfo(token, amount);
+        if(msg.value > 0 && msg.value != amount) revert ShouldBeSame();
         if (
-            token == ETH && gnosisSafe.balance.add(amount) <= vaults[token].cap
+            // we should also subtract lastQueuedWithdrawAmounts from total balance so queued withdrawals will not be added in the total balance
+            // and cap will work only for the deposited balance.
+            token == ETH && gnosisSafe.balance.add(amount).sub(lastQueuedWithdrawAmounts[token]) <= vaults[token].cap 
         ) {
             // transfer ETH to Cruize gnosis valut.
             (bool sent, ) = gnosisSafe.call{value: amount}("");
             if (!sent) revert FailedToTransferETH();
         } else if (
-            IERC20(token).balanceOf(gnosisSafe).add(amount) <= vaults[token].cap
+             // we should also subtract lastQueuedWithdrawAmounts from total balance so queued withdrawals will be added in the total balance
+            // and cap will work only for the deposited balance.
+             token != ETH && IERC20(token).balanceOf(gnosisSafe).add(amount).sub(lastQueuedWithdrawAmounts[token]) <= vaults[token].cap
         ) {
             // transfer token to Cruize gnosis vault.
             IERC20(token).safeTransferFrom(msg.sender, gnosisSafe, amount);
