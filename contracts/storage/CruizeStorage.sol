@@ -20,7 +20,7 @@ abstract contract CruizeStorage {
 
     /// @notice gnosis safe address where all the fund will be locked
     address public gnosisSafe;
-    /// @notice gnosis safe address where all the fund will be locked
+    /// @notice address of the cruize proxy
     address public cruizeProxy;
     /// @notice crContract address that will be used to create new crcontract clone
     address public crContract;

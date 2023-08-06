@@ -2,6 +2,7 @@
 pragma solidity =0.8.18;
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Types} from "./Types.sol";
+import "hardhat/console.sol";
 
 library ShareMath {
     using SafeMath for uint256;
@@ -65,7 +66,7 @@ library ShareMath {
         uint256 totalBalance,
         uint256 pendingAmount,
         uint256 decimals
-    ) internal pure returns (uint256) {
+    ) internal view returns (uint256) {
         uint256 singleShare = 10**decimals;
         return
             totalSupply > 0

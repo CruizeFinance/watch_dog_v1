@@ -83,7 +83,7 @@ describe("work flow from curize vault to cruize contract", function () {
         "crETH",
         ETHADDRESS,
         18,
-        "1000",
+        "50",
         cruizeModule
       );
       await expect(tx).to.be.emit(cruizeModule, "CreateToken");
@@ -94,6 +94,30 @@ describe("work flow from curize vault to cruize contract", function () {
       hre.tracer.nameTags[crDai] = "crDAI";
       hre.tracer.nameTags[crEth] = "crETH";
     });
+  });
+
+  describe("BlockSec fixtures ", () => {
+  
+    it("Deposit DAI(ERC20) token", async () => {
+      await depositERC20(cruizeModule, dai, "10");
+    });
+
+    it("Close Round#1", async () => {
+      await cruizeModule.closeTokensRound([daiAddress], [parseEther("10")]);
+    });
+    
+    it("Initiate Withdraw in Round#2", async () => {
+      await cruizeModule.initiateWithdrawal(daiAddress, parseEther("10"))
+    });
+    
+    it("Close Round#2", async () => {
+      await cruizeModule.closeTokensRound([daiAddress], [parseEther("10")]);
+    });
+
+    it("price per share", async () => {
+      console.log( await cruizeModule.callStatic.pricePerShare(daiAddress))
+    });
+
   });
 
   describe("#Deposit in Round 1 ", () => {
@@ -135,6 +159,7 @@ describe("work flow from curize vault to cruize contract", function () {
       await expect(cruizeModule.deposit(daiAddress, parseEther("10")))
         .emit(cruizeModule, "Deposit")
         .withArgs(signer.address, parseEther("10"), daiAddress);
+
       await expect(cruizeModule.instantWithdrawal(daiAddress, parseEther("10")))
         .emit(cruizeModule, "InstantWithdrawal")
         .withArgs(signer.address, parseEther("10"), 1, daiAddress);
@@ -145,6 +170,11 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       expect(receipt.round).to.be.equal(1);
       expect(receipt.amount).to.be.equal(parseEther("10"));
+    });
+    it.only("Throw, if ETH and amount is not same", async () => {
+      await expect(cruizeModule.deposit(ETHADDRESS, parseEther("2"), {
+        value: parseEther("1"),
+      })).to.be.reverted;
     });
     it.only("Close 1st ETH round", async () => {
       await cruizeModule.closeTokensRound([daiAddress], [parseEther("10")]);
@@ -203,7 +233,6 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("Simulate 20% APY", async () => {
       await dai.transfer(cruizeSafe.address, parseEther("2"));
     });
-
     it.only("close 2nd ETH round", async () => {
       await cruizeModule.closeTokensRound([daiAddress], [parseEther("22")]);
 
@@ -252,6 +281,14 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       expect(recepit).to.be.equal(parseEther("21.795397260261362349"));
     });
+    it("Throwm If Vault reached its max-DAI", async () => {
+      await expect(depositERC20(cruizeModule, dai, "1000")).to.be.reverted;
+    });
+    it.only("Throwm If Vault reached its max-ETH", async () => {
+      await expect(cruizeModule.deposit(ETHADDRESS, parseEther("60"), {
+        value: parseEther("60"),
+      })).to.be.reverted;
+    });
   });
 
   describe("3rd round", () => {
@@ -265,7 +302,6 @@ describe("work flow from curize vault to cruize contract", function () {
       assert.equal(receipt.amount.toString(), parseEther("10"));
       // assert.equal(receipt.totalDeposit.toString(), parseEther("30"));
     });
-
     it.only("Check Dai vault state after 3 round start...", async () => {
       const vault = await cruizeModule.callStatic.vaults(daiAddress);
       assert.equal(vault.round, 3);
@@ -285,7 +321,6 @@ describe("work flow from curize vault to cruize contract", function () {
         parseEther("18.477883177101590941")
       );
     });
-
     it.only("Initiate Withdraw: Throw error if balance is not enough", async () => {
       await expect(
         cruizeModule.initiateWithdrawal(
@@ -299,7 +334,6 @@ describe("work flow from curize vault to cruize contract", function () {
           parseEther("20.650519031141868512")
         );
     });
-
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.callStatic.balanceOfUser(
         daiAddress,
@@ -309,7 +343,6 @@ describe("work flow from curize vault to cruize contract", function () {
         parseEther("21.795397260261362349")
       );
     });
-
     it.only("Initiate DAI Withdrawal in 3rd Round", async () => {
       let totalShares: any = await cruizeModule.callStatic.shareBalances(
         daiAddress,
@@ -345,7 +378,7 @@ describe("work flow from curize vault to cruize contract", function () {
     it.only("close 3rd ETH round", async () => {
       await cruizeModule.closeTokensRound([ETHADDRESS], [parseEther("0")]);
     });
-    it.only("close 3rd ETH round", async () => {
+    it.only("close 3rd DAI round", async () => {
       await cruizeModule.closeTokensRound(
         [daiAddress],
         [parseEther("31.795397260261362357")]
@@ -374,6 +407,10 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       assert.equal(roundPrice.toString(), parseEther("1.179539726026136235"));
     });
+    it.only("Still deposit 1000 DAI because now queued withdrawals are excluded from the cap",async () => {
+      await depositERC20(cruizeModule, dai, "979");
+      cruizeModule.instantWithdrawal(daiAddress, parseEther("979"))
+    })
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.balanceOfUser(
         daiAddress,
@@ -400,7 +437,6 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       expect(vault.queuedWithdrawShares).to.be.equal(parseEther("0"));
     });
-
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.balanceOfUser(
         daiAddress,
@@ -408,13 +444,15 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       assert.equal(recepit.toString(), parseEther("19.999999999999999999"));
     });
+    it.only("Enable ETH token in contract", async () => {
+      await cruizeModule.changeAssetStatus(ETHADDRESS, false);
+    });
   });
 
   describe("4th round", () => {
     it.only("Simulate 20% APY", async () => {
       await dai.transfer(cruizeSafe.address, parseEther("4"));
     });
-
     it.only("Initiate DAI Withdrawal in 4rd Round", async () => {
       let totalShares: any = await cruizeModule.callStatic.shareBalances(
         daiAddress,
@@ -458,7 +496,6 @@ describe("work flow from curize vault to cruize contract", function () {
         parseEther("20.000000000000000007")
       );
     });
-
     it.only("close 4th ETH round", async () => {
       await depositERC20(cruizeModule, dai, "10");
 
@@ -491,7 +528,6 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       assert.equal(roundPrice.toString(), parseEther("1.391313965273812532"));
     });
-
     it.only("get user lockedAmount", async () => {
       const recepit = await cruizeModule.balanceOfUser(
         daiAddress,
@@ -500,7 +536,6 @@ describe("work flow from curize vault to cruize contract", function () {
       expect(recepit).to.be.equal(parseEther("9.999999999999999998"));
       // assert.equal(recepit.toString(), parseEther("21.56"));
     });
-
     it.only("Complete withdrawal in 5rd Round  start ", async () => {
       await expect(cruizeModule.standardWithdrawal(daiAddress))
         .emit(cruizeModule, "StandardWithdrawal")
@@ -525,7 +560,6 @@ describe("work flow from curize vault to cruize contract", function () {
         .to.be.revertedWithCustomError(cruizeModule, "ZeroValue")
         .withArgs(0);
     });
-
     it.only("WithdrawInstantly: Throw, if token address is zero-address", async () => {
       await expect(
         cruizeModule.instantWithdrawal(
@@ -568,7 +602,6 @@ describe("work flow from curize vault to cruize contract", function () {
         .to.be.revertedWithCustomError(cruizeModule, "InvalidWithdrawalRound")
         .withArgs(4, 5);
     });
-
     it.only("instantWithdraw just after deposit if withdrawal amount is greater than deposit", async () => {
       await depositERC20(cruizeModule, dai, "10");
       await expect(cruizeModule.instantWithdrawal(daiAddress, parseEther("50")))
@@ -578,7 +611,6 @@ describe("work flow from curize vault to cruize contract", function () {
         )
         .withArgs(parseEther("10"), parseEther("50"));
     });
-
     it.only("instantWithdraw if asset is not allowed", async () => {
       await expect(
         cruizeModule.instantWithdrawal(
@@ -589,7 +621,7 @@ describe("work flow from curize vault to cruize contract", function () {
         .to.be.revertedWithCustomError(cruizeModule, "AssetNotAllowed")
         .withArgs(ethers.constants.AddressZero);
     });
-    it("initiateWithdrawal if withdrawal amount is greater than  the deposited amount", async () => {
+    it.only("initiateWithdrawal if withdrawal amount is greater than  the deposited amount", async () => {
       await expect(
         cruizeModule.initiateWithdrawal(ETHADDRESS, parseEther("2000"))
       )
@@ -617,7 +649,6 @@ describe("work flow from curize vault to cruize contract", function () {
       );
       // assert.equal(roundPrice.toString(), parseEther("1.336336"));
     });
-
     it.only("initiateWithdrawal", async () => {
       await cruizeModule.initiateWithdrawal(daiAddress, parseEther("10"));
     });
@@ -653,14 +684,13 @@ describe("work flow from curize vault to cruize contract", function () {
         .withArgs(ethers.constants.AddressZero);
     });
     it.only("set setFeeRecipient", async () => {
-      await expect(cruizeModule.setFeeRecipient(deployer.address));
+      expect(await cruizeModule.setFeeRecipient(deployer.address));
     });
     it.only("set setFeeRecipient address is null", async () => {
       await expect(cruizeModule.setFeeRecipient(ethers.constants.AddressZero))
         .to.be.revertedWithCustomError(cruizeModule, "ZeroAddress")
         .withArgs(ethers.constants.AddressZero);
     });
-
     it.only("set setManagementFee with 0 value", async () => {
       await expect(cruizeModule.setManagementFee(parseEther("0")))
         .to.be.revertedWithCustomError(cruizeModule, "ZeroValue")

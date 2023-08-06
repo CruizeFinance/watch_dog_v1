@@ -7,6 +7,7 @@ error WithdrawalAlreadyExists(uint256 WithdrawalAlreadyExists);
 error AssetAlreadyExists(address AssetAlreadyExists);
 error ZeroAmount(uint256 ZeroAmount);
 error EmptyName();
+error ShouldBeSame();
 error ZeroValue(uint256 ZeroValue);
 error EmptySymbol();
 error ZeroDecimal();
@@ -36,6 +37,10 @@ error InvalidVaultAddress(address invalidVaultAddress);
 error VaultBalanceIsLessThenTheTotalDeposit(
     uint256 TotalDeposit,
     uint256 vaultTotalBalance
+);
+error TotalBalanceIsLessThenTheTotalDeposit(
+     uint256 TotalDeposit,
+    uint256 TotalBalance
 );
 error InvalidLength(uint256 tokenAddressArray, uint256 tokenBalanceArray);
 error InvalidCap(uint256 VaultBalance, uint256 newCap);
